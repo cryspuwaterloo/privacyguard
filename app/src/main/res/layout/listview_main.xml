@@ -12,7 +12,6 @@
     <ImageView
         android:layout_width="32dp"
         android:layout_height="32dp"
-        android:src="@drawable/default_icon"
         android:id="@+id/main_appIcon"
         android:scaleType="centerInside"
         android:layout_marginStart="4dp"
