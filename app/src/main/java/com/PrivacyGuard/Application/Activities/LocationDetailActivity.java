@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.TaskStackBuilder;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -16,18 +15,15 @@ import android.widget.TextView;
 import com.PrivacyGuard.Application.Database.DataLeak;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
 import com.PrivacyGuard.Application.PrivacyGuard;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by justinhu on 16-03-11.
@@ -96,17 +92,13 @@ public class LocationDetailActivity extends Activity implements OnMapReadyCallba
                     double lat = Double.parseDouble(point[0]);
                     double lng = Double.parseDouble(point[1]);
                     LatLng loc = new LatLng(lat, lng);
-                    googleMap.moveCamera(CameraUpdateFactory.newLatLng(loc));
-
-                    // Setting the zoom level in the map on last point
-                    googleMap.animateCamera(CameraUpdateFactory.zoomTo(Float.parseFloat("15")));
+                    googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 15));
                 }
             }
         });
 
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
     }
 
     @Override
@@ -141,6 +133,8 @@ public class LocationDetailActivity extends Activity implements OnMapReadyCallba
         map.setMyLocationEnabled(true);
         map.clear();
 
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+
         for(int i = 0; i < adapter.getCount(); i++){
             DataLeak leak = (DataLeak) adapter.getItem(i);
             String location = leak.leakContent;
@@ -149,6 +143,9 @@ public class LocationDetailActivity extends Activity implements OnMapReadyCallba
                 double lat = Double.parseDouble(point[0]);
                 double lng = Double.parseDouble(point[1]);
                 LatLng loc = new LatLng(lat,lng);
+
+                builder.include(loc);
+
                 MarkerOptions markerOptions = new MarkerOptions();
 
                 // Setting latitude and longitude for the marker
@@ -160,6 +157,10 @@ public class LocationDetailActivity extends Activity implements OnMapReadyCallba
                 map.addMarker(markerOptions);
             }
         }
+
+        LatLngBounds bounds = builder.build();
+        map.moveCamera(CameraUpdateFactory.newLatLng(bounds.getCenter()));
+
         googleMap = map;
     }
 
