@@ -20,15 +20,18 @@
 package com.PrivacyGuard.Application.Activities;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.VpnService;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
 import android.security.KeyChain;
 import android.util.Log;
@@ -52,8 +55,6 @@ import com.opencsv.CSVWriter;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.security.cert.Certificate;
@@ -65,17 +66,34 @@ public class MainActivity extends Activity {
     private static String TAG = "MainActivity";
     private static final int REQUEST_VPN = 1;
     public static final int REQUEST_CERT = 2;
-    private ArrayList<HashMap<String, String>> list;
 
     private ToggleButton buttonConnect;
     private ListView listLeak;
     private MainListViewAdapter adapter;
     private DatabaseHandler mDbHandler; // [w3kim@uwaterloo.ca] : factored out as an instance var
 
+    private View loadingView;
+    private View contentView;
+
     private boolean bounded = false;
     private boolean keyChainInstalled = false;
     ServiceConnection mSc;
     MyVpnService mVPN;
+
+    private class ReceiveMessages extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    showLoadingView(false);
+                }
+            }, 2000);
+        }
+    }
+    ReceiveMessages myReceiver = null;
+    Boolean myReceiverIsRegistered = false;
 
     /**
      * Called when the activity is first created.
@@ -85,6 +103,11 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
+
+        myReceiver = new ReceiveMessages();
+
+        loadingView = findViewById(R.id.loading_view);
+        contentView = findViewById(R.id.content);
 
         buttonConnect = (ToggleButton) findViewById(R.id.connect_button);
         listLeak = (ListView) findViewById(R.id.leaksList);
@@ -99,7 +122,7 @@ public class MainActivity extends Activity {
                     } else {
                         startVPN();
                     }
-                } else {
+                } else if (!isChecked && MyVpnService.isRunning()) {
                     Logger.d(TAG, "Connect toggled OFF");
                     stopVPN();
                 }
@@ -124,9 +147,12 @@ public class MainActivity extends Activity {
 
         mDbHandler = new DatabaseHandler(this);
         mDbHandler.monthlyReset();
-        installCertificate();
     }
 
+    private void showLoadingView(boolean show) {
+        loadingView.setVisibility(show ? View.VISIBLE : View.GONE);
+        contentView.setVisibility(show ? View.GONE : View.VISIBLE);
+    }
 
     @Override
     protected void onStart() {
@@ -144,6 +170,19 @@ public class MainActivity extends Activity {
         super.onResume();
         populateLeakList();
 
+        if (!myReceiverIsRegistered) {
+            registerReceiver(myReceiver, new IntentFilter("com.PrivacyGuard.VpnRunning"));
+            myReceiverIsRegistered = true;
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (myReceiverIsRegistered) {
+            unregisterReceiver(myReceiver);
+            myReceiverIsRegistered = false;
+        }
     }
 
     @Override
@@ -196,8 +235,9 @@ public class MainActivity extends Activity {
      */
     public void installCertificate() {
         boolean certInstalled = CertificateManager.isCACertificateInstalled(MyVpnService.CADir, MyVpnService.CAName, MyVpnService.KeyType, MyVpnService.Password.toCharArray());
-        if (keyChainInstalled && certInstalled)
+        if (keyChainInstalled && certInstalled) {
             return;
+        }
         if (!certInstalled) {
             CertificateManager.initiateFactory(MyVpnService.CADir, MyVpnService.CAName, MyVpnService.CertName, MyVpnService.KeyType, MyVpnService.Password.toCharArray());
         }
@@ -212,7 +252,6 @@ public class MainActivity extends Activity {
         } catch (CertificateEncodingException e) {
             Logger.e(TAG, "Certificate Encoding Error", e);
         }
-
     }
 
     /**
@@ -230,12 +269,13 @@ public class MainActivity extends Activity {
         } else if (request == REQUEST_VPN) {
             if (result == RESULT_OK) {
                 Logger.d(TAG, "Starting VPN service");
+
+                showLoadingView(true);
                 mVPN.startVPN(this);
             } else {
                 buttonConnect.setChecked(false);    // update UI in case user doesn't give consent to VPN
             }
         }
-
     }
 
 

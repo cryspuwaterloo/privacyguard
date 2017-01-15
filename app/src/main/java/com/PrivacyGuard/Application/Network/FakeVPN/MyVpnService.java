@@ -137,9 +137,15 @@ public class MyVpnService extends VpnService implements Runnable {
 
     @Override
     public void run() {
-        if (!(setup_network()))
+        if (!(setup_network())) {
             return;
+        }
+
         running = true;
+
+        Intent i = new Intent("com.PrivacyGuard.VpnRunning");
+        sendBroadcast(i);
+
         setup_workers();
         wait_to_close();
     }
@@ -300,7 +306,6 @@ public class MyVpnService extends VpnService implements Runnable {
 
         mNotificationManager.cancel(id);
     }
-
 
     private void stop() {
         running = false;
