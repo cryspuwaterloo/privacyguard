@@ -80,20 +80,28 @@ public class MainActivity extends Activity {
     ServiceConnection mSc;
     MyVpnService mVPN;
 
+    //When the VPN has started running, remove the loading view so that the user can continue
+    //interacting with the application.
     private class ReceiveMessages extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+            long difference = System.currentTimeMillis() - loadingViewShownTime;
+
+            //The loading view should show for a minimum of 2 seconds to prevent the loading view
+            //from appearing and disappearing rapidly.
             final Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     showLoadingView(false);
                 }
-            }, 2000);
+            }, Math.max(2000 - difference, 0));
         }
     }
-    ReceiveMessages myReceiver = null;
-    Boolean myReceiverIsRegistered = false;
+
+    private ReceiveMessages myReceiver = null;
+    private boolean myReceiverIsRegistered = false;
+    private long loadingViewShownTime = 0;
 
     /**
      * Called when the activity is first created.
@@ -149,11 +157,6 @@ public class MainActivity extends Activity {
         mDbHandler.monthlyReset();
     }
 
-    private void showLoadingView(boolean show) {
-        loadingView.setVisibility(show ? View.VISIBLE : View.GONE);
-        contentView.setVisibility(show ? View.GONE : View.VISIBLE);
-    }
-
     @Override
     protected void onStart() {
         super.onStart();
@@ -171,7 +174,7 @@ public class MainActivity extends Activity {
         populateLeakList();
 
         if (!myReceiverIsRegistered) {
-            registerReceiver(myReceiver, new IntentFilter("com.PrivacyGuard.VpnRunning"));
+            registerReceiver(myReceiver, new IntentFilter(getString(R.string.vpn_running_broadcast_intent)));
             myReceiverIsRegistered = true;
         }
     }
@@ -194,6 +197,14 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void showLoadingView(boolean show) {
+        loadingView.setVisibility(show ? View.VISIBLE : View.GONE);
+        contentView.setVisibility(show ? View.GONE : View.VISIBLE);
+
+        if (show) {
+            loadingViewShownTime = System.currentTimeMillis();
+        }
+    }
 
     /**
      *

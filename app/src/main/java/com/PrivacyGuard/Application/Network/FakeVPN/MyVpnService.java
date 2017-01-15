@@ -68,7 +68,6 @@ public class MyVpnService extends VpnService implements Runnable {
     public static final String KeyType = "PKCS12";
     public static final String Password = "";
 
-
     private static final String TAG = "MyVpnService";
     private static final boolean DEBUG = true;
     private static boolean running = false;
@@ -143,7 +142,8 @@ public class MyVpnService extends VpnService implements Runnable {
 
         running = true;
 
-        Intent i = new Intent("com.PrivacyGuard.VpnRunning");
+        //Notify the MainActivity that the VPN is now running.
+        Intent i = new Intent(getString(R.string.vpn_running_broadcast_intent));
         sendBroadcast(i);
 
         setup_workers();
