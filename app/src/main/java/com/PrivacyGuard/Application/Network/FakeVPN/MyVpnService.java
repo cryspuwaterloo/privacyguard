@@ -19,7 +19,6 @@
 
 package com.PrivacyGuard.Application.Network.FakeVPN;
 
-import android.app.ActivityManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
@@ -37,14 +36,15 @@ import com.PrivacyGuard.Application.Activities.AppSummaryActivity;
 import com.PrivacyGuard.Application.Activities.R;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
 import com.PrivacyGuard.Application.Logger;
-import com.PrivacyGuard.Application.PrivacyGuard;
-import com.PrivacyGuard.Plugin.LeakReport;
 import com.PrivacyGuard.Application.Network.Forwarder.ForwarderPools;
 import com.PrivacyGuard.Application.Network.LocalServer;
 import com.PrivacyGuard.Application.Network.Resolver.MyClientResolver;
 import com.PrivacyGuard.Application.Network.Resolver.MyNetworkHostNameResolver;
+import com.PrivacyGuard.Application.PrivacyGuard;
 import com.PrivacyGuard.Plugin.ContactDetection;
 import com.PrivacyGuard.Plugin.IPlugin;
+import com.PrivacyGuard.Plugin.KeywordDetection;
+import com.PrivacyGuard.Plugin.LeakReport;
 import com.PrivacyGuard.Plugin.LocationDetection;
 import com.PrivacyGuard.Plugin.PhoneStateDetection;
 import com.PrivacyGuard.Utilities.CertificateManager;
@@ -56,7 +56,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 
 
 /**
@@ -68,7 +67,6 @@ public class MyVpnService extends VpnService implements Runnable {
     public static final String CertName = "PrivacyGuard_Cert";
     public static final String KeyType = "PKCS12";
     public static final String Password = "";
-
 
 
     private static final String TAG = "MyVpnService";
@@ -95,6 +93,8 @@ public class MyVpnService extends VpnService implements Runnable {
             LocationDetection.class,
             PhoneStateDetection.class,
             ContactDetection.class,
+            // newly added for KeywordDetection
+            KeywordDetection.class
     };
     private ArrayList<IPlugin> plugins;
 
@@ -113,6 +113,7 @@ public class MyVpnService extends VpnService implements Runnable {
         uiThread.start();
         return START_STICKY_COMPATIBILITY;
     }
+
     @Override
     public IBinder onBind(Intent intent) {
         return new MyVpnServiceBinder();
@@ -120,7 +121,7 @@ public class MyVpnService extends VpnService implements Runnable {
 
     @Override
     public void onRevoke() {
-        Logger.d(TAG,"onRevoke");
+        Logger.d(TAG, "onRevoke");
         stop();
         super.onRevoke();
     }
@@ -128,11 +129,12 @@ public class MyVpnService extends VpnService implements Runnable {
 
     @Override
     public void onDestroy() {
-        Logger.d(TAG,"onDestroy");
+        Logger.d(TAG, "onDestroy");
         stop();
         super.onDestroy();
 
     }
+
     @Override
     public void run() {
         if (!(setup_network()))
@@ -228,11 +230,14 @@ public class MyVpnService extends VpnService implements Runnable {
     // Notification Methods
     ///////////////////////////////////////////////////
 
-
-    public void notify(LeakReport leak) {
+    // w3kim@uwaterloo.ca : added the 1st parameter
+    public void notify(String request, LeakReport leak) {
         //update database
 
         DatabaseHandler db = new DatabaseHandler(this);
+
+        // w3kim@uwaterloo.ca
+        db.addUrlIfAny(leak.appName, leak.packageName, request);
 
         int notifyId = db.findNotificationId(leak);
         if (notifyId < 0) {
@@ -297,18 +302,17 @@ public class MyVpnService extends VpnService implements Runnable {
     }
 
 
-
-    private  void stop() {
+    private void stop() {
         running = false;
         if (mInterface == null) return;
-        Logger.d(TAG,"Stopping");
+        Logger.d(TAG, "Stopping");
         try {
             readThread.interrupt();
             writeThread.interrupt();
             localServer.interrupt();
             mInterface.close();
         } catch (IOException e) {
-            Logger.e(TAG,e.toString()+"\n"+ Arrays.toString(e.getStackTrace()));
+            Logger.e(TAG, e.toString() + "\n" + Arrays.toString(e.getStackTrace()));
         }
         mInterface = null;
     }

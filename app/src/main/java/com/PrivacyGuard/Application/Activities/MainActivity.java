@@ -24,10 +24,14 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.VpnService;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.IBinder;
 import android.security.KeyChain;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.CompoundButton;
@@ -40,8 +44,14 @@ import com.PrivacyGuard.Application.Logger;
 import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService;
 import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService.MyVpnServiceBinder;
 import com.PrivacyGuard.Application.PrivacyGuard;
+import com.PrivacyGuard.Plugin.KeywordDetection;
 import com.PrivacyGuard.Utilities.CertificateManager;
+import com.PrivacyGuard.Utilities.FileChooser;
+import com.PrivacyGuard.Utilities.FileUtils;
+import com.opencsv.CSVWriter;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -60,6 +70,7 @@ public class MainActivity extends Activity {
     private ToggleButton buttonConnect;
     private ListView listLeak;
     private MainListViewAdapter adapter;
+    private DatabaseHandler mDbHandler; // [w3kim@uwaterloo.ca] : factored out as an instance var
 
     private boolean bounded = false;
     private boolean keyChainInstalled = false;
@@ -72,6 +83,7 @@ public class MainActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
         buttonConnect = (ToggleButton) findViewById(R.id.connect_button);
@@ -110,8 +122,8 @@ public class MainActivity extends Activity {
             }
         };
 
-        DatabaseHandler db = new DatabaseHandler(this);
-        db.monthlyReset();
+        mDbHandler = new DatabaseHandler(this);
+        mDbHandler.monthlyReset();
         installCertificate();
     }
 
@@ -125,8 +137,6 @@ public class MainActivity extends Activity {
             bounded = true;
         }
         buttonConnect.setChecked(MyVpnService.isRunning());
-
-
     }
 
     @Override
@@ -143,8 +153,6 @@ public class MainActivity extends Activity {
             this.unbindService(mSc);
             bounded = false;
         }
-
-
     }
 
 
@@ -261,5 +269,76 @@ public class MainActivity extends Activity {
             bounded = false;
         }
         mVPN.stopVPN();
+    }
+
+    /**
+     * [w3kim@uwaterloo.ca]
+     * Update Filtering Keywords
+     *
+     * @param view UI view triggering this method
+     */
+    public void updateFilterKeywords(View view) {
+        new FileChooser(this).setFileListener(new FileChooser.FileSelectedListener() {
+            @Override
+            public void fileSelected(final File file) {
+                // this is the path where the chosen file gets copied to
+                String path = String.format("%s/%s",
+                        getFilesDir().getAbsolutePath(), KeywordDetection.KEYWORDS_FILE_NAME);
+
+                // check if there is an existing file
+                File keywords = new File(path);
+                if (keywords.exists()) {
+                    keywords.delete();
+                }
+
+                // copy the file to the path
+                FileUtils.copyFile(file, keywords.getAbsolutePath());
+                // notify the plugin the file has been updated
+                KeywordDetection.invalidate();
+            }
+        }).showDialog();
+    }
+
+    /**
+     * [w3kim@uwaterloo.ca]
+     * Export DB contents to CSV files
+     *
+     * @param view UI view triggering this method
+     */
+    public void exportData(View view) {
+        File exportDir = new File(Environment.getExternalStorageDirectory(), "privacyguard");
+        if (!exportDir.exists()) {
+            if (!exportDir.mkdirs()) {
+                Log.e(TAG, "cannot create directories: " + exportDir.getAbsolutePath());
+            }
+        }
+
+        long timestamp = System.currentTimeMillis();
+        for (String table : mDbHandler.getTables()) {
+            File file = new File(exportDir,
+                    String.format("pg-export-%s-%s.csv", timestamp, table));
+            try {
+                file.createNewFile();
+                CSVWriter csvWrite = new CSVWriter(new FileWriter(file));
+                SQLiteDatabase db = mDbHandler.getReadableDatabase();
+                Cursor curCSV = db.rawQuery("SELECT * FROM " + table, null);
+                csvWrite.writeNext(curCSV.getColumnNames());
+                while (curCSV.moveToNext()) {
+                    //Which column you want to exprort
+                    int numColumns = curCSV.getColumnCount();
+                    String[] arrStr = new String[numColumns];
+                    for (int i = 0; i < numColumns; i++) {
+                        arrStr[i] = curCSV.getString(i);
+                    }
+                    csvWrite.writeNext(arrStr);
+                }
+                csvWrite.close();
+                curCSV.close();
+
+                Log.d(TAG, String.format("table '%s' has been exported to '%s'", table, file.getAbsolutePath()));
+            } catch (Exception sqlEx) {
+                Log.e(TAG, sqlEx.getMessage(), sqlEx);
+            }
+        }
     }
 }

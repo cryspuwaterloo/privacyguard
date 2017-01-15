@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -23,10 +22,9 @@ import java.util.Map;
 public class Logger {
     private static final String TIME_STAMP_FORMAT = "MM-dd HH:mm:ss.SSS";
     private static final SimpleDateFormat df = new SimpleDateFormat(TIME_STAMP_FORMAT, Locale.CANADA);//TODO: auto detect locale
-    private static File logFile = new File(getDiskCacheDir(),"Log");
+    private static File logFile = new File(getDiskCacheDir(), "Log");
     private static File trafficFile = new File(getDiskFileDir(), "NetworkTraffic");
     private static File locationFile = new File(getDiskFileDir(), "LastLocations");
-
 
     /**
      * Returns a dir  for cache storage
@@ -136,10 +134,10 @@ public class Logger {
                 PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(trafficFile, true)));
                 out.println("=========================");
                 out.println("Time : " + df.format(new Date()));
-                out.println(" [ " +  packageName+ " ]  "+ appName);
-                out.println("IP: "+ ip);
+                out.println(" [ " + packageName + " ]  " + appName);
+                out.println("IP: " + ip);
                 out.println("");
-                out.println("Request "+ msg);
+                out.println("Request " + msg);
                 out.println("");
                 out.close();
             } catch (IOException e) {
@@ -149,7 +147,7 @@ public class Logger {
     }
 
     public static void logLeak(String category) {
-         //log network traffic ONLY in debug build
+        //log network traffic ONLY in debug build
         if (BuildConfig.DEBUG) {
 
             try {

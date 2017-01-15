@@ -11,7 +11,8 @@ public class LeakReport {
     public enum LeakCategory{
         LOCATION,
         CONTACT,
-        DEVICE
+        DEVICE,
+        KEYWORD /* * [w3kim@uwaterloo.ca] added for keyword detection */
     }
 
     public String packageName;

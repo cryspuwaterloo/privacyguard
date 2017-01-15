@@ -37,6 +37,20 @@
         android:text="@string/connect"
         /> -->
 
+    <Button
+        android:text="Update Filter Keywords"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/button"
+        android:onClick="updateFilterKeywords" />
+
+    <Button
+        android:text="Export Data"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/button3"
+        android:onClick="exportData"/>
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
