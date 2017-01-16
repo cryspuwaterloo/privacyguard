@@ -5,9 +5,22 @@
     tools:context="com.justinhu.leaksimulator.LocationFragment">
 
     <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="match_parent">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id = "@+id/lat"
+            android:text="Latitute" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id = "@+id/lon"
+            android:text="Longtitute" />
+    </LinearLayout>
 
 </FrameLayout>
