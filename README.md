@@ -22,9 +22,7 @@ Y. Song and U. Hengartner. [PrivacyGuard: A VPN-based Platform to Detect Informa
 5. Imported project from local repo
 
 ## Misc
-SHA1: 58:95:40:B9:31:02:12:93:34:78:0D:ED:C6:8A:A1:3B:66:9A:07:99
-API key: AIzaSyBL9tVkRjRtayPIpBnnri7MfAlka-lkwyU
-keystore password: privacyguard
+The Google Maps API key is stored in privacyguard/app/src/debug/res/values/google_maps_api.xml
 
 ## FAQ
 
