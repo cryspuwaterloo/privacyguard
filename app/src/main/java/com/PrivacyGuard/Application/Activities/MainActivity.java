@@ -177,6 +177,12 @@ public class MainActivity extends Activity {
             registerReceiver(myReceiver, new IntentFilter(getString(R.string.vpn_running_broadcast_intent)));
             myReceiverIsRegistered = true;
         }
+
+        //If the VPN was started before the user closed the app and still is not running, show
+        //the loading view once again.
+        if (MyVpnService.isStarted()) {
+            showLoadingView(true);
+        }
     }
 
     @Override

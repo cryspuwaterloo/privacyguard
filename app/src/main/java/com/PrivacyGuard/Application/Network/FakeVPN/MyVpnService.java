@@ -71,6 +71,7 @@ public class MyVpnService extends VpnService implements Runnable {
     private static final String TAG = "MyVpnService";
     private static final boolean DEBUG = true;
     private static boolean running = false;
+    private static boolean started = false;
     private static HashMap<String, Integer[]> notificationMap = new HashMap<String, Integer[]>();
 
     //The virtual network interface, get and return packets to it
@@ -103,6 +104,10 @@ public class MyVpnService extends VpnService implements Runnable {
     public static boolean isRunning() {
         /** http://stackoverflow.com/questions/600207/how-to-check-if-a-service-is-running-on-android */
         return running;
+    }
+
+    public static boolean isStarted() {
+        return started;
     }
 
     @Override
@@ -140,6 +145,7 @@ public class MyVpnService extends VpnService implements Runnable {
             return;
         }
 
+        started = false;
         running = true;
 
         //Notify the MainActivity that the VPN is now running.
@@ -325,6 +331,7 @@ public class MyVpnService extends VpnService implements Runnable {
     public void startVPN(Context context) {
         Intent intent = new Intent(context, MyVpnService.class);
         context.startService(intent);
+        started = true;
     }
 
     public void stopVPN() {
