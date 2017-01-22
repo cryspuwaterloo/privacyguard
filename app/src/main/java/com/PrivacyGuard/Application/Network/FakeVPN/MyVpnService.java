@@ -68,10 +68,10 @@ public class MyVpnService extends VpnService implements Runnable {
     public static final String KeyType = "PKCS12";
     public static final String Password = "";
 
-
     private static final String TAG = "MyVpnService";
     private static final boolean DEBUG = true;
     private static boolean running = false;
+    private static boolean started = false;
     private static HashMap<String, Integer[]> notificationMap = new HashMap<String, Integer[]>();
 
     //The virtual network interface, get and return packets to it
@@ -106,6 +106,10 @@ public class MyVpnService extends VpnService implements Runnable {
         return running;
     }
 
+    public static boolean isStarted() {
+        return started;
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Logger.d(TAG, "onStartCommand");
@@ -137,9 +141,17 @@ public class MyVpnService extends VpnService implements Runnable {
 
     @Override
     public void run() {
-        if (!(setup_network()))
+        if (!(setup_network())) {
             return;
+        }
+
+        started = false;
         running = true;
+
+        //Notify the MainActivity that the VPN is now running.
+        Intent i = new Intent(getString(R.string.vpn_running_broadcast_intent));
+        sendBroadcast(i);
+
         setup_workers();
         wait_to_close();
     }
@@ -301,7 +313,6 @@ public class MyVpnService extends VpnService implements Runnable {
         mNotificationManager.cancel(id);
     }
 
-
     private void stop() {
         running = false;
         if (mInterface == null) return;
@@ -320,6 +331,7 @@ public class MyVpnService extends VpnService implements Runnable {
     public void startVPN(Context context) {
         Intent intent = new Intent(context, MyVpnService.class);
         context.startService(intent);
+        started = true;
     }
 
     public void stopVPN() {

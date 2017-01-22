@@ -10,5 +10,7 @@
     <string name="mainActivity_warn_dialog_msg">Unable to start Privacy Guard</string>
     <string name="data_leakage_frequency">Data leakage frequency this month:</string>
     <string name="title_activity_location">Map</string>
+    <string name="starting_vpn_message">Starting VPN</string>
+    <string name="vpn_running_broadcast_intent">com.PrivacyGuard.VpnRunning</string>
 
 </resources>
