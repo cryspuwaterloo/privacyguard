@@ -23,6 +23,7 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -34,11 +35,18 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.security.KeyChain;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.CompoundButton;
 import android.widget.ListView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.PrivacyGuard.Application.Database.AppSummary;
@@ -60,7 +68,7 @@ import java.util.List;
 import javax.security.cert.Certificate;
 import javax.security.cert.CertificateEncodingException;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     //public static final boolean debug = false;
     private static String TAG = "MainActivity";
@@ -212,9 +220,59 @@ public class MainActivity extends Activity {
         }
     }
 
-    /**
-     *
-     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater=getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.update_filter_keywords:
+                new AlertDialog.Builder(this)
+                        .setTitle("Update Filter Keywords")
+                        .setMessage("Are you sure you want to update filter keywords? Privacy Guard " +
+                                "will look for occurrences of these keywords while monitoring the network.")
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                updateFilterKeywords();
+                            }
+                        })
+                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                // do nothing
+                            }
+                        })
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();
+                break;
+            case R.id.export_data:
+                new AlertDialog.Builder(this)
+                        .setTitle("Export Data")
+                        .setMessage("Are you sure you want to export data? This will export all database tables " +
+                                "into CSV files (one CSV file for each table).")
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                exportData();
+                            }
+                        })
+                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                // do nothing
+                            }
+                        })
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();
+                break;
+            case R.id.settings:
+                Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
+                break;
+        }
+        return true;
+    }
+
     public void populateLeakList() {
         // -----------------------------------------------------------------------
         // Database Fetch
@@ -331,10 +389,8 @@ public class MainActivity extends Activity {
     /**
      * [w3kim@uwaterloo.ca]
      * Update Filtering Keywords
-     *
-     * @param view UI view triggering this method
      */
-    public void updateFilterKeywords(View view) {
+    public void updateFilterKeywords() {
         new FileChooser(this).setFileListener(new FileChooser.FileSelectedListener() {
             @Override
             public void fileSelected(final File file) {
@@ -359,10 +415,8 @@ public class MainActivity extends Activity {
     /**
      * [w3kim@uwaterloo.ca]
      * Export DB contents to CSV files
-     *
-     * @param view UI view triggering this method
      */
-    public void exportData(View view) {
+    public void exportData() {
         File exportDir = new File(Environment.getExternalStorageDirectory(), "privacyguard");
         if (!exportDir.exists()) {
             if (!exportDir.mkdirs()) {

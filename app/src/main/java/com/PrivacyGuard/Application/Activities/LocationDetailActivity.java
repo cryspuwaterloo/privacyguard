@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.TaskStackBuilder;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -28,7 +29,7 @@ import java.util.List;
 /**
  * Created by justinhu on 16-03-11.
  */
-public class LocationDetailActivity extends Activity implements OnMapReadyCallback {
+public class LocationDetailActivity extends AppCompatActivity implements OnMapReadyCallback {
     private GoogleMap googleMap;
 
     private int notifyId;
@@ -44,7 +45,7 @@ public class LocationDetailActivity extends Activity implements OnMapReadyCallba
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setContentView(R.layout.activity_detail_location);
 
         // Get the message from the intent
