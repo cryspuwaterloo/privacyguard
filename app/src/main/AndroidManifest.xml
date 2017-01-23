@@ -20,7 +20,7 @@
 
     <!-- End of copy. -->
     <application
-        android:theme = "@style/Theme.AppCompat"
+        android:theme = "@style/AppTheme"
         android:name="com.PrivacyGuard.Application.PrivacyGuard"
         android:hardwareAccelerated="true"
         android:icon="@drawable/ic_launcher"

@@ -3,15 +3,14 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
-    android:minHeight="32dp"
     android:paddingLeft="4dp"
     android:paddingRight="4dp"
     android:orientation="horizontal">
 
-
     <ImageView
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_margin="6dp"
         android:id="@+id/main_appIcon"
         android:scaleType="centerInside"
         android:layout_marginStart="4dp"
@@ -21,7 +20,7 @@
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="App Name"
         android:id="@+id/main_appName" />
 
@@ -29,7 +28,8 @@
         android:orientation="vertical"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical">
+        android:layout_gravity="center_vertical"
+        android:layout_margin="6dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -45,7 +45,5 @@
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:text="leaks"
             android:id="@+id/main_appLeak" />
-
     </LinearLayout>
-
 </LinearLayout>

@@ -19,7 +19,6 @@
 
 package com.PrivacyGuard.Application.Activities;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -35,7 +34,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.security.KeyChain;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -44,10 +42,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 
 import com.PrivacyGuard.Application.Database.AppSummary;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
@@ -70,18 +66,18 @@ import javax.security.cert.CertificateEncodingException;
 
 public class MainActivity extends AppCompatActivity {
 
-    //public static final boolean debug = false;
     private static String TAG = "MainActivity";
     private static final int REQUEST_VPN = 1;
     public static final int REQUEST_CERT = 2;
 
-    private ToggleButton buttonConnect;
     private ListView listLeak;
     private MainListViewAdapter adapter;
     private DatabaseHandler mDbHandler; // [w3kim@uwaterloo.ca] : factored out as an instance var
 
     private View loadingView;
     private View contentView;
+    private View onIndicator;
+    private View offIndicator;
 
     private boolean bounded = false;
     private boolean keyChainInstalled = false;
@@ -101,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
+                    showOnIndicator(true);
                     showLoadingView(false);
                 }
             }, Math.max(2000 - difference, 0));
@@ -124,31 +121,31 @@ public class MainActivity extends AppCompatActivity {
 
         loadingView = findViewById(R.id.loading_view);
         contentView = findViewById(R.id.content);
-
-        buttonConnect = (ToggleButton) findViewById(R.id.connect_button);
+        onIndicator = findViewById(R.id.on_indicator);
+        offIndicator = findViewById(R.id.off_indicator);
         listLeak = (ListView) findViewById(R.id.leaksList);
+        View vpnToggle = findViewById(R.id.on_off_button);
 
-        buttonConnect.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                Logger.d(TAG, "Connect toggled " + isChecked);
-                if (isChecked && !MyVpnService.isRunning()) {
+        vpnToggle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!MyVpnService.isRunning()) {
                     Logger.d(TAG, "Connect toggled ON");
                     if (!keyChainInstalled) {
                         installCertificate();
                     } else {
                         startVPN();
                     }
-                } else if (!isChecked && MyVpnService.isRunning()) {
+                } else {
                     Logger.d(TAG, "Connect toggled OFF");
+                    showOnIndicator(false);
                     stopVPN();
                 }
             }
         });
 
-
         /** use bound service here because stopservice() doesn't immediately trigger onDestroy of VPN service */
         mSc = new ServiceConnection() {
-
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
                 Logger.d(TAG, "VPN Service connected");
@@ -173,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
             this.bindService(service, mSc, Context.BIND_AUTO_CREATE);
             bounded = true;
         }
-        buttonConnect.setChecked(MyVpnService.isRunning());
+        showOnIndicator(MyVpnService.isRunning());
     }
 
     @Override
@@ -220,6 +217,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void showOnIndicator(boolean show) {
+        onIndicator.setVisibility(show ? View.VISIBLE : View.GONE);
+        offIndicator.setVisibility(show ? View.GONE : View.VISIBLE);
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater=getMenuInflater();
@@ -232,9 +234,8 @@ public class MainActivity extends AppCompatActivity {
         switch(item.getItemId()) {
             case R.id.update_filter_keywords:
                 new AlertDialog.Builder(this)
-                        .setTitle("Update Filter Keywords")
-                        .setMessage("Are you sure you want to update filter keywords? Privacy Guard " +
-                                "will look for occurrences of these keywords while monitoring the network.")
+                        .setTitle(R.string.update_filter_keywords_title)
+                        .setMessage(R.string.update_filter_keywords_message)
                         .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                                 updateFilterKeywords();
@@ -250,9 +251,8 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case R.id.export_data:
                 new AlertDialog.Builder(this)
-                        .setTitle("Export Data")
-                        .setMessage("Are you sure you want to export data? This will export all database tables " +
-                                "into CSV files (one CSV file for each table).")
+                        .setTitle(R.string.export_data_title)
+                        .setMessage(R.string.export_data_message)
                         .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                                 exportData();
@@ -338,8 +338,6 @@ public class MainActivity extends AppCompatActivity {
             keyChainInstalled = result == RESULT_OK;
             if (keyChainInstalled) {
                 startVPN();
-            } else {
-                buttonConnect.setChecked(false);
             }
         } else if (request == REQUEST_VPN) {
             if (result == RESULT_OK) {
@@ -347,12 +345,9 @@ public class MainActivity extends AppCompatActivity {
 
                 showLoadingView(true);
                 mVPN.startVPN(this);
-            } else {
-                buttonConnect.setChecked(false);    // update UI in case user doesn't give consent to VPN
             }
         }
     }
-
 
     private void startVPN() {
         if (!bounded) {
