@@ -98,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    showIndicator(Status.ON);
+                    showIndicator(Status.VPN_ON);
                 }
             }, Math.max(2000 - difference, 0));
         }
@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 } else {
                     Logger.d(TAG, "Connect toggled OFF");
-                    showIndicator(Status.OFF);
+                    showIndicator(Status.VPN_OFF);
                     stopVPN();
                 }
             }
@@ -184,11 +184,11 @@ public class MainActivity extends AppCompatActivity {
         if (MyVpnService.isStarted()) {
             //If the VPN was started before the user closed the app and still is not running, show
             //the loading indicator once again.
-            showIndicator(Status.LOADING);
+            showIndicator(Status.VPN_STARTING);
         } else if (MyVpnService.isRunning()) {
-            showIndicator(Status.ON);
+            showIndicator(Status.VPN_ON);
         } else {
-            showIndicator(Status.OFF);
+            showIndicator(Status.VPN_OFF);
         }
     }
 
@@ -211,20 +211,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private enum Status {
-        ON,
-        OFF,
-        LOADING
+        VPN_ON,
+        VPN_OFF,
+        VPN_STARTING
     }
 
     private void showIndicator(Status status) {
-        onIndicator.setVisibility(status == Status.ON ? View.VISIBLE : View.GONE);
-        offIndicator.setVisibility(status == Status.OFF ? View.VISIBLE : View.GONE);
-        loadingIndicator.setVisibility(status == Status.LOADING ? View.VISIBLE : View.GONE);
+        onIndicator.setVisibility(status == Status.VPN_ON ? View.VISIBLE : View.GONE);
+        offIndicator.setVisibility(status == Status.VPN_OFF ? View.VISIBLE : View.GONE);
+        loadingIndicator.setVisibility(status == Status.VPN_STARTING ? View.VISIBLE : View.GONE);
 
-        vpnToggle.setEnabled(status != Status.LOADING);
-        vpnToggle.setAlpha(status == Status.LOADING ? 0.3f : 1.0f);
+        vpnToggle.setEnabled(status != Status.VPN_STARTING);
+        vpnToggle.setAlpha(status == Status.VPN_STARTING ? 0.3f : 1.0f);
 
-        if (status == Status.LOADING) {
+        if (status == Status.VPN_STARTING) {
             loadingViewShownTime = System.currentTimeMillis();
         }
     }
@@ -350,7 +350,7 @@ public class MainActivity extends AppCompatActivity {
             if (result == RESULT_OK) {
                 Logger.d(TAG, "Starting VPN service");
 
-                showIndicator(Status.LOADING);
+                showIndicator(Status.VPN_STARTING);
                 mVPN.startVPN(this);
             }
         }
