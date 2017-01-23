@@ -19,10 +19,10 @@
 
 package com.PrivacyGuard.Application.Activities;
 
-import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -34,12 +34,17 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.security.KeyChain;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.CompoundButton;
 import android.widget.ListView;
-import android.widget.ToggleButton;
+import android.widget.Toast;
 
 import com.PrivacyGuard.Application.Database.AppSummary;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
@@ -60,20 +65,20 @@ import java.util.List;
 import javax.security.cert.Certificate;
 import javax.security.cert.CertificateEncodingException;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
-    //public static final boolean debug = false;
     private static String TAG = "MainActivity";
     private static final int REQUEST_VPN = 1;
     public static final int REQUEST_CERT = 2;
 
-    private ToggleButton buttonConnect;
     private ListView listLeak;
     private MainListViewAdapter adapter;
     private DatabaseHandler mDbHandler; // [w3kim@uwaterloo.ca] : factored out as an instance var
 
-    private View loadingView;
-    private View contentView;
+    private View onIndicator;
+    private View offIndicator;
+    private View loadingIndicator;
+    private FloatingActionButton vpnToggle;
 
     private boolean bounded = false;
     private boolean keyChainInstalled = false;
@@ -93,7 +98,7 @@ public class MainActivity extends Activity {
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    showLoadingView(false);
+                    showIndicator(Status.VPN_ON);
                 }
             }, Math.max(2000 - difference, 0));
         }
@@ -114,33 +119,32 @@ public class MainActivity extends Activity {
 
         myReceiver = new ReceiveMessages();
 
-        loadingView = findViewById(R.id.loading_view);
-        contentView = findViewById(R.id.content);
+        onIndicator = findViewById(R.id.on_indicator);
+        offIndicator = findViewById(R.id.off_indicator);
+        loadingIndicator = findViewById(R.id.loading_indicator);
+        listLeak = (ListView)findViewById(R.id.leaksList);
+        vpnToggle = (FloatingActionButton)findViewById(R.id.on_off_button);
 
-        buttonConnect = (ToggleButton) findViewById(R.id.connect_button);
-        listLeak = (ListView) findViewById(R.id.leaksList);
-
-        buttonConnect.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                Logger.d(TAG, "Connect toggled " + isChecked);
-                if (isChecked && !MyVpnService.isRunning()) {
+        vpnToggle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!MyVpnService.isRunning()) {
                     Logger.d(TAG, "Connect toggled ON");
                     if (!keyChainInstalled) {
                         installCertificate();
                     } else {
                         startVPN();
                     }
-                } else if (!isChecked && MyVpnService.isRunning()) {
+                } else {
                     Logger.d(TAG, "Connect toggled OFF");
+                    showIndicator(Status.VPN_OFF);
                     stopVPN();
                 }
             }
         });
 
-
         /** use bound service here because stopservice() doesn't immediately trigger onDestroy of VPN service */
         mSc = new ServiceConnection() {
-
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
                 Logger.d(TAG, "VPN Service connected");
@@ -165,7 +169,6 @@ public class MainActivity extends Activity {
             this.bindService(service, mSc, Context.BIND_AUTO_CREATE);
             bounded = true;
         }
-        buttonConnect.setChecked(MyVpnService.isRunning());
     }
 
     @Override
@@ -178,10 +181,14 @@ public class MainActivity extends Activity {
             myReceiverIsRegistered = true;
         }
 
-        //If the VPN was started before the user closed the app and still is not running, show
-        //the loading view once again.
         if (MyVpnService.isStarted()) {
-            showLoadingView(true);
+            //If the VPN was started before the user closed the app and still is not running, show
+            //the loading indicator once again.
+            showIndicator(Status.VPN_STARTING);
+        } else if (MyVpnService.isRunning()) {
+            showIndicator(Status.VPN_ON);
+        } else {
+            showIndicator(Status.VPN_OFF);
         }
     }
 
@@ -203,18 +210,76 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void showLoadingView(boolean show) {
-        loadingView.setVisibility(show ? View.VISIBLE : View.GONE);
-        contentView.setVisibility(show ? View.GONE : View.VISIBLE);
+    private enum Status {
+        VPN_ON,
+        VPN_OFF,
+        VPN_STARTING
+    }
 
-        if (show) {
+    private void showIndicator(Status status) {
+        onIndicator.setVisibility(status == Status.VPN_ON ? View.VISIBLE : View.GONE);
+        offIndicator.setVisibility(status == Status.VPN_OFF ? View.VISIBLE : View.GONE);
+        loadingIndicator.setVisibility(status == Status.VPN_STARTING ? View.VISIBLE : View.GONE);
+
+        vpnToggle.setEnabled(status != Status.VPN_STARTING);
+        vpnToggle.setAlpha(status == Status.VPN_STARTING ? 0.3f : 1.0f);
+
+        if (status == Status.VPN_STARTING) {
             loadingViewShownTime = System.currentTimeMillis();
         }
     }
 
-    /**
-     *
-     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater=getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.update_filter_keywords:
+                new AlertDialog.Builder(this)
+                        .setTitle(R.string.update_filter_keywords_title)
+                        .setMessage(R.string.update_filter_keywords_message)
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                updateFilterKeywords();
+                            }
+                        })
+                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                // do nothing
+                            }
+                        })
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();
+                break;
+            case R.id.export_data:
+                new AlertDialog.Builder(this)
+                        .setTitle(R.string.export_data_title)
+                        .setMessage(R.string.export_data_message)
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                exportData();
+                            }
+                        })
+                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                // do nothing
+                            }
+                        })
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();
+                break;
+            case R.id.settings:
+                Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
+                break;
+        }
+        return true;
+    }
+
     public void populateLeakList() {
         // -----------------------------------------------------------------------
         // Database Fetch
@@ -280,21 +345,16 @@ public class MainActivity extends Activity {
             keyChainInstalled = result == RESULT_OK;
             if (keyChainInstalled) {
                 startVPN();
-            } else {
-                buttonConnect.setChecked(false);
             }
         } else if (request == REQUEST_VPN) {
             if (result == RESULT_OK) {
                 Logger.d(TAG, "Starting VPN service");
 
-                showLoadingView(true);
+                showIndicator(Status.VPN_STARTING);
                 mVPN.startVPN(this);
-            } else {
-                buttonConnect.setChecked(false);    // update UI in case user doesn't give consent to VPN
             }
         }
     }
-
 
     private void startVPN() {
         if (!bounded) {
@@ -331,10 +391,8 @@ public class MainActivity extends Activity {
     /**
      * [w3kim@uwaterloo.ca]
      * Update Filtering Keywords
-     *
-     * @param view UI view triggering this method
      */
-    public void updateFilterKeywords(View view) {
+    public void updateFilterKeywords() {
         new FileChooser(this).setFileListener(new FileChooser.FileSelectedListener() {
             @Override
             public void fileSelected(final File file) {
@@ -359,10 +417,8 @@ public class MainActivity extends Activity {
     /**
      * [w3kim@uwaterloo.ca]
      * Export DB contents to CSV files
-     *
-     * @param view UI view triggering this method
      */
-    public void exportData(View view) {
+    public void exportData() {
         File exportDir = new File(Environment.getExternalStorageDirectory(), "privacyguard");
         if (!exportDir.exists()) {
             if (!exportDir.mkdirs()) {

@@ -5,6 +5,7 @@ import android.app.TaskStackBuilder;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
+import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -19,7 +20,7 @@ import com.PrivacyGuard.Application.PrivacyGuard;
 
 import java.util.List;
 
-public class AppSummaryActivity extends Activity {
+public class AppSummaryActivity extends AppCompatActivity {
 
     private static String TAG = "UI";
     //GoogleMap googleMap;
@@ -33,7 +34,7 @@ public class AppSummaryActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setContentView(R.layout.activity_app_summary);
 
         // Get the message from the intent

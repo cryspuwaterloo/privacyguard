@@ -60,6 +60,7 @@ public class MainListViewAdapter extends BaseAdapter{
             holder.appIcon = (ImageView)convertView.findViewById(R.id.main_appIcon);
             holder.appName = (TextView)convertView.findViewById(R.id.main_appName);
             holder.leakCount = (TextView)convertView.findViewById(R.id.main_leakCount);
+            holder.leakString = (TextView)convertView.findViewById(R.id.main_appLeak);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder)convertView.getTag();
@@ -67,6 +68,7 @@ public class MainListViewAdapter extends BaseAdapter{
         AppSummary app = list.get(position);
         holder.appName.setText(app.appName);
         holder.leakCount.setText(String.valueOf(app.totalLeaks));
+        holder.leakString.setText(app.totalLeaks == 1 ? R.string.leak_singular : R.string.leak_plural);
         try {
             holder.appIcon.setImageDrawable(pm.getApplicationIcon(app.packageName));
         } catch (PackageManager.NameNotFoundException e) {
@@ -81,5 +83,6 @@ public class MainListViewAdapter extends BaseAdapter{
         public ImageView appIcon;
         public TextView appName;
         public TextView leakCount;
+        public TextView leakString;
     }
 }
