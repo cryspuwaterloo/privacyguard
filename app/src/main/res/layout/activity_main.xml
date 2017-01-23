@@ -22,40 +22,15 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <RelativeLayout
-        android:visibility="gone"
-        android:id="@+id/loading_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center">
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/starting_vpn_message"
-                android:textSize="25sp"
-                android:padding="10dp"/>
-            <ProgressBar
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:indeterminate="true"
-                android:padding="10dp"/>
-        </LinearLayout>
-    </RelativeLayout>
-
     <android.support.design.widget.CoordinatorLayout
-        android:id="@+id/content"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <ListView android:id="@+id/leaksList"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:paddingBottom="88dp">
+            android:paddingBottom="88dp"
+            android:clipToPadding="false">
         </ListView>
 
         <FrameLayout
@@ -92,8 +67,7 @@
                 android:backgroundTint="@color/green"
                 android:text="@string/vpn_on"
                 android:elevation="10dp"
-                android:textStyle="bold"
-                android:visibility="invisible"/>
+                android:textStyle="bold"/>
 
             <TextView
                 android:id="@+id/off_indicator"
@@ -107,7 +81,24 @@
                 android:backgroundTint="@color/red"
                 android:text="@string/vpn_off"
                 android:elevation="10dp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                android:visibility="invisible"/>
+
+            <ProgressBar
+                android:id="@+id/loading_indicator"
+                android:paddingBottom="5dp"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:gravity="center_horizontal"
+                android:layout_marginStart="25dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/chat_bubble"
+                android:backgroundTint="@color/yellow"
+                android:indeterminate="true"
+                android:elevation="10dp"
+                android:visibility="invisible"/>
         </FrameLayout>
     </android.support.design.widget.CoordinatorLayout>
 </RelativeLayout>

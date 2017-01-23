@@ -34,6 +34,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.security.KeyChain;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -74,10 +75,10 @@ public class MainActivity extends AppCompatActivity {
     private MainListViewAdapter adapter;
     private DatabaseHandler mDbHandler; // [w3kim@uwaterloo.ca] : factored out as an instance var
 
-    private View loadingView;
-    private View contentView;
     private View onIndicator;
     private View offIndicator;
+    private View loadingIndicator;
+    private FloatingActionButton vpnToggle;
 
     private boolean bounded = false;
     private boolean keyChainInstalled = false;
@@ -97,8 +98,7 @@ public class MainActivity extends AppCompatActivity {
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    showOnIndicator(true);
-                    showLoadingView(false);
+                    showIndicator(Status.ON);
                 }
             }, Math.max(2000 - difference, 0));
         }
@@ -119,12 +119,11 @@ public class MainActivity extends AppCompatActivity {
 
         myReceiver = new ReceiveMessages();
 
-        loadingView = findViewById(R.id.loading_view);
-        contentView = findViewById(R.id.content);
         onIndicator = findViewById(R.id.on_indicator);
         offIndicator = findViewById(R.id.off_indicator);
-        listLeak = (ListView) findViewById(R.id.leaksList);
-        View vpnToggle = findViewById(R.id.on_off_button);
+        loadingIndicator = findViewById(R.id.loading_indicator);
+        listLeak = (ListView)findViewById(R.id.leaksList);
+        vpnToggle = (FloatingActionButton)findViewById(R.id.on_off_button);
 
         vpnToggle.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -138,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 } else {
                     Logger.d(TAG, "Connect toggled OFF");
-                    showOnIndicator(false);
+                    showIndicator(Status.OFF);
                     stopVPN();
                 }
             }
@@ -170,7 +169,6 @@ public class MainActivity extends AppCompatActivity {
             this.bindService(service, mSc, Context.BIND_AUTO_CREATE);
             bounded = true;
         }
-        showOnIndicator(MyVpnService.isRunning());
     }
 
     @Override
@@ -183,10 +181,14 @@ public class MainActivity extends AppCompatActivity {
             myReceiverIsRegistered = true;
         }
 
-        //If the VPN was started before the user closed the app and still is not running, show
-        //the loading view once again.
         if (MyVpnService.isStarted()) {
-            showLoadingView(true);
+            //If the VPN was started before the user closed the app and still is not running, show
+            //the loading indicator once again.
+            showIndicator(Status.LOADING);
+        } else if (MyVpnService.isRunning()) {
+            showIndicator(Status.ON);
+        } else {
+            showIndicator(Status.OFF);
         }
     }
 
@@ -208,18 +210,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void showLoadingView(boolean show) {
-        loadingView.setVisibility(show ? View.VISIBLE : View.GONE);
-        contentView.setVisibility(show ? View.GONE : View.VISIBLE);
-
-        if (show) {
-            loadingViewShownTime = System.currentTimeMillis();
-        }
+    private enum Status {
+        ON,
+        OFF,
+        LOADING
     }
 
-    private void showOnIndicator(boolean show) {
-        onIndicator.setVisibility(show ? View.VISIBLE : View.GONE);
-        offIndicator.setVisibility(show ? View.GONE : View.VISIBLE);
+    private void showIndicator(Status status) {
+        onIndicator.setVisibility(status == Status.ON ? View.VISIBLE : View.GONE);
+        offIndicator.setVisibility(status == Status.OFF ? View.VISIBLE : View.GONE);
+        loadingIndicator.setVisibility(status == Status.LOADING ? View.VISIBLE : View.GONE);
+
+        vpnToggle.setEnabled(status != Status.LOADING);
+        vpnToggle.setAlpha(status == Status.LOADING ? 0.3f : 1.0f);
+
+        if (status == Status.LOADING) {
+            loadingViewShownTime = System.currentTimeMillis();
+        }
     }
 
     @Override
@@ -343,7 +350,7 @@ public class MainActivity extends AppCompatActivity {
             if (result == RESULT_OK) {
                 Logger.d(TAG, "Starting VPN service");
 
-                showLoadingView(true);
+                showIndicator(Status.LOADING);
                 mVPN.startVPN(this);
             }
         }
