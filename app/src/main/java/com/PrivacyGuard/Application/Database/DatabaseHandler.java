@@ -126,34 +126,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    //TODO: I think this resets table as soon as it goes into next month, so on the first day of a month
-    //      user would lose all data even they are from yesterday
-    public void monthlyReset() {
-        DateFormat dateFormat = new SimpleDateFormat("MM", Locale.getDefault());//TODO: get user locale
-        Date date = new Date();
-        String m = dateFormat.format(date);
-
-        SQLiteDatabase db = this.getWritableDatabase();
-
-        //reset table date_leak
-        Cursor cursor = db.query(TABLE_DATA_LEAKS, new String[]{KEY_TIME_STAMP}, null,
-                null, null, null, " date(" + KEY_TIME_STAMP + ") DESC", null);
-
-        if (cursor != null && cursor.getCount() > 0) {
-            cursor.moveToFirst();
-            String dateString = cursor.getString(0).substring(3, 5);
-
-            if (!dateString.equals(m)) {
-                resetDataLeakTable();
-                return;
-            }
-        }
-
-        if (cursor != null) {
-            cursor.close();
-        }
-    }
-
     /**
      * All CRUD(Create, Read, Update, Delete) Operations
      */

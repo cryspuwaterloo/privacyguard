@@ -1,10 +1,10 @@
 package com.PrivacyGuard.Application.Activities;
 
-import android.app.Activity;
 import android.app.TaskStackBuilder;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -159,8 +159,16 @@ public class LocationDetailActivity extends AppCompatActivity implements OnMapRe
             }
         }
 
-        LatLngBounds bounds = builder.build();
-        map.moveCamera(CameraUpdateFactory.newLatLng(bounds.getCenter()));
+        try {
+            LatLngBounds bounds = builder.build();
+            map.moveCamera(CameraUpdateFactory.newLatLng(bounds.getCenter()));
+        } catch (IllegalArgumentException e) {
+            //If the builder in the try block above has no points added to it, an exception
+            //will be thrown. This should NEVER happen because a user should never be able to
+            //navigate to this activity if there are no location leaks. However, if it does happen,
+            //fail gracefully instead of crashing.
+            Log.e(e.getClass().toString(), e.getMessage());
+        }
 
         googleMap = map;
     }

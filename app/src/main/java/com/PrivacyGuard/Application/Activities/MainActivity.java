@@ -158,7 +158,6 @@ public class MainActivity extends AppCompatActivity {
         };
 
         mDbHandler = new DatabaseHandler(this);
-        mDbHandler.monthlyReset();
     }
 
     @Override
