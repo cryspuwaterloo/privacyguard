@@ -44,10 +44,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.PrivacyGuard.Application.Database.AppSummary;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
+import com.PrivacyGuard.Application.Helpers.PreferenceHelper;
 import com.PrivacyGuard.Application.Logger;
 import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService;
 import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService.MyVpnServiceBinder;
@@ -60,6 +60,8 @@ import com.opencsv.CSVWriter;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.security.cert.Certificate;
@@ -273,7 +275,8 @@ public class MainActivity extends AppCompatActivity {
                         .show();
                 break;
             case R.id.settings:
-                Toast.makeText(this, "Settings", Toast.LENGTH_SHORT).show();
+                Intent i = new Intent(this, MyPreferencesActivity.class);
+                startActivity(i);
                 break;
         }
         return true;
@@ -289,6 +292,12 @@ public class MainActivity extends AppCompatActivity {
         if (apps == null) {
             return;
         }
+
+        Comparator<AppSummary> comparator = PreferenceHelper.getAppLeakOrder(getApplicationContext());
+        if (comparator != null) {
+            Collections.sort(apps, comparator);
+        }
+
         if (adapter == null) {
             adapter = new MainListViewAdapter(this, apps);
             listLeak.setAdapter(adapter);
