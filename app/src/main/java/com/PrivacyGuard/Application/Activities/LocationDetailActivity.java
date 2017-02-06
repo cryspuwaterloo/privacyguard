@@ -166,7 +166,7 @@ public class LocationDetailActivity extends AppCompatActivity implements OnMapRe
             //If the builder in the try block above has no points added to it, an exception
             //will be thrown. This should NEVER happen because a user should never be able to
             //navigate to this activity if there are no location leaks. However, if it does happen,
-            //fail gracefully.
+            //fail gracefully instead of crashing.
             Log.e(e.getClass().toString(), e.getMessage());
         }
 
