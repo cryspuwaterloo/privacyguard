@@ -14,6 +14,7 @@ import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,10 +45,11 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
     private String mParam2;
 
     private GoogleApiClient mGoogleApiClient;
-    private OnItemSelectedListener mListener;
+    private OnLeakButtonListener mLeakListener;
     private TextView mLatitudeText;
     private TextView mLongitudeText;
     private Location mLastLocation;
+    private Button mLeakButton;
 
     public LocationFragment() {
         // Required empty public constructor
@@ -98,6 +100,15 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
         View view = inflater.inflate(R.layout.fragment_location, container, false);
         mLatitudeText = (TextView) view.findViewById(R.id.lat);
         mLongitudeText = (TextView) view.findViewById(R.id.lon);
+        mLeakButton = (Button) view.findViewById(R.id.leak);
+        mLeakButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mLeakListener!=null){
+                    mLeakListener.leak(mLatitudeText.getText().toString()+','+mLongitudeText.getText().toString());
+                }
+            }
+        });
         return view;
     }
 
@@ -105,18 +116,16 @@ public class LocationFragment extends Fragment implements GoogleApiClient.Connec
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnItemSelectedListener) {
-            mListener = (OnItemSelectedListener) context;
-        } else {
-            //throw new RuntimeException(context.toString()
-            //        + " must implement OnItemSelectedListener");
+
+        if (context instanceof OnLeakButtonListener){
+            mLeakListener = (OnLeakButtonListener) context;
         }
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        mListener = null;
+        mLeakListener = null;
     }
 
     @Override
