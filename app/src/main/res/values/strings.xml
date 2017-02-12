@@ -10,5 +10,21 @@
     <string name="mainActivity_warn_dialog_msg">Unable to start Privacy Guard</string>
     <string name="data_leakage_frequency">Data leakage frequency this month:</string>
     <string name="title_activity_location">Map</string>
+    <string name="starting_vpn_message">Starting VPN</string>
+    <string name="vpn_running_broadcast_intent">com.PrivacyGuard.VpnRunning</string>
+    <string name="update_filter_keywords_title">Update Filter Keywords</string>
+    <string name="update_filter_keywords_message">Are you sure you want to update filter keywords? Privacy Guard will look for occurrences of these keywords while monitoring the network.</string>
+    <string name="export_data_title">Export Data</string>
+    <string name="export_data_message">Are you sure you want to export data? This will export all database tables into CSV files (one CSV file for each table).</string>
+    <string name="vpn_on">ON</string>
+    <string name="vpn_off">OFF</string>
+    <string name="leak_singular">leak</string>
+    <string name="leak_plural">leaks</string>
+
+    <!-- Preferences -->
+    <string name="pref_leak_display_order_key">pref_leak_display_order</string>
+    <string name="pref_leak_display_order_title">Leak Display Order</string>
+    <string name="pref_leak_display_order_summary">The order to display application leakages.</string>
+    <string name="pref_leak_display_order_dialog_title">Order leaks:</string>
 
 </resources>

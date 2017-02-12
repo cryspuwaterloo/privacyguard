@@ -20,6 +20,7 @@
 
     <!-- End of copy. -->
     <application
+        android:theme = "@style/AppTheme"
         android:name="com.PrivacyGuard.Application.PrivacyGuard"
         android:hardwareAccelerated="true"
         android:icon="@drawable/ic_launcher"
@@ -57,6 +58,11 @@
         <activity
             android:name=".LocationDetailActivity"
             android:parentActivityName=".AppSummaryActivity"
+            android:screenOrientation="portrait"/>
+
+        <activity
+            android:name=".MyPreferencesActivity"
+            android:parentActivityName=".MainActivity"
             android:screenOrientation="portrait"/>
 
         <receiver android:name="com.PrivacyGuard.Application.ActionReceiver"/>

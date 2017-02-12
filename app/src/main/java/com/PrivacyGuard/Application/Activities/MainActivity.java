@@ -19,52 +19,96 @@
 
 package com.PrivacyGuard.Application.Activities;
 
-import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.VpnService;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
 import android.security.KeyChain;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.CompoundButton;
 import android.widget.ListView;
-import android.widget.ToggleButton;
 
 import com.PrivacyGuard.Application.Database.AppSummary;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
+import com.PrivacyGuard.Application.Helpers.PreferenceHelper;
 import com.PrivacyGuard.Application.Logger;
 import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService;
 import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService.MyVpnServiceBinder;
 import com.PrivacyGuard.Application.PrivacyGuard;
+import com.PrivacyGuard.Plugin.KeywordDetection;
 import com.PrivacyGuard.Utilities.CertificateManager;
+import com.PrivacyGuard.Utilities.FileChooser;
+import com.PrivacyGuard.Utilities.FileUtils;
+import com.opencsv.CSVWriter;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.io.File;
+import java.io.FileWriter;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.security.cert.Certificate;
 import javax.security.cert.CertificateEncodingException;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
-    //public static final boolean debug = false;
     private static String TAG = "MainActivity";
     private static final int REQUEST_VPN = 1;
     public static final int REQUEST_CERT = 2;
-    private ArrayList<HashMap<String, String>> list;
 
-    private ToggleButton buttonConnect;
     private ListView listLeak;
     private MainListViewAdapter adapter;
+    private DatabaseHandler mDbHandler; // [w3kim@uwaterloo.ca] : factored out as an instance var
+
+    private View onIndicator;
+    private View offIndicator;
+    private View loadingIndicator;
+    private FloatingActionButton vpnToggle;
 
     private boolean bounded = false;
     private boolean keyChainInstalled = false;
     ServiceConnection mSc;
     MyVpnService mVPN;
+
+    //When the VPN has started running, remove the loading view so that the user can continue
+    //interacting with the application.
+    private class ReceiveMessages extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            long difference = System.currentTimeMillis() - loadingViewShownTime;
+
+            //The loading view should show for a minimum of 2 seconds to prevent the loading view
+            //from appearing and disappearing rapidly.
+            final Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    showIndicator(Status.VPN_ON);
+                }
+            }, Math.max(2000 - difference, 0));
+        }
+    }
+
+    private ReceiveMessages myReceiver = null;
+    private boolean myReceiverIsRegistered = false;
+    private long loadingViewShownTime = 0;
 
     /**
      * Called when the activity is first created.
@@ -72,15 +116,21 @@ public class MainActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
-        buttonConnect = (ToggleButton) findViewById(R.id.connect_button);
-        listLeak = (ListView) findViewById(R.id.leaksList);
+        myReceiver = new ReceiveMessages();
 
-        buttonConnect.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                Logger.d(TAG, "Connect toggled " + isChecked);
-                if (isChecked && !MyVpnService.isRunning()) {
+        onIndicator = findViewById(R.id.on_indicator);
+        offIndicator = findViewById(R.id.off_indicator);
+        loadingIndicator = findViewById(R.id.loading_indicator);
+        listLeak = (ListView)findViewById(R.id.leaksList);
+        vpnToggle = (FloatingActionButton)findViewById(R.id.on_off_button);
+
+        vpnToggle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!MyVpnService.isRunning()) {
                     Logger.d(TAG, "Connect toggled ON");
                     if (!keyChainInstalled) {
                         installCertificate();
@@ -89,15 +139,14 @@ public class MainActivity extends Activity {
                     }
                 } else {
                     Logger.d(TAG, "Connect toggled OFF");
+                    showIndicator(Status.VPN_OFF);
                     stopVPN();
                 }
             }
         });
 
-
         /** use bound service here because stopservice() doesn't immediately trigger onDestroy of VPN service */
         mSc = new ServiceConnection() {
-
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
                 Logger.d(TAG, "VPN Service connected");
@@ -110,11 +159,8 @@ public class MainActivity extends Activity {
             }
         };
 
-        DatabaseHandler db = new DatabaseHandler(this);
-        db.monthlyReset();
-        installCertificate();
+        mDbHandler = new DatabaseHandler(this);
     }
-
 
     @Override
     protected void onStart() {
@@ -124,9 +170,6 @@ public class MainActivity extends Activity {
             this.bindService(service, mSc, Context.BIND_AUTO_CREATE);
             bounded = true;
         }
-        buttonConnect.setChecked(MyVpnService.isRunning());
-
-
     }
 
     @Override
@@ -134,6 +177,29 @@ public class MainActivity extends Activity {
         super.onResume();
         populateLeakList();
 
+        if (!myReceiverIsRegistered) {
+            registerReceiver(myReceiver, new IntentFilter(getString(R.string.vpn_running_broadcast_intent)));
+            myReceiverIsRegistered = true;
+        }
+
+        if (MyVpnService.isStarted()) {
+            //If the VPN was started before the user closed the app and still is not running, show
+            //the loading indicator once again.
+            showIndicator(Status.VPN_STARTING);
+        } else if (MyVpnService.isRunning()) {
+            showIndicator(Status.VPN_ON);
+        } else {
+            showIndicator(Status.VPN_OFF);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (myReceiverIsRegistered) {
+            unregisterReceiver(myReceiver);
+            myReceiverIsRegistered = false;
+        }
     }
 
     @Override
@@ -143,14 +209,79 @@ public class MainActivity extends Activity {
             this.unbindService(mSc);
             bounded = false;
         }
-
-
     }
 
+    private enum Status {
+        VPN_ON,
+        VPN_OFF,
+        VPN_STARTING
+    }
 
-    /**
-     *
-     */
+    private void showIndicator(Status status) {
+        onIndicator.setVisibility(status == Status.VPN_ON ? View.VISIBLE : View.GONE);
+        offIndicator.setVisibility(status == Status.VPN_OFF ? View.VISIBLE : View.GONE);
+        loadingIndicator.setVisibility(status == Status.VPN_STARTING ? View.VISIBLE : View.GONE);
+
+        vpnToggle.setEnabled(status != Status.VPN_STARTING);
+        vpnToggle.setAlpha(status == Status.VPN_STARTING ? 0.3f : 1.0f);
+
+        if (status == Status.VPN_STARTING) {
+            loadingViewShownTime = System.currentTimeMillis();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater=getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.update_filter_keywords:
+                new AlertDialog.Builder(this)
+                        .setTitle(R.string.update_filter_keywords_title)
+                        .setMessage(R.string.update_filter_keywords_message)
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                updateFilterKeywords();
+                            }
+                        })
+                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                // do nothing
+                            }
+                        })
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();
+                break;
+            case R.id.export_data:
+                new AlertDialog.Builder(this)
+                        .setTitle(R.string.export_data_title)
+                        .setMessage(R.string.export_data_message)
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                exportData();
+                            }
+                        })
+                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                // do nothing
+                            }
+                        })
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();
+                break;
+            case R.id.settings:
+                Intent i = new Intent(this, MyPreferencesActivity.class);
+                startActivity(i);
+                break;
+        }
+        return true;
+    }
+
     public void populateLeakList() {
         // -----------------------------------------------------------------------
         // Database Fetch
@@ -161,6 +292,12 @@ public class MainActivity extends Activity {
         if (apps == null) {
             return;
         }
+
+        Comparator<AppSummary> comparator = PreferenceHelper.getAppLeakOrder(getApplicationContext());
+        if (comparator != null) {
+            Collections.sort(apps, comparator);
+        }
+
         if (adapter == null) {
             adapter = new MainListViewAdapter(this, apps);
             listLeak.setAdapter(adapter);
@@ -188,8 +325,9 @@ public class MainActivity extends Activity {
      */
     public void installCertificate() {
         boolean certInstalled = CertificateManager.isCACertificateInstalled(MyVpnService.CADir, MyVpnService.CAName, MyVpnService.KeyType, MyVpnService.Password.toCharArray());
-        if (keyChainInstalled && certInstalled)
+        if (keyChainInstalled && certInstalled) {
             return;
+        }
         if (!certInstalled) {
             CertificateManager.initiateFactory(MyVpnService.CADir, MyVpnService.CAName, MyVpnService.CertName, MyVpnService.KeyType, MyVpnService.Password.toCharArray());
         }
@@ -204,7 +342,6 @@ public class MainActivity extends Activity {
         } catch (CertificateEncodingException e) {
             Logger.e(TAG, "Certificate Encoding Error", e);
         }
-
     }
 
     /**
@@ -216,20 +353,16 @@ public class MainActivity extends Activity {
             keyChainInstalled = result == RESULT_OK;
             if (keyChainInstalled) {
                 startVPN();
-            } else {
-                buttonConnect.setChecked(false);
             }
         } else if (request == REQUEST_VPN) {
             if (result == RESULT_OK) {
                 Logger.d(TAG, "Starting VPN service");
+
+                showIndicator(Status.VPN_STARTING);
                 mVPN.startVPN(this);
-            } else {
-                buttonConnect.setChecked(false);    // update UI in case user doesn't give consent to VPN
             }
         }
-
     }
-
 
     private void startVPN() {
         if (!bounded) {
@@ -261,5 +394,72 @@ public class MainActivity extends Activity {
             bounded = false;
         }
         mVPN.stopVPN();
+    }
+
+    /**
+     * [w3kim@uwaterloo.ca]
+     * Update Filtering Keywords
+     */
+    public void updateFilterKeywords() {
+        new FileChooser(this).setFileListener(new FileChooser.FileSelectedListener() {
+            @Override
+            public void fileSelected(final File file) {
+                // this is the path where the chosen file gets copied to
+                String path = String.format("%s/%s",
+                        getFilesDir().getAbsolutePath(), KeywordDetection.KEYWORDS_FILE_NAME);
+
+                // check if there is an existing file
+                File keywords = new File(path);
+                if (keywords.exists()) {
+                    keywords.delete();
+                }
+
+                // copy the file to the path
+                FileUtils.copyFile(file, keywords.getAbsolutePath());
+                // notify the plugin the file has been updated
+                KeywordDetection.invalidate();
+            }
+        }).showDialog();
+    }
+
+    /**
+     * [w3kim@uwaterloo.ca]
+     * Export DB contents to CSV files
+     */
+    public void exportData() {
+        File exportDir = new File(Environment.getExternalStorageDirectory(), "privacyguard");
+        if (!exportDir.exists()) {
+            if (!exportDir.mkdirs()) {
+                Log.e(TAG, "cannot create directories: " + exportDir.getAbsolutePath());
+            }
+        }
+
+        long timestamp = System.currentTimeMillis();
+        for (String table : mDbHandler.getTables()) {
+            File file = new File(exportDir,
+                    String.format("pg-export-%s-%s.csv", timestamp, table));
+            try {
+                file.createNewFile();
+                CSVWriter csvWrite = new CSVWriter(new FileWriter(file));
+                SQLiteDatabase db = mDbHandler.getReadableDatabase();
+                Cursor curCSV = db.rawQuery("SELECT * FROM " + table, null);
+                csvWrite.writeNext(curCSV.getColumnNames());
+                while (curCSV.moveToNext()) {
+                    //Which column you want to exprort
+                    int numColumns = curCSV.getColumnCount();
+                    String[] arrStr = new String[numColumns];
+                    for (int i = 0; i < numColumns; i++) {
+                        arrStr[i] = curCSV.getString(i);
+                    }
+                    csvWrite.writeNext(arrStr);
+                }
+                csvWrite.close();
+                curCSV.close();
+
+                Log.d(TAG, String.format("table '%s' has been exported to '%s'", table, file.getAbsolutePath()));
+            } catch (Exception sqlEx) {
+                Log.e(TAG, sqlEx.getMessage(), sqlEx);
+            }
+        }
     }
 }

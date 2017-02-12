@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.TaskStackBuilder;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.widget.CompoundButton;
 import android.widget.ListView;
@@ -19,7 +20,7 @@ import java.util.List;
 /**
  * Created by justinhu on 16-03-11.
  */
-public class DetailActivity extends Activity {
+public class DetailActivity extends AppCompatActivity {
 
     private int notifyId;
     private String packageName;
@@ -34,7 +35,7 @@ public class DetailActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setContentView(R.layout.activity_detail);
 
         // Get the message from the intent
