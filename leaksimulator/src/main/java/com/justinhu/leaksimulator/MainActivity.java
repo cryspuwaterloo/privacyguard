@@ -19,7 +19,6 @@ import android.view.View;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, HomeFragment.OnItemSelectedListener, OnLeakButtonListener {
 
-    private TCPServer server;
     private CharSequence mTitle;
     private DrawerLayout mDrawer;
     private NavigationView mNavigationView;
@@ -54,8 +53,6 @@ public class MainActivity extends AppCompatActivity
 
         mFragmentManager.beginTransaction().add(R.id.content_frame, new HomeFragment()).commit();
 
-        server = new TCPServer();
-        server.start();
     }
 
     @Override
@@ -74,7 +71,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onDestroy(){
         super.onDestroy();
-        server.terminate();
     }
     private void selectMenuItem(int id) {
         MenuItem item = mNavigationView.getMenu().findItem(id);

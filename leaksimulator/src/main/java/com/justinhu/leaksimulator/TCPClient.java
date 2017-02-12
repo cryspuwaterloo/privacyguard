@@ -14,7 +14,7 @@ import java.net.Socket;
 public class TCPClient extends AsyncTask<String,Void,Void>{
 
     private String serverMessage;
-    public static final String SERVERIP = "10.8.0.1"; //localhost
+    public static final String SERVERIP = "192.168.2.132"; //host machine
     public static final int SERVERPORT = 4444;
     private boolean mRun = false;
 
