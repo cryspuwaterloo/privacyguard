@@ -20,11 +20,14 @@
     <string name="vpn_off">OFF</string>
     <string name="leak_singular">leak</string>
     <string name="leak_plural">leaks</string>
+    <string name="settings">Settings</string>
 
     <!-- Preferences -->
     <string name="pref_leak_display_order_key">pref_leak_display_order</string>
     <string name="pref_leak_display_order_title">Leak Display Order</string>
     <string name="pref_leak_display_order_summary">The order to display application leakages.</string>
     <string name="pref_leak_display_order_dialog_title">Order leaks:</string>
+    <string name="export_data">Export Data</string>
+    <string name="update_filter_keywords">Update Filter Keywords</string>
 
 </resources>

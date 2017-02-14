@@ -240,40 +240,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
-            case R.id.update_filter_keywords:
-                new AlertDialog.Builder(this)
-                        .setTitle(R.string.update_filter_keywords_title)
-                        .setMessage(R.string.update_filter_keywords_message)
-                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                updateFilterKeywords();
-                            }
-                        })
-                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                // do nothing
-                            }
-                        })
-                        .setIcon(android.R.drawable.ic_dialog_alert)
-                        .show();
-                break;
-            case R.id.export_data:
-                new AlertDialog.Builder(this)
-                        .setTitle(R.string.export_data_title)
-                        .setMessage(R.string.export_data_message)
-                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                exportData();
-                            }
-                        })
-                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                // do nothing
-                            }
-                        })
-                        .setIcon(android.R.drawable.ic_dialog_alert)
-                        .show();
-                break;
             case R.id.settings:
                 Intent i = new Intent(this, MyPreferencesActivity.class);
                 startActivity(i);
@@ -394,72 +360,5 @@ public class MainActivity extends AppCompatActivity {
             bounded = false;
         }
         mVPN.stopVPN();
-    }
-
-    /**
-     * [w3kim@uwaterloo.ca]
-     * Update Filtering Keywords
-     */
-    public void updateFilterKeywords() {
-        new FileChooser(this).setFileListener(new FileChooser.FileSelectedListener() {
-            @Override
-            public void fileSelected(final File file) {
-                // this is the path where the chosen file gets copied to
-                String path = String.format("%s/%s",
-                        getFilesDir().getAbsolutePath(), KeywordDetection.KEYWORDS_FILE_NAME);
-
-                // check if there is an existing file
-                File keywords = new File(path);
-                if (keywords.exists()) {
-                    keywords.delete();
-                }
-
-                // copy the file to the path
-                FileUtils.copyFile(file, keywords.getAbsolutePath());
-                // notify the plugin the file has been updated
-                KeywordDetection.invalidate();
-            }
-        }).showDialog();
-    }
-
-    /**
-     * [w3kim@uwaterloo.ca]
-     * Export DB contents to CSV files
-     */
-    public void exportData() {
-        File exportDir = new File(Environment.getExternalStorageDirectory(), "privacyguard");
-        if (!exportDir.exists()) {
-            if (!exportDir.mkdirs()) {
-                Log.e(TAG, "cannot create directories: " + exportDir.getAbsolutePath());
-            }
-        }
-
-        long timestamp = System.currentTimeMillis();
-        for (String table : mDbHandler.getTables()) {
-            File file = new File(exportDir,
-                    String.format("pg-export-%s-%s.csv", timestamp, table));
-            try {
-                file.createNewFile();
-                CSVWriter csvWrite = new CSVWriter(new FileWriter(file));
-                SQLiteDatabase db = mDbHandler.getReadableDatabase();
-                Cursor curCSV = db.rawQuery("SELECT * FROM " + table, null);
-                csvWrite.writeNext(curCSV.getColumnNames());
-                while (curCSV.moveToNext()) {
-                    //Which column you want to exprort
-                    int numColumns = curCSV.getColumnCount();
-                    String[] arrStr = new String[numColumns];
-                    for (int i = 0; i < numColumns; i++) {
-                        arrStr[i] = curCSV.getString(i);
-                    }
-                    csvWrite.writeNext(arrStr);
-                }
-                csvWrite.close();
-                curCSV.close();
-
-                Log.d(TAG, String.format("table '%s' has been exported to '%s'", table, file.getAbsolutePath()));
-            } catch (Exception sqlEx) {
-                Log.e(TAG, sqlEx.getMessage(), sqlEx);
-            }
-        }
     }
 }

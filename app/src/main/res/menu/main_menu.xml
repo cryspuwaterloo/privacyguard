@@ -2,21 +2,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/update_filter_keywords"
-        android:icon="@drawable/update"
-        app:showAsAction="ifRoom"
-        android:orderInCategory="1"
-        android:title="Update Filter Keywords"/>
-    <item
-        android:id="@+id/export_data"
-        android:icon="@drawable/export"
-        app:showAsAction="ifRoom"
-        android:orderInCategory="2"
-        android:title="Export Data"/>
-    <item
         android:id="@+id/settings"
-        android:icon="@drawable/settings"
-        app:showAsAction="ifRoom"
-        android:orderInCategory="3"
-        android:title="Settings"/>
+        app:showAsAction="never"
+        android:orderInCategory="1"
+        android:title="@string/settings"/>
 </menu>
