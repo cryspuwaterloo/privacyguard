@@ -7,4 +7,5 @@
     <color name="red">#fa543b</color>
     <color name="yellow">#eafa3b</color>
     <color name="transparent">#00000000</color>
+    <color name="grey">#545454</color>
 </resources>
