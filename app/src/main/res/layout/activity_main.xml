@@ -14,91 +14,85 @@
      limitations under the License.
 -->
 
-
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".MainActivity"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:layout_height="match_parent">
 
-    <android.support.design.widget.CoordinatorLayout
+    <ListView android:id="@+id/leaksList"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:paddingBottom="88dp"
+        android:clipToPadding="false">
+    </ListView>
 
-        <ListView android:id="@+id/leaksList"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingBottom="88dp"
-            android:clipToPadding="false">
-        </ListView>
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_anchorGravity="bottom|right"
+        app:layout_anchor="@id/leaksList">
 
-        <FrameLayout
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/on_off_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_anchorGravity="bottom|right"
-            app:layout_anchor="@id/leaksList">
+            app:fabSize="normal"
+            app:rippleColor="@color/background_floating_material_dark"
+            android:layout_margin="16dp"/>
 
-            <android.support.design.widget.FloatingActionButton
-                android:src="@android:color/transparent"
-                android:id="@+id/on_off_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                app:fabSize="normal"
-                app:rippleColor="@color/background_floating_material_dark"
-                android:layout_margin="16dp"/>
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center"
+            android:src="@drawable/vpn"
+            android:elevation="10dp"/>
 
-            <ImageView
-                android:layout_width="40dp"
-                android:layout_height="30dp"
-                android:layout_gravity="center"
-                android:src="@drawable/vpn"
-                android:elevation="10dp"/>
+        <TextView
+            android:id="@+id/on_indicator"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:paddingTop="3dp"
+            android:gravity="center_horizontal"
+            android:layout_marginStart="25dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/chat_bubble"
+            android:backgroundTint="@color/green"
+            android:text="@string/vpn_on"
+            android:elevation="10dp"
+            android:textStyle="bold"/>
 
-            <TextView
-                android:id="@+id/on_indicator"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:paddingTop="3dp"
-                android:gravity="center_horizontal"
-                android:layout_marginStart="25dp"
-                android:layout_gravity="center_horizontal"
-                android:background="@drawable/chat_bubble"
-                android:backgroundTint="@color/green"
-                android:text="@string/vpn_on"
-                android:elevation="10dp"
-                android:textStyle="bold"/>
+        <TextView
+            android:id="@+id/off_indicator"
+            android:layout_width="35dp"
+            android:layout_height="30dp"
+            android:paddingTop="3dp"
+            android:gravity="center_horizontal"
+            android:layout_marginStart="25dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/chat_bubble"
+            android:backgroundTint="@color/red"
+            android:text="@string/vpn_off"
+            android:elevation="10dp"
+            android:textStyle="bold"
+            android:visibility="invisible"/>
 
-            <TextView
-                android:id="@+id/off_indicator"
-                android:layout_width="35dp"
-                android:layout_height="30dp"
-                android:paddingTop="3dp"
-                android:gravity="center_horizontal"
-                android:layout_marginStart="25dp"
-                android:layout_gravity="center_horizontal"
-                android:background="@drawable/chat_bubble"
-                android:backgroundTint="@color/red"
-                android:text="@string/vpn_off"
-                android:elevation="10dp"
-                android:textStyle="bold"
-                android:visibility="invisible"/>
-
-            <ProgressBar
-                android:id="@+id/loading_indicator"
-                android:paddingBottom="5dp"
-                android:paddingLeft="5dp"
-                android:paddingRight="5dp"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:gravity="center_horizontal"
-                android:layout_marginStart="25dp"
-                android:layout_gravity="center_horizontal"
-                android:background="@drawable/chat_bubble"
-                android:backgroundTint="@color/yellow"
-                android:indeterminate="true"
-                android:elevation="10dp"
-                android:visibility="invisible"/>
-        </FrameLayout>
-    </android.support.design.widget.CoordinatorLayout>
-</RelativeLayout>
+        <ProgressBar
+            android:id="@+id/loading_indicator"
+            android:paddingBottom="5dp"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:gravity="center_horizontal"
+            android:layout_marginStart="25dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/chat_bubble"
+            android:backgroundTint="@color/yellow"
+            android:indeterminate="true"
+            android:elevation="10dp"
+            android:visibility="invisible"/>
+    </FrameLayout>
+</android.support.design.widget.CoordinatorLayout>
