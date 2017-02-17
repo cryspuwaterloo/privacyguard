@@ -30,4 +30,9 @@
     <string name="export_data">Export Data</string>
     <string name="update_filter_keywords">Update Filter Keywords</string>
 
+    <!-- App Data Activity -->
+    <string name="permission_not_granted_message">To view usage statistics, you need to turn on\nthe Usage Access Permission.</string>
+    <string name="turn_on_permission_button">Turn On</string>
+    <string name="invalid_android_version_message" formatted="false">Your current Android version is: %d.\nYou need at least version %d to use this feature.</string>
+
 </resources>
