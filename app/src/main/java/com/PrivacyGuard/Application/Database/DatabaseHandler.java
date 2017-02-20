@@ -12,12 +12,11 @@ import com.PrivacyGuard.Application.Logger;
 import com.PrivacyGuard.Plugin.LeakInstance;
 import com.PrivacyGuard.Plugin.LeakReport;
 
-import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 
@@ -167,6 +166,16 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         // Inserting Row
         mDB.insert(TABLE_DATA_LEAKS, null, values);
+    }
+
+    public Date getDateFromTimestamp(String timestamp) {
+        Date date = null;
+        try {
+            date = mDateFormat.parse(timestamp);
+        }
+        catch (ParseException ex) {}
+
+        return date;
     }
 
     private void addLeakSummary(LeakReport rpt) {

@@ -9,13 +9,25 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.v4.util.TimeUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.PrivacyGuard.Application.Database.DataLeak;
+import com.PrivacyGuard.Application.Database.DatabaseHandler;
+import com.PrivacyGuard.Plugin.LeakReport;
+import com.androidplot.xy.LineAndPointFormatter;
+import com.androidplot.xy.SimpleXYSeries;
+import com.androidplot.xy.XYPlot;
+import com.androidplot.xy.XYSeries;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -35,9 +47,10 @@ public class AppDataActivity extends AppCompatActivity {
 
     private View invalidAndroidVersionView;
     private View permissionDisabledView;
-    private View contentView;
+    private RelativeLayout contentView;
 
     private UsageStatsManager usageStatsManager;
+    private DatabaseHandler databaseHandler;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -51,7 +64,7 @@ public class AppDataActivity extends AppCompatActivity {
 
         invalidAndroidVersionView = findViewById(R.id.invalid_android_version);
         permissionDisabledView = findViewById(R.id.permission_disabled_message);
-        contentView = findViewById(R.id.content);
+        contentView = (RelativeLayout)findViewById(R.id.content);
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP_MR1) {
             invalidAndroidVersion = true;
@@ -61,6 +74,7 @@ public class AppDataActivity extends AppCompatActivity {
         }
 
         usageStatsManager = (UsageStatsManager) getSystemService(USAGE_STATS_SERVICE);
+        databaseHandler = new DatabaseHandler(this);
 
         Button turnOnPermissionButton = (Button)findViewById(R.id.turn_on_permission_button);
         turnOnPermissionButton.setOnClickListener(new View.OnClickListener() {
@@ -106,6 +120,43 @@ public class AppDataActivity extends AppCompatActivity {
                 myUsageEvents.add(event);
             }
         }
+
+        XYPlot plot = (XYPlot) findViewById(R.id.plot);
+        plot.clear();
+
+        XYSeries seriesLocation = plotLeakCategory(LeakReport.LeakCategory.LOCATION);
+        XYSeries seriesContact = plotLeakCategory(LeakReport.LeakCategory.CONTACT);
+        XYSeries seriesDevice = plotLeakCategory(LeakReport.LeakCategory.DEVICE);
+        XYSeries seriesKeyword = plotLeakCategory(LeakReport.LeakCategory.KEYWORD);
+
+        LineAndPointFormatter locationFormat = new LineAndPointFormatter(this, R.xml.point_formatter_location);
+        LineAndPointFormatter contactFormat = new LineAndPointFormatter(this, R.xml.point_formatter_contact);
+        LineAndPointFormatter deviceFormat = new LineAndPointFormatter(this, R.xml.point_formatter_device);
+        LineAndPointFormatter keywordFormat = new LineAndPointFormatter(this, R.xml.point_formatter_keyword);
+
+        plot.addSeries(seriesLocation, locationFormat);
+        plot.addSeries(seriesContact, contactFormat);
+        plot.addSeries(seriesDevice, deviceFormat);
+        plot.addSeries(seriesKeyword, keywordFormat);
+    }
+
+    private XYSeries plotLeakCategory(LeakReport.LeakCategory category) {
+        List<DataLeak> leaks = databaseHandler.getAppLeaks(packageName, category.name());
+        Map<String, Integer> leakMap = new HashMap<>();
+        for (DataLeak leak : leaks) {
+            Integer count = leakMap.get(leak.timestamp);
+            if (count == null) {
+                count = 0;
+            }
+            leakMap.put(leak.timestamp, count + 1);
+        }
+
+        SimpleXYSeries series = new SimpleXYSeries(category.name().substring(0,1));
+        for(String timeStamp : leakMap.keySet()) {
+            series.addLast(databaseHandler.getDateFromTimestamp(timeStamp).getTime()/1000, leakMap.get(timeStamp));
+        }
+
+        return series;
     }
 
     private boolean hasUsageAccessPermission() {

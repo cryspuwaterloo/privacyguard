@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -49,5 +50,15 @@
         android:layout_height="match_parent"
         android:visibility="invisible">
 
+        <com.androidplot.xy.XYPlot
+            style="@style/APDefacto.Dark"
+            android:id="@+id/plot"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            app:title="Leakage Incidents"
+            app:rangeTitle="# of Occurrences"
+            app:domainTitle="Time"
+            app:lineLabels="left|bottom"
+            app:lineLabelRotationBottom="-45"/>
     </RelativeLayout>
 </RelativeLayout>
