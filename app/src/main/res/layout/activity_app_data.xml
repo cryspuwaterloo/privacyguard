@@ -53,15 +53,16 @@
         <RelativeLayout
             android:id="@+id/button_menu"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="50dp"
             android:paddingLeft="5dp"
             android:paddingRight="5dp"
             android:layout_alignParentTop="true"
             android:background="@color/black">
             <ImageButton
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:padding="10dp"
+                android:id="@+id/navigate_left"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:padding="5dp"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 android:src="@drawable/left_arrow"
@@ -71,13 +72,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
-                android:textSize="20sp"
+                android:textSize="18sp"
                 android:text="Leak Report"/>
 
             <ImageButton
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:padding="10dp"
+                android:id="@+id/navigate_right"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:padding="5dp"
                 android:layout_alignParentRight="true"
                 android:layout_alignParentEnd="true"
                 android:src="@drawable/right_arrow"
@@ -93,6 +95,8 @@
             app:rangeTitle="# of Occurrences"
             app:domainTitle="Time"
             app:lineLabels="left|bottom"
-            app:lineLabelRotationBottom="-45"/>
+            app:lineLabelRotationBottom="-60"
+            app:paddingLeft="10dp"
+            app:paddingRight="10dp"/>
     </RelativeLayout>
 </RelativeLayout>
