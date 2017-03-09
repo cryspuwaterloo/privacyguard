@@ -35,4 +35,8 @@
     <string name="turn_on_permission_button">Turn On</string>
     <string name="invalid_android_version_message" formatted="false">Your current Android version is: %d.\nYou need at least version %d to use this feature.</string>
 
+    <!-- DataLeak -->
+    <string name="type_label">Type</string>
+    <string name="time_label">Time</string>
+    <string name="content_label">Content</string>
 </resources>

@@ -91,7 +91,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             + KEY_FREQUENCY + " INTEGER,"
             + KEY_IGNORE + " INTEGER" + ")";
     private static final String[] LEAK_SUMMARY_TABLE_COLUMNS = new String[]{KEY_ID, KEY_PACKAGE, KEY_NAME, KEY_CATEGORY, KEY_FREQUENCY, KEY_IGNORE};
-    private SimpleDateFormat mDateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+    public static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
     private SQLiteDatabase mDB;
 
     public DatabaseHandler(Context context) {
@@ -144,7 +144,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put(KEY_URL_PACKAGE, packageName);
         values.put(KEY_URL_APP_NAME, appName);
-        values.put(KEY_URL_TIMESTAMP, mDateFormat.format(new Date()));
+        values.put(KEY_URL_TIMESTAMP, DATE_FORMAT.format(new Date()));
         values.put(KEY_URL_HOST, host);
         values.put(KEY_URL_RES, res);
         values.put(KEY_URL_QUERY_PARAMS, queryParams);
@@ -171,7 +171,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public Date getDateFromTimestamp(String timestamp) {
         Date date = null;
         try {
-            date = mDateFormat.parse(timestamp);
+            date = DATE_FORMAT.parse(timestamp);
         }
         catch (ParseException ex) {}
 
