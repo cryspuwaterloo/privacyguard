@@ -19,14 +19,27 @@ import android.widget.TextView;
 import com.PrivacyGuard.Application.Database.DataLeak;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
 import com.PrivacyGuard.Plugin.LeakReport;
+import com.androidplot.ui.Size;
+import com.androidplot.ui.SizeMode;
+import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.SimpleXYSeries;
+import com.androidplot.xy.StepMode;
+import com.androidplot.xy.XYGraphWidget;
 import com.androidplot.xy.XYPlot;
 import com.androidplot.xy.XYSeries;
 
+import java.text.DateFormat;
+import java.text.FieldPosition;
+import java.text.Format;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -97,6 +110,7 @@ public class AppDataActivity extends AppCompatActivity {
 
     private void setViewVisibility() {
         if (invalidAndroidVersion) {
+            //boolean retVal = invalidAndroidVersionView.getVisibility() == View.VISIBLE;
             invalidAndroidVersionView.setVisibility(View.VISIBLE);
             permissionDisabledView.setVisibility(View.INVISIBLE);
             contentView.setVisibility(View.INVISIBLE);
@@ -108,55 +122,139 @@ public class AppDataActivity extends AppCompatActivity {
         contentView.setVisibility(hasPermission ? View.VISIBLE : View.INVISIBLE);
     }
 
+    private List<DataLeak> leaksList = new ArrayList<>();
+    private List<UsageEvents.Event> appUsageEvents = new ArrayList<>();
+    private int currentListIndex = -1;
+
     private void setUpData() {
         long time = System.currentTimeMillis();
         UsageEvents usageEvents = usageStatsManager.queryEvents(time - TimeUnit.DAYS.toMillis(30), time);
 
-        List<UsageEvents.Event> myUsageEvents = new ArrayList<>();
+        appUsageEvents.clear();
         while (usageEvents.hasNextEvent()) {
             UsageEvents.Event event = new UsageEvents.Event();
             usageEvents.getNextEvent(event);
             if (event.getPackageName().equals(packageName)) {
-                myUsageEvents.add(event);
+                appUsageEvents.add(event);
             }
         }
 
+        leaksList.clear();
+        for (LeakReport.LeakCategory category : LeakReport.LeakCategory.values()) {
+            leaksList.addAll(databaseHandler.getAppLeaks(packageName, category.name()));
+        }
+        Collections.sort(leaksList);
+
+        currentListIndex = leaksList.size() - 1;
+
+        setUpGraph();
+    }
+
+    private void setUpGraph() {
         XYPlot plot = (XYPlot) findViewById(R.id.plot);
         plot.clear();
 
-        XYSeries seriesLocation = plotLeakCategory(LeakReport.LeakCategory.LOCATION);
-        XYSeries seriesContact = plotLeakCategory(LeakReport.LeakCategory.CONTACT);
-        XYSeries seriesDevice = plotLeakCategory(LeakReport.LeakCategory.DEVICE);
-        XYSeries seriesKeyword = plotLeakCategory(LeakReport.LeakCategory.KEYWORD);
+        DataLeak centerLeak = leaksList.get(currentListIndex);
+        Date centerDate = databaseHandler.getDateFromTimestamp(centerLeak.timestamp);
+        long centerMillis = centerDate.getTime();
+        long range = 1000 * 10;
 
-        LineAndPointFormatter locationFormat = new LineAndPointFormatter(this, R.xml.point_formatter_location);
-        LineAndPointFormatter contactFormat = new LineAndPointFormatter(this, R.xml.point_formatter_contact);
-        LineAndPointFormatter deviceFormat = new LineAndPointFormatter(this, R.xml.point_formatter_device);
-        LineAndPointFormatter keywordFormat = new LineAndPointFormatter(this, R.xml.point_formatter_keyword);
+        long domainLowerBound = centerMillis - range;
+        long domainUpperBound = centerMillis + range;
+        plot.setDomainBoundaries(centerMillis - range, centerMillis + range, BoundaryMode.FIXED);
+        int rangeUpperBound = 0;
 
-        plot.addSeries(seriesLocation, locationFormat);
-        plot.addSeries(seriesContact, contactFormat);
-        plot.addSeries(seriesDevice, deviceFormat);
-        plot.addSeries(seriesKeyword, keywordFormat);
+        LeakReport.LeakCategory[] leakCategories = LeakReport.LeakCategory.values();
+        List<Map<String, Integer>> leakMaps = new ArrayList<>();
+        int[] lineFormats = {R.xml.point_formatter_location, R.xml.point_formatter_contact, R.xml.point_formatter_device, R.xml.point_formatter_keyword};
+
+        for (int i = 0; i < leakCategories.length; i++) {
+            leakMaps.add(new HashMap<String, Integer>());
+        }
+        
+        int searchIndex = currentListIndex;
+        while (searchIndex >= 0) {
+            DataLeak leak = leaksList.get(searchIndex);
+            if (databaseHandler.getDateFromTimestamp(leak.timestamp).getTime() < domainLowerBound) {
+                break;
+            }
+            
+            LeakReport.LeakCategory category = LeakReport.LeakCategory.valueOf(leak.category);
+            Map<String, Integer> map = leakMaps.get(category.ordinal());
+            Integer value = map.get(leak.timestamp);
+            if (value == null) {
+                value = 0;
+            }
+            map.put(leak.timestamp, value + 1);
+            if (value + 1 > rangeUpperBound) rangeUpperBound = value + 1;
+            
+            searchIndex--;
+        }
+        
+        searchIndex = currentListIndex + 1;
+        while (searchIndex < leaksList.size()) {
+            DataLeak leak = leaksList.get(searchIndex);
+            if (databaseHandler.getDateFromTimestamp(leak.timestamp).getTime() > domainUpperBound) {
+                break;
+            }
+
+            LeakReport.LeakCategory category = LeakReport.LeakCategory.valueOf(leak.category);
+            Map<String, Integer> map = leakMaps.get(category.ordinal());
+            Integer value = map.get(leak.timestamp);
+            if (value == null) {
+                value = 0;
+            }
+            map.put(leak.timestamp, value + 1);
+            if (value + 1 > rangeUpperBound) rangeUpperBound = value + 1;
+
+            searchIndex++;
+        }
+
+        for (int i = 0; i < leakCategories.length; i++) {
+            SimpleXYSeries series = new SimpleXYSeries(leakCategories[i].name());
+            Map<String, Integer> leaks = leakMaps.get(i);
+            for(String timeStamp : leaks.keySet()) {
+                series.addLast(databaseHandler.getDateFromTimestamp(timeStamp).getTime(), leaks.get(timeStamp));
+            }
+            plot.addSeries(series, new LineAndPointFormatter(this, lineFormats[i]));
+        }
+
+        rangeUpperBound++;
+        plot.setRangeBoundaries(0, rangeUpperBound + rangeUpperBound % 2, BoundaryMode.FIXED);
+        plot.setRangeStep(StepMode.INCREMENT_BY_VAL, 2);
+        plot.setDomainStep(StepMode.INCREMENT_BY_VAL, 2000);
+        DateFormat dateFormat = new SimpleDateFormat("MMMM dd, yyyy", Locale.CANADA);
+        plot.setTitle(dateFormat.format(new Date(domainUpperBound)));
+        plot.getGraph().getLineLabelStyle(XYGraphWidget.Edge.BOTTOM).setFormat(new GraphDomainFormat());
+        plot.getGraph().getLineLabelStyle(XYGraphWidget.Edge.LEFT).setFormat(new GraphRangeFormat());
+        plot.getLegend().setSize(new Size(200, SizeMode.ABSOLUTE, 400, SizeMode.ABSOLUTE));
     }
 
-    private XYSeries plotLeakCategory(LeakReport.LeakCategory category) {
-        List<DataLeak> leaks = databaseHandler.getAppLeaks(packageName, category.name());
-        Map<String, Integer> leakMap = new HashMap<>();
-        for (DataLeak leak : leaks) {
-            Integer count = leakMap.get(leak.timestamp);
-            if (count == null) {
-                count = 0;
-            }
-            leakMap.put(leak.timestamp, count + 1);
-        }
+    private static class GraphDomainFormat extends Format {
+        private static DateFormat dateFormat = new SimpleDateFormat("hh:mm:ss aa", Locale.CANADA);
 
-        SimpleXYSeries series = new SimpleXYSeries(category.name().substring(0,1));
-        for(String timeStamp : leakMap.keySet()) {
-            series.addLast(databaseHandler.getDateFromTimestamp(timeStamp).getTime()/1000, leakMap.get(timeStamp));
+        @Override
+        public StringBuffer format(Object obj, StringBuffer toAppendTo, FieldPosition pos) {
+            long millis = ((Number) obj).longValue();
+            return toAppendTo.append(dateFormat.format(new Date(millis)));
         }
+        @Override
+        public Object parseObject(String source, ParsePosition pos) {
+            return null;
+        }
+    }
 
-        return series;
+    private static class GraphRangeFormat extends Format {
+
+        @Override
+        public StringBuffer format(Object obj, StringBuffer toAppendTo, FieldPosition pos) {
+            int quantity = ((Number) obj).intValue();
+            return toAppendTo.append(quantity);
+        }
+        @Override
+        public Object parseObject(String source, ParsePosition pos) {
+            return null;
+        }
     }
 
     private boolean hasUsageAccessPermission() {

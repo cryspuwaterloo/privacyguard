@@ -117,7 +117,7 @@ public class LocationDetailActivity extends AppCompatActivity implements OnMapRe
         if (details == null) {
             return;
         }
-        DataLeak header = new DataLeak("Type","Content","Time");
+        DataLeak header = new DataLeak("Type","Content","Time", null);
         details.add(0, header);
         if (adapter == null) {
             adapter = new DetailListViewAdapter(this, details);

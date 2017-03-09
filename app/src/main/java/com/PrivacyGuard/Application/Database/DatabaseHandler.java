@@ -229,15 +229,12 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
 
     public List<DataLeak> getAppLeaks(String packageName, String category) {
-        List<DataLeak> leakList = new ArrayList<DataLeak>();
+        List<DataLeak> leakList = new ArrayList<>();
         Cursor cursor = mDB.query(TABLE_DATA_LEAKS, new String[]{KEY_TYPE, KEY_CONTENT, KEY_TIME_STAMP}, KEY_PACKAGE + "=? AND " + KEY_CATEGORY + "=?", new String[]{packageName, category}, null, null, null);
         if (cursor != null) {
             if (cursor.moveToFirst()) {
                 do {
-                    DataLeak leak = new DataLeak();
-                    leak.type = cursor.getString(0);
-                    leak.leakContent = cursor.getString(1);
-                    leak.timestamp = cursor.getString(2);
+                    DataLeak leak = new DataLeak(category, cursor.getString(0), cursor.getString(1), cursor.getString(2));
                     leakList.add(leak);
                 } while (cursor.moveToNext());
             }
