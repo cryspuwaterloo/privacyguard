@@ -6,6 +6,8 @@ import android.app.usage.UsageEvents;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -19,10 +21,12 @@ import android.widget.TextView;
 
 import com.PrivacyGuard.Application.Database.DataLeak;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
+import com.PrivacyGuard.Application.Helpers.PreferenceHelper;
 import com.PrivacyGuard.Plugin.LeakReport;
 import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
 import com.androidplot.xy.SimpleXYSeries;
+import com.androidplot.xy.StepFormatter;
 import com.androidplot.xy.StepMode;
 import com.androidplot.xy.XYGraphWidget;
 import com.androidplot.xy.XYPlot;
@@ -206,7 +210,8 @@ public class AppDataActivity extends AppCompatActivity {
 
         Date centerDate = organizedLeakMapKeys.get(currentKeyIndex);
         long centerMillis = centerDate.getTime();
-        long range = 1000 * 10;
+        int halfRange = PreferenceHelper.getLeakReportGraphDomainSize(this)/2;
+        long range = 1000 * halfRange;
 
         long domainLowerBound = centerMillis - range;
         long domainUpperBound = centerMillis + range;
@@ -263,19 +268,11 @@ public class AppDataActivity extends AppCompatActivity {
             searchIndex++;
         }
 
-        for (int i = 0; i < leakCategories.length; i++) {
-            SimpleXYSeries series = new SimpleXYSeries(leakCategories[i].name().substring(0, 1));
-            Map<String, Integer> leaks = leakMaps.get(i);
-            for(String timeStamp : leaks.keySet()) {
-                series.addLast(databaseHandler.getDateFromTimestamp(timeStamp).getTime(), leaks.get(timeStamp));
-            }
-            plot.addSeries(series, new LineAndPointFormatter(this, lineFormats[i]));
-        }
-
         rangeUpperBound++;
-        plot.setRangeBoundaries(0, rangeUpperBound + rangeUpperBound % 2, BoundaryMode.FIXED);
+        rangeUpperBound = rangeUpperBound + rangeUpperBound % 2;
+        plot.setRangeBoundaries(0, rangeUpperBound, BoundaryMode.FIXED);
         plot.setRangeStep(StepMode.INCREMENT_BY_VAL, 1);
-        plot.setDomainStep(StepMode.INCREMENT_BY_VAL, 2000);
+        plot.setDomainStep(StepMode.INCREMENT_BY_VAL, (halfRange/5) * 1000);
         DateFormat dateFormat = new SimpleDateFormat("MMMM dd, yyyy", Locale.CANADA);
         plot.setTitle(dateFormat.format(new Date(domainUpperBound)));
         plot.getGraph().getLineLabelStyle(XYGraphWidget.Edge.BOTTOM).setFormat(new GraphDomainFormat());
@@ -286,6 +283,93 @@ public class AppDataActivity extends AppCompatActivity {
         plot.getGraph().setPaddingBottom(100);
         plot.getLayoutManager().remove(plot.getLegend());
         plot.getLayoutManager().remove(plot.getDomainTitle());
+
+        Paint lineFillForeground = new Paint();
+        lineFillForeground.setColor(getResources().getColor(R.color.green));
+        lineFillForeground.setAlpha(70);
+
+        Paint lineFillBackground = new Paint();
+        lineFillBackground.setColor(getResources().getColor(R.color.red));
+        lineFillBackground.setAlpha(70);
+
+        Paint lineFillNoData = new Paint();
+        lineFillNoData.setColor(getResources().getColor(R.color.blue));
+        lineFillNoData.setAlpha(70);
+
+        StepFormatter stepFormatterForeground  = new StepFormatter(Color.WHITE, Color.WHITE);
+        stepFormatterForeground.setVertexPaint(null);
+        stepFormatterForeground.getLinePaint().setStrokeWidth(0);
+        stepFormatterForeground.setFillPaint(lineFillForeground);
+
+        StepFormatter stepFormatterBackground  = new StepFormatter(Color.WHITE, Color.WHITE);
+        stepFormatterBackground.setVertexPaint(null);
+        stepFormatterBackground.getLinePaint().setStrokeWidth(0);
+        stepFormatterBackground.setFillPaint(lineFillBackground);
+
+        StepFormatter stepFormatterNoData  = new StepFormatter(Color.WHITE, Color.WHITE);
+        stepFormatterNoData.setVertexPaint(null);
+        stepFormatterNoData.getLinePaint().setStrokeWidth(0);
+        stepFormatterNoData.setFillPaint(lineFillNoData);
+
+        SimpleXYSeries seriesForeground = new SimpleXYSeries(null);
+        SimpleXYSeries seriesBackground = new SimpleXYSeries(null);
+        SimpleXYSeries seriesNoData = new SimpleXYSeries(null);
+        UsageEvents.Event lastBackgroundForegroundEvent = null;
+        UsageEvents.Event firstEvent = null;
+        for (UsageEvents.Event event : appUsageEvents) {
+            if (event.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+                seriesForeground.addLast(event.getTimeStamp(), 0);
+                seriesForeground.addLast(event.getTimeStamp(), rangeUpperBound);
+
+                seriesBackground.addLast(event.getTimeStamp(), rangeUpperBound);
+                seriesBackground.addLast(event.getTimeStamp(), 0);
+
+                lastBackgroundForegroundEvent = event;
+                if (firstEvent == null) firstEvent = event;
+            }
+            if (event.getEventType() == UsageEvents.Event.MOVE_TO_BACKGROUND) {
+                seriesForeground.addLast(event.getTimeStamp(), rangeUpperBound);
+                seriesForeground.addLast(event.getTimeStamp(), 0);
+
+                seriesBackground.addLast(event.getTimeStamp(), 0);
+                seriesBackground.addLast(event.getTimeStamp(), rangeUpperBound);
+
+                lastBackgroundForegroundEvent = event;
+                if (firstEvent == null) firstEvent = event;
+            }
+        }
+
+        if (firstEvent == null) {
+            seriesNoData.addFirst(new Date().getTime(), rangeUpperBound);
+            seriesNoData.addFirst(0, rangeUpperBound);
+        }
+        else {
+            seriesNoData.addFirst(firstEvent.getTimeStamp(), rangeUpperBound);
+            seriesNoData.addFirst(0, rangeUpperBound);
+        }
+
+        if (lastBackgroundForegroundEvent != null) {
+            if (lastBackgroundForegroundEvent.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+                throw new RuntimeException("Should not happen.");
+            }
+            if (lastBackgroundForegroundEvent.getEventType() == UsageEvents.Event.MOVE_TO_BACKGROUND) {
+                seriesBackground.addLast(new Date().getTime(), rangeUpperBound);
+            }
+        }
+
+        plot.addSeries(seriesForeground, stepFormatterForeground);
+        plot.addSeries(seriesBackground, stepFormatterBackground);
+        plot.addSeries(seriesNoData, stepFormatterNoData);
+
+        for (int i = 0; i < leakCategories.length; i++) {
+            SimpleXYSeries leakSeries = new SimpleXYSeries(null);
+            Map<String, Integer> leaks = leakMaps.get(i);
+            for(String timeStamp : leaks.keySet()) {
+                leakSeries.addLast(databaseHandler.getDateFromTimestamp(timeStamp).getTime(), leaks.get(timeStamp));
+            }
+            plot.addSeries(leakSeries, new LineAndPointFormatter(this, lineFormats[i]));
+        }
+
         plot.redraw();
     }
 

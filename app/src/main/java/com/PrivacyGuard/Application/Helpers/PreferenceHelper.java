@@ -15,6 +15,12 @@ import java.util.Comparator;
 
 public class PreferenceHelper {
 
+    public static int getLeakReportGraphDomainSize(Context context) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+        String leakReportDomainSize = sp.getString(context.getResources().getString(R.string.pref_graph_domain_size_key), "20");
+        return Integer.valueOf(leakReportDomainSize);
+    }
+
     public static Comparator<AppSummary> getAppLeakOrder(Context context) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         String appLeakOrderString = sp.getString(context.getResources().getString(R.string.pref_leak_display_order_key), "1");

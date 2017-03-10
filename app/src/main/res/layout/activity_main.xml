@@ -59,7 +59,7 @@
             android:layout_marginStart="25dp"
             android:layout_gravity="center_horizontal"
             android:background="@drawable/chat_bubble"
-            android:backgroundTint="@color/green"
+            android:backgroundTint="@color/vpn_green"
             android:text="@string/vpn_on"
             android:elevation="10dp"
             android:textStyle="bold"/>
@@ -73,7 +73,7 @@
             android:layout_marginStart="25dp"
             android:layout_gravity="center_horizontal"
             android:background="@drawable/chat_bubble"
-            android:backgroundTint="@color/red"
+            android:backgroundTint="@color/vpn_red"
             android:text="@string/vpn_off"
             android:elevation="10dp"
             android:textStyle="bold"
@@ -90,7 +90,7 @@
             android:layout_marginStart="25dp"
             android:layout_gravity="center_horizontal"
             android:background="@drawable/chat_bubble"
-            android:backgroundTint="@color/yellow"
+            android:backgroundTint="@color/vpn_yellow"
             android:indeterminate="true"
             android:elevation="10dp"
             android:visibility="invisible"/>

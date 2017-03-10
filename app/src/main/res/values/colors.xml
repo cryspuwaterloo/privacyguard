@@ -3,14 +3,19 @@
     <color name="white">#ffffffff</color>
     <color name="black">#ff000000</color>
     <color name="gold">#B39E3E</color>
-    <color name="green">#31d620</color>
-    <color name="red">#fa543b</color>
-    <color name="yellow">#eafa3b</color>
+    <color name="green">#FF00FF00</color>
+    <color name="red">#FFFF0000</color>
+    <color name="blue">#FF0000FF</color>
+    <color name="yellow">#FFFFFF00</color>
     <color name="transparent">#00000000</color>
     <color name="grey">#545454</color>
 
-    <color name="location_color">#e13bf4</color>
-    <color name="contact_color">#6666FF</color>
-    <color name="device_color">#34fa5f</color>
-    <color name="keyword_color">#e3fa4c</color>
+    <color name="vpn_green">#31d620</color>
+    <color name="vpn_red">#fa543b</color>
+    <color name="vpn_yellow">#eafa3b</color>
+
+    <color name="location_color">#de04f7</color>
+    <color name="contact_color">#fd7226</color>
+    <color name="device_color">#11ffcc</color>
+    <color name="keyword_color">#e0fa36</color>
 </resources>

@@ -27,6 +27,12 @@
     <string name="pref_leak_display_order_title">Leak Display Order</string>
     <string name="pref_leak_display_order_summary">The order to display application leakages.</string>
     <string name="pref_leak_display_order_dialog_title">Order leaks:</string>
+
+    <string name="pref_graph_domain_size_key">pref_graph_domain_size</string>
+    <string name="pref_graph_domain_size_title">Graph Domain Size</string>
+    <string name="pref_graph_domain_size_summary">The size of the leak report graph domain.</string>
+    <string name="pref_graph_domain_size_dialog_title">Domain size:</string>
+
     <string name="export_data">Export Data</string>
     <string name="update_filter_keywords">Update Filter Keywords</string>
 
