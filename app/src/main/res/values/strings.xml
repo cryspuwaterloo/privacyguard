@@ -39,4 +39,16 @@
     <string name="type_label">Type</string>
     <string name="time_label">Time</string>
     <string name="content_label">Content</string>
+
+    <!-- Leak Categories -->
+    <string name="location_category">Location</string>
+    <string name="contact_category">Contact</string>
+    <string name="device_category">Device</string>
+    <string name="keyword_category">Keyword</string>
+
+    <!-- Android Plot Display -->
+    <string name="graph_message">This feature allows you to see when your apps are leaking compared to when the app is in the foreground or background.</string>
+    <string name="dialog_accept">OK</string>
+    <string name="leak_report_title">Leak Report</string>
+
 </resources>

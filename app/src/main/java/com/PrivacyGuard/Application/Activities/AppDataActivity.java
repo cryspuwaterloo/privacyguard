@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
@@ -101,15 +102,29 @@ public class AppDataActivity extends AppCompatActivity {
         navigateLeft.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                currentListIndex = Math.max(currentListIndex - 1, 0);
+                currentKeyIndex--;
                 setUpGraph();
             }
         });
         navigateRight.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                currentListIndex = Math.min(currentListIndex + 1, leaksList.size() - 1);
+                currentKeyIndex++;
                 setUpGraph();
+            }
+        });
+
+        ImageButton infoButton = (ImageButton)findViewById(R.id.info_button);
+        infoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                AlertDialog alertDialog = new AlertDialog.Builder(v.getContext())
+                        .setTitle(R.string.leak_report_title)
+                        .setIcon(R.drawable.info_outline)
+                        .setMessage(R.string.graph_message)
+                        .setPositiveButton(R.string.dialog_accept, null)
+                        .create();
+                alertDialog.show();
             }
         });
     }
@@ -138,9 +153,10 @@ public class AppDataActivity extends AppCompatActivity {
         contentView.setVisibility(hasPermission ? View.VISIBLE : View.INVISIBLE);
     }
 
-    private List<DataLeak> leaksList = new ArrayList<>();
     private List<UsageEvents.Event> appUsageEvents = new ArrayList<>();
-    private int currentListIndex = -1;
+    private int currentKeyIndex = -1;
+    private Map<Date, List<DataLeak>> organizedLeakMap = new HashMap<>();
+    private List<Date> organizedLeakMapKeys = new ArrayList<>();
 
     private void setUpData() {
         long time = System.currentTimeMillis();
@@ -155,20 +171,31 @@ public class AppDataActivity extends AppCompatActivity {
             }
         }
 
-        leaksList.clear();
+        organizedLeakMap.clear();
         for (LeakReport.LeakCategory category : LeakReport.LeakCategory.values()) {
-            leaksList.addAll(databaseHandler.getAppLeaks(packageName, category.name()));
+            List<DataLeak> leaks = databaseHandler.getAppLeaks(packageName, category.name());
+            for (DataLeak leak : leaks) {
+                List<DataLeak> list = organizedLeakMap.get(leak.timestampDate);
+                if (list == null) {
+                    list = new ArrayList<>();
+                    organizedLeakMap.put(leak.timestampDate, list);
+                }
+                list.add(leak);
+            }
         }
-        Collections.sort(leaksList);
 
-        currentListIndex = leaksList.size() - 1;
+        organizedLeakMapKeys.clear();
+        organizedLeakMapKeys.addAll(organizedLeakMap.keySet());
+        Collections.sort(organizedLeakMapKeys);
+
+        currentKeyIndex = organizedLeakMapKeys.size() - 1;
 
         setUpGraph();
     }
 
     private void setUpGraph() {
-        boolean navigateRightEnabled = currentListIndex < leaksList.size() - 1;
-        boolean navigateLeftEnabled = currentListIndex > 0;
+        boolean navigateRightEnabled = currentKeyIndex < organizedLeakMapKeys.size() - 1;
+        boolean navigateLeftEnabled = currentKeyIndex > 0;
         navigateRight.setEnabled(navigateRightEnabled);
         navigateRight.setAlpha(navigateRightEnabled ? 1.0f : 0.3f);
         navigateLeft.setEnabled(navigateLeftEnabled);
@@ -177,8 +204,7 @@ public class AppDataActivity extends AppCompatActivity {
         XYPlot plot = (XYPlot) findViewById(R.id.plot);
         plot.clear();
 
-        DataLeak centerLeak = leaksList.get(currentListIndex);
-        Date centerDate = databaseHandler.getDateFromTimestamp(centerLeak.timestamp);
+        Date centerDate = organizedLeakMapKeys.get(currentKeyIndex);
         long centerMillis = centerDate.getTime();
         long range = 1000 * 10;
 
@@ -195,40 +221,44 @@ public class AppDataActivity extends AppCompatActivity {
             leakMaps.add(new HashMap<String, Integer>());
         }
         
-        int searchIndex = currentListIndex;
+        int searchIndex = currentKeyIndex;
         while (searchIndex >= 0) {
-            DataLeak leak = leaksList.get(searchIndex);
-            if (databaseHandler.getDateFromTimestamp(leak.timestamp).getTime() < domainLowerBound) {
+            Date date = organizedLeakMapKeys.get(searchIndex);
+            if (date.getTime() < domainLowerBound) {
                 break;
             }
-            
-            LeakReport.LeakCategory category = LeakReport.LeakCategory.valueOf(leak.category);
-            Map<String, Integer> map = leakMaps.get(category.ordinal());
-            Integer value = map.get(leak.timestamp);
-            if (value == null) {
-                value = 0;
+
+            for (DataLeak leak : organizedLeakMap.get(date)) {
+                LeakReport.LeakCategory category = LeakReport.LeakCategory.valueOf(leak.category);
+                Map<String, Integer> map = leakMaps.get(category.ordinal());
+                Integer value = map.get(leak.timestamp);
+                if (value == null) {
+                    value = 0;
+                }
+                map.put(leak.timestamp, value + 1);
+                if (value + 1 > rangeUpperBound) rangeUpperBound = value + 1;
             }
-            map.put(leak.timestamp, value + 1);
-            if (value + 1 > rangeUpperBound) rangeUpperBound = value + 1;
             
             searchIndex--;
         }
         
-        searchIndex = currentListIndex + 1;
-        while (searchIndex < leaksList.size()) {
-            DataLeak leak = leaksList.get(searchIndex);
-            if (databaseHandler.getDateFromTimestamp(leak.timestamp).getTime() > domainUpperBound) {
+        searchIndex = currentKeyIndex + 1;
+        while (searchIndex < organizedLeakMapKeys.size()) {
+            Date date = organizedLeakMapKeys.get(searchIndex);
+            if (date.getTime() > domainUpperBound) {
                 break;
             }
 
-            LeakReport.LeakCategory category = LeakReport.LeakCategory.valueOf(leak.category);
-            Map<String, Integer> map = leakMaps.get(category.ordinal());
-            Integer value = map.get(leak.timestamp);
-            if (value == null) {
-                value = 0;
+            for (DataLeak leak : organizedLeakMap.get(date)) {
+                LeakReport.LeakCategory category = LeakReport.LeakCategory.valueOf(leak.category);
+                Map<String, Integer> map = leakMaps.get(category.ordinal());
+                Integer value = map.get(leak.timestamp);
+                if (value == null) {
+                    value = 0;
+                }
+                map.put(leak.timestamp, value + 1);
+                if (value + 1 > rangeUpperBound) rangeUpperBound = value + 1;
             }
-            map.put(leak.timestamp, value + 1);
-            if (value + 1 > rangeUpperBound) rangeUpperBound = value + 1;
 
             searchIndex++;
         }
@@ -251,9 +281,11 @@ public class AppDataActivity extends AppCompatActivity {
         plot.getGraph().getLineLabelStyle(XYGraphWidget.Edge.BOTTOM).setFormat(new GraphDomainFormat());
         plot.getGraph().getLineLabelStyle(XYGraphWidget.Edge.LEFT).setFormat(new GraphRangeFormat());
         plot.getGraph().getDomainCursorPaint().setTextSize(10);
-        plot.getGraph().setPaddingLeft(50);
-        plot.getGraph().setPaddingRight(50);
-        plot.getGraph().setPaddingBottom(200);
+        plot.getGraph().setPaddingLeft(40);
+        plot.getGraph().setPaddingRight(40);
+        plot.getGraph().setPaddingBottom(100);
+        plot.getLayoutManager().remove(plot.getLegend());
+        plot.getLayoutManager().remove(plot.getDomainTitle());
         plot.redraw();
     }
 

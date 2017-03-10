@@ -8,4 +8,9 @@
     <color name="yellow">#eafa3b</color>
     <color name="transparent">#00000000</color>
     <color name="grey">#545454</color>
+
+    <color name="location_color">#e13bf4</color>
+    <color name="contact_color">#6666FF</color>
+    <color name="device_color">#34fa5f</color>
+    <color name="keyword_color">#e3fa4c</color>
 </resources>
