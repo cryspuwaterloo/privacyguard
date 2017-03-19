@@ -9,4 +9,13 @@
         android:entries="@array/pref_leak_display_entries"
         android:entryValues="@array/pref_leak_display_values"
         android:defaultValue="1"/>
+
+    <ListPreference
+        android:key="@string/pref_graph_domain_size_key"
+        android:title="@string/pref_graph_domain_size_title"
+        android:summary="@string/pref_graph_domain_size_summary"
+        android:dialogTitle="@string/pref_graph_domain_size_title"
+        android:entries="@array/pref_graph_domain_size_entries"
+        android:entryValues="@array/pref_graph_domain_size_values"
+        android:defaultValue="20"/>
 </PreferenceScreen>

@@ -117,12 +117,17 @@ public class LocationDetailActivity extends AppCompatActivity implements OnMapRe
         if (details == null) {
             return;
         }
-        DataLeak header = new DataLeak("Type","Content","Time");
-        details.add(0, header);
+
         if (adapter == null) {
             adapter = new DetailListViewAdapter(this, details);
-            list.setAdapter(adapter);
 
+            View header = getLayoutInflater().inflate(R.layout.listview_detail, null);
+            ((TextView) header.findViewById(R.id.detail_type)).setText(R.string.type_label);
+            ((TextView) header.findViewById(R.id.detail_time)).setText(R.string.time_label);
+            ((TextView) header.findViewById(R.id.detail_content)).setText(R.string.content_label);
+
+            list.addHeaderView(header);
+            list.setAdapter(adapter);
         } else {
             adapter.updateData(details);
         }

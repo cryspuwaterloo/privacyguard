@@ -27,7 +27,34 @@
     <string name="pref_leak_display_order_title">Leak Display Order</string>
     <string name="pref_leak_display_order_summary">The order to display application leakages.</string>
     <string name="pref_leak_display_order_dialog_title">Order leaks:</string>
+
+    <string name="pref_graph_domain_size_key">pref_graph_domain_size</string>
+    <string name="pref_graph_domain_size_title">Graph Domain Size</string>
+    <string name="pref_graph_domain_size_summary">The size of the leak report graph domain.</string>
+    <string name="pref_graph_domain_size_dialog_title">Domain size:</string>
+
     <string name="export_data">Export Data</string>
     <string name="update_filter_keywords">Update Filter Keywords</string>
+
+    <!-- App Data Activity -->
+    <string name="permission_not_granted_message">To view usage statistics, you need to turn on\nthe Usage Access Permission.</string>
+    <string name="turn_on_permission_button">Turn On</string>
+    <string name="invalid_android_version_message" formatted="false">Your current Android version is: %d.\nYou need at least version %d to use this feature.</string>
+
+    <!-- DataLeak -->
+    <string name="type_label">Type</string>
+    <string name="time_label">Time</string>
+    <string name="content_label">Content</string>
+
+    <!-- Leak Categories -->
+    <string name="location_category">Location</string>
+    <string name="contact_category">Contact</string>
+    <string name="device_category">Device</string>
+    <string name="keyword_category">Keyword</string>
+
+    <!-- Android Plot Display -->
+    <string name="graph_message">This feature allows you to see when your apps are leaking compared to when the app is in the foreground or background.</string>
+    <string name="dialog_accept">OK</string>
+    <string name="leak_report_title">Leak Report</string>
 
 </resources>

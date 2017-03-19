@@ -1,11 +1,11 @@
 package com.PrivacyGuard.Application.Activities;
 
-import android.app.Activity;
 import android.app.TaskStackBuilder;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.Switch;
@@ -89,10 +89,16 @@ public class DetailActivity extends AppCompatActivity {
         if (details == null) {
             return;
         }
-        DataLeak header = new DataLeak("Type","Content","Time");
-        details.add(0, header);
+
         if (adapter == null) {
             adapter = new DetailListViewAdapter(this, details);
+
+            View header = getLayoutInflater().inflate(R.layout.listview_detail, null);
+            ((TextView) header.findViewById(R.id.detail_type)).setText(R.string.type_label);
+            ((TextView) header.findViewById(R.id.detail_time)).setText(R.string.time_label);
+            ((TextView) header.findViewById(R.id.detail_content)).setText(R.string.content_label);
+
+            list.addHeaderView(header);
             list.setAdapter(adapter);
         } else {
             adapter.updateData(details);

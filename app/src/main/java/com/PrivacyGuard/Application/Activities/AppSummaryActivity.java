@@ -1,10 +1,9 @@
 package com.PrivacyGuard.Application.Activities;
 
-import android.app.Activity;
 import android.app.TaskStackBuilder;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.NavUtils;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
@@ -91,6 +90,16 @@ public class AppSummaryActivity extends AppCompatActivity {
             }
         });
 
+        FloatingActionButton viewStats = (FloatingActionButton)findViewById(R.id.stats_button);
+        viewStats.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(getApplicationContext(), AppDataActivity.class);
+                i.putExtra(AppDataActivity.APP_NAME_INTENT, appName);
+                i.putExtra(AppDataActivity.APP_PACKAGE_INTENT, packageName);
+                startActivity(i);
+            }
+        });
     }
 
     @Override

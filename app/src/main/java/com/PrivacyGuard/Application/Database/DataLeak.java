@@ -1,29 +1,34 @@
 package com.PrivacyGuard.Application.Database;
 
-import com.PrivacyGuard.Utilities.StringUtil;
+import android.support.annotation.NonNull;
 
-import java.text.SimpleDateFormat;
+import java.text.ParseException;
 import java.util.Date;
 
-public class DataLeak {
-    //private variables
-    //int notifyId;
-    //String packageName;
-    //String appName;
-    //String category;
+public class DataLeak implements Comparable<DataLeak> {
+
+    public String category;
     public String type;
     public String leakContent;
     public String timestamp;
-    // Empty constructor
-    public DataLeak(){
-    }
+    public Date timestampDate;
 
-
-    public DataLeak( String type, String content,String timestamp){
+    public DataLeak(String category, String type, String content, String timestamp){
+        this.category = category;
         this.type = type;
         this.leakContent = content;
         this.timestamp = timestamp;
+
+        try {
+            this.timestampDate = DatabaseHandler.DATE_FORMAT.parse(timestamp);
+        }
+        catch (ParseException ex) {
+            throw new RuntimeException("Invalid timestamp for DataLeak, tried to parse: " + timestamp);
+        }
     }
 
-
+    @Override
+    public int compareTo(@NonNull DataLeak leak) {
+        return timestampDate.compareTo(leak.timestampDate);
+    }
 }
