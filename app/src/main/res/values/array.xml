@@ -18,15 +18,21 @@
 
     <string-array name="pref_graph_domain_size_entries">
         <item>20 Seconds</item>
-        <item>40 Seconds</item>
-        <item>60 Seconds</item>
-        <item>80 Seconds</item>
+        <item>1 Minute</item>
+        <item>10 Minutes</item>
+        <item>1 Hour</item>
+        <item>10 Hours</item>
+        <item>1 Day</item>
+        <item>1 Week</item>
     </string-array>
 
     <string-array name="pref_graph_domain_size_values">
         <item>20</item>
-        <item>40</item>
         <item>60</item>
-        <item>80</item>
+        <item>600</item>
+        <item>3600</item>
+        <item>36000</item>
+        <item>86400</item>
+        <item>604800</item>
     </string-array>
 </resources>
