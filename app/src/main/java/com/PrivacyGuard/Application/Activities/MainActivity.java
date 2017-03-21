@@ -22,22 +22,16 @@ package com.PrivacyGuard.Application.Activities;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.VpnService;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.security.KeyChain;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -47,19 +41,14 @@ import android.widget.ListView;
 
 import com.PrivacyGuard.Application.Database.AppSummary;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
+import com.PrivacyGuard.Application.Helpers.ActivityRequestCodes;
 import com.PrivacyGuard.Application.Helpers.PreferenceHelper;
 import com.PrivacyGuard.Application.Logger;
 import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService;
 import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService.MyVpnServiceBinder;
 import com.PrivacyGuard.Application.PrivacyGuard;
-import com.PrivacyGuard.Plugin.KeywordDetection;
 import com.PrivacyGuard.Utilities.CertificateManager;
-import com.PrivacyGuard.Utilities.FileChooser;
-import com.PrivacyGuard.Utilities.FileUtils;
-import com.opencsv.CSVWriter;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -70,8 +59,6 @@ import javax.security.cert.CertificateEncodingException;
 public class MainActivity extends AppCompatActivity {
 
     private static String TAG = "MainActivity";
-    private static final int REQUEST_VPN = 1;
-    public static final int REQUEST_CERT = 2;
 
     private ListView listLeak;
     private MainListViewAdapter adapter;
@@ -303,7 +290,7 @@ public class MainActivity extends AppCompatActivity {
             if (cert != null) {
                 intent.putExtra(KeyChain.EXTRA_CERTIFICATE, cert.getEncoded());
                 intent.putExtra(KeyChain.EXTRA_NAME, MyVpnService.CAName);
-                startActivityForResult(intent, REQUEST_CERT);
+                startActivityForResult(intent, ActivityRequestCodes.REQUEST_CERT);
             }
         } catch (CertificateEncodingException e) {
             Logger.e(TAG, "Certificate Encoding Error", e);
@@ -315,12 +302,12 @@ public class MainActivity extends AppCompatActivity {
      */
     @Override
     protected void onActivityResult(int request, int result, Intent data) {
-        if (request == REQUEST_CERT) {
+        if (request == ActivityRequestCodes.REQUEST_CERT) {
             keyChainInstalled = result == RESULT_OK;
             if (keyChainInstalled) {
                 startVPN();
             }
-        } else if (request == REQUEST_VPN) {
+        } else if (request == ActivityRequestCodes.REQUEST_VPN) {
             if (result == RESULT_OK) {
                 Logger.d(TAG, "Starting VPN service");
 
@@ -347,9 +334,9 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = VpnService.prepare(this);
         Logger.d(TAG, "VPN prepare done");
         if (intent != null) {
-            startActivityForResult(intent, REQUEST_VPN);
+            startActivityForResult(intent, ActivityRequestCodes.REQUEST_VPN);
         } else {
-            onActivityResult(REQUEST_VPN, RESULT_OK, null);
+            onActivityResult(ActivityRequestCodes.REQUEST_VPN, RESULT_OK, null);
         }
     }
 
