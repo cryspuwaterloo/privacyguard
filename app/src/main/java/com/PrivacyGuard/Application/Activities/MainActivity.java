@@ -230,9 +230,9 @@ public class MainActivity extends AppCompatActivity {
             case R.id.settings:
                 Intent i = new Intent(this, MyPreferencesActivity.class);
                 startActivity(i);
-                break;
+                return true;
         }
-        return true;
+        return super.onOptionsItemSelected(item);
     }
 
     public void populateLeakList() {

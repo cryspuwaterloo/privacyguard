@@ -443,8 +443,8 @@ public class AppDataActivity extends AppCompatActivity {
                         .setPositiveButton(R.string.dialog_accept, null)
                         .create();
                 alertDialog.show();
-                break;
+                return true;
         }
-        return true;
+        return super.onOptionsItemSelected(item);
     }
 }
