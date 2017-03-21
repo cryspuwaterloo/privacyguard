@@ -6,6 +6,7 @@ import android.app.usage.UsageEvents;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Build;
@@ -13,9 +14,13 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -57,7 +62,6 @@ public class AppDataActivity extends AppCompatActivity {
     public static final String APP_PACKAGE_INTENT = "PACKAGE_NAME";
 
     private String packageName;
-    private String appName;
 
     private boolean invalidAndroidVersion = false;
 
@@ -66,9 +70,16 @@ public class AppDataActivity extends AppCompatActivity {
     private RelativeLayout contentView;
     private ImageButton navigateLeft;
     private ImageButton navigateRight;
+    private TextView graphTitleText;
 
     private UsageStatsManager usageStatsManager;
     private DatabaseHandler databaseHandler;
+
+    //Maps a date to an int[] that contains the count of each type of leak.
+    private Map<Date, int[]> leakMap = new HashMap<>();
+    private List<Date> leakMapKeys = new ArrayList<>();
+    private int currentKeyIndex = -1;
+    private XYPlot plot;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -77,7 +88,7 @@ public class AppDataActivity extends AppCompatActivity {
         setContentView(R.layout.activity_app_data);
 
         Intent i = getIntent();
-        appName = i.getStringExtra(APP_NAME_INTENT);
+        String appName = i.getStringExtra(APP_NAME_INTENT);
         packageName = i.getStringExtra(APP_PACKAGE_INTENT);
 
         invalidAndroidVersionView = findViewById(R.id.invalid_android_version);
@@ -123,19 +134,18 @@ public class AppDataActivity extends AppCompatActivity {
             }
         });
 
-        ImageButton infoButton = (ImageButton)findViewById(R.id.info_button);
-        infoButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                AlertDialog alertDialog = new AlertDialog.Builder(v.getContext())
-                        .setTitle(R.string.leak_report_title)
-                        .setIcon(R.drawable.info_outline)
-                        .setMessage(R.string.graph_message)
-                        .setPositiveButton(R.string.dialog_accept, null)
-                        .create();
-                alertDialog.show();
-            }
-        });
+        graphTitleText = (TextView)findViewById(R.id.graph_title_text);
+
+        PackageManager pm = getPackageManager();
+        ImageView appIcon = (ImageView)findViewById(R.id.app_icon);
+        try {
+            appIcon.setImageDrawable(pm.getApplicationIcon(packageName));
+        } catch (PackageManager.NameNotFoundException e) {
+            appIcon.setImageResource(R.drawable.default_icon);
+        }
+
+        TextView appNameText = (TextView)findViewById(R.id.app_name);
+        appNameText.setText(appName);
 
         setViewVisibility();
 
@@ -160,7 +170,6 @@ public class AppDataActivity extends AppCompatActivity {
 
     private void setViewVisibility() {
         if (invalidAndroidVersion) {
-            //boolean retVal = invalidAndroidVersionView.getVisibility() == View.VISIBLE;
             invalidAndroidVersionView.setVisibility(View.VISIBLE);
             permissionDisabledView.setVisibility(View.INVISIBLE);
             contentView.setVisibility(View.INVISIBLE);
@@ -171,12 +180,6 @@ public class AppDataActivity extends AppCompatActivity {
         permissionDisabledView.setVisibility(hasPermission ? View.INVISIBLE : View.VISIBLE);
         contentView.setVisibility(hasPermission ? View.VISIBLE : View.INVISIBLE);
     }
-
-    //maps a date to an int[] that contains the count of each type of leak
-    private Map<Date, int[]> leakMap = new HashMap<>();
-    private List<Date> leakMapKeys = new ArrayList<>();
-    private int currentKeyIndex = -1;
-    private XYPlot plot = null;
 
     private void setUpDisplay() {
         boolean navigateRightEnabled = currentKeyIndex < leakMapKeys.size() - 1;
@@ -193,12 +196,19 @@ public class AppDataActivity extends AppCompatActivity {
         int halfRange = PreferenceHelper.getLeakReportGraphDomainSize(this)/2;
         long range = 1000 * halfRange;
 
-        DateFormat dateFormat = new SimpleDateFormat("MMMM dd, yyyy", Locale.CANADA);
         long domainLowerBound = centerMillis - range;
         long domainUpperBound = centerMillis + range;
         plot.setDomainBoundaries(domainLowerBound, domainUpperBound, BoundaryMode.FIXED);
-        plot.setTitle(dateFormat.format(new Date(domainUpperBound)));
         plot.setDomainStep(StepMode.INCREMENT_BY_VAL, (halfRange/5) * 1000);
+
+        DateFormat dateFormat = new SimpleDateFormat("MMMM d, yyyy", Locale.CANADA);
+        String lowerBoundDate = dateFormat.format(new Date(domainLowerBound));
+        String upperBoundDate = dateFormat.format(new Date(domainUpperBound));
+        if (lowerBoundDate.equals(upperBoundDate)) {
+            graphTitleText.setText(lowerBoundDate);
+        } else {
+            graphTitleText.setText(lowerBoundDate + " - " + upperBoundDate);
+        }
 
         int rangeUpperBound = 0;
 
@@ -280,18 +290,19 @@ public class AppDataActivity extends AppCompatActivity {
         plot.getGraph().getLineLabelStyle(XYGraphWidget.Edge.BOTTOM).setFormat(new GraphDomainFormat());
         plot.getGraph().getLineLabelStyle(XYGraphWidget.Edge.LEFT).setFormat(new GraphRangeFormat());
         plot.getGraph().getDomainCursorPaint().setTextSize(10);
-        plot.getGraph().setPaddingLeft(40);
-        plot.getGraph().setPaddingRight(40);
+        plot.getGraph().setPaddingLeft(30);
+        plot.getGraph().setPaddingRight(30);
         plot.getGraph().setPaddingBottom(100);
         plot.getLayoutManager().remove(plot.getLegend());
         plot.getLayoutManager().remove(plot.getDomainTitle());
+        plot.getLayoutManager().remove(plot.getTitle());
 
         Paint lineFillForeground = new Paint();
-        lineFillForeground.setColor(getResources().getColor(R.color.green));
+        lineFillForeground.setColor(getResources().getColor(R.color.app_status_green));
         lineFillForeground.setAlpha(70);
 
         Paint lineFillBackground = new Paint();
-        lineFillBackground.setColor(getResources().getColor(R.color.red));
+        lineFillBackground.setColor(getResources().getColor(R.color.app_status_red));
         lineFillBackground.setAlpha(70);
 
         Paint lineFillNoData = new Paint();
@@ -412,5 +423,28 @@ public class AppDataActivity extends AppCompatActivity {
         AppOpsManager appOps = (AppOpsManager)getSystemService(Context.APP_OPS_SERVICE);
         int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), getPackageName());
         return mode == AppOpsManager.MODE_ALLOWED;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.app_data_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.info:
+                AlertDialog alertDialog = new AlertDialog.Builder(this)
+                        .setTitle(R.string.leak_report_title)
+                        .setIcon(R.drawable.info_outline)
+                        .setMessage(R.string.graph_message)
+                        .setPositiveButton(R.string.dialog_accept, null)
+                        .create();
+                alertDialog.show();
+                break;
+        }
+        return true;
     }
 }

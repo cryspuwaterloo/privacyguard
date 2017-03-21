@@ -5,6 +5,6 @@
 
     <dimen name="android_plot_legend_text_height">20dp</dimen>
     <dimen name="android_plot_legend_text_width">70dp</dimen>
-    <dimen name="android_plot_legend_text_height_x2">40dp</dimen>
+    <dimen name="android_plot_legend_text_width_large">80dp</dimen>
     <dimen name="android_plot_legend_logo_height">10dp</dimen>
 </resources>

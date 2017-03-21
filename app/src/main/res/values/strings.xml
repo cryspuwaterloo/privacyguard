@@ -56,5 +56,9 @@
     <string name="graph_message">This feature allows you to see when your apps are leaking compared to when the app is in the foreground or background.</string>
     <string name="dialog_accept">OK</string>
     <string name="leak_report_title">Leak Report</string>
+    <string name="app_status_foreground">Foreground</string>
+    <string name="app_status_background">Background</string>
+    <string name="app_status_no_data">No Data</string>
+    <string name="app_data_info">Info</string>
 
 </resources>

@@ -59,6 +59,7 @@
             android:paddingRight="5dp"
             android:layout_alignParentTop="true"
             android:background="@color/black">
+
             <ImageButton
                 android:id="@+id/navigate_left"
                 android:layout_width="50dp"
@@ -69,12 +70,27 @@
                 android:src="@drawable/left_arrow"
                 android:scaleType="fitXY"/>
 
-            <TextView
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:orientation="horizontal"
                 android:layout_centerInParent="true"
-                android:textSize="18sp"
-                android:text="@string/leak_report_title"/>
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/app_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="22sp"/>
+
+                <ImageView
+                    android:id="@+id/app_icon"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:scaleType="centerInside"
+                    android:layout_marginLeft="4dp"
+                    android:layout_marginStart="4dp"/>
+            </LinearLayout>
 
             <ImageButton
                 android:id="@+id/navigate_right"
@@ -87,12 +103,26 @@
                 android:scaleType="fitXY"/>
         </RelativeLayout>
 
+        <RelativeLayout
+            android:id="@+id/graph_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/button_menu">
+
+            <TextView
+                android:id="@+id/graph_title_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:textSize="18sp"/>
+        </RelativeLayout>
+
         <com.androidplot.xy.XYPlot
             style="@style/APDefacto.Dark"
             android:id="@+id/plot"
             android:layout_width="match_parent"
             android:layout_height="fill_parent"
-            android:layout_below="@id/button_menu"
+            android:layout_below="@id/graph_title"
             android:layout_above="@+id/legend"
             app:rangeTitle="# of Occurrences"
             app:lineLabels="left|bottom"
@@ -210,11 +240,55 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <ImageButton
-                android:id="@+id/info_button"
-                android:layout_width="@dimen/android_plot_legend_text_height_x2"
-                android:layout_height="@dimen/android_plot_legend_text_height_x2"
-                android:src="@drawable/info_outline"/>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:baselineAligned="false"
+                    android:gravity="center">
+
+                    <TextView
+                        android:layout_width="@dimen/android_plot_legend_logo_height"
+                        android:layout_height="@dimen/android_plot_legend_logo_height"
+                        android:background="@drawable/rectangle_background"
+                        android:backgroundTint="@color/app_status_green"/>
+
+                    <TextView
+                        android:layout_width="@dimen/android_plot_legend_text_width_large"
+                        android:layout_height="@dimen/android_plot_legend_text_height"
+                        android:text="@string/app_status_foreground"
+                        android:paddingTop="0dp"
+                        android:paddingLeft="4dp"
+                        android:paddingStart="4dp"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:baselineAligned="false"
+                    android:gravity="center">
+
+                    <TextView
+                        android:layout_width="@dimen/android_plot_legend_logo_height"
+                        android:layout_height="@dimen/android_plot_legend_logo_height"
+                        android:background="@drawable/rectangle_background"
+                        android:backgroundTint="@color/app_status_red"/>
+
+                    <TextView
+                        android:layout_width="@dimen/android_plot_legend_text_width_large"
+                        android:layout_height="@dimen/android_plot_legend_text_height"
+                        android:text="@string/app_status_background"
+                        android:paddingTop="0dp"
+                        android:paddingLeft="4dp"
+                        android:paddingStart="4dp"/>
+                </LinearLayout>
+            </LinearLayout>
         </LinearLayout>
     </RelativeLayout>
 </RelativeLayout>

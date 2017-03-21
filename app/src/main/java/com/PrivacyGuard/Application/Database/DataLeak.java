@@ -1,11 +1,9 @@
 package com.PrivacyGuard.Application.Database;
 
-import android.support.annotation.NonNull;
-
 import java.text.ParseException;
 import java.util.Date;
 
-public class DataLeak implements Comparable<DataLeak> {
+public class DataLeak {
 
     public String category;
     public String type;
@@ -25,10 +23,5 @@ public class DataLeak implements Comparable<DataLeak> {
         catch (ParseException ex) {
             throw new RuntimeException("Invalid timestamp for DataLeak, tried to parse: " + timestamp);
         }
-    }
-
-    @Override
-    public int compareTo(@NonNull DataLeak leak) {
-        return timestampDate.compareTo(leak.timestampDate);
     }
 }
