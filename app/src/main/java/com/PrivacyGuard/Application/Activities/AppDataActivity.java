@@ -16,6 +16,7 @@ import android.view.MenuItem;
 
 import com.PrivacyGuard.Application.Database.DataLeak;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
+import com.PrivacyGuard.Application.Fragments.LeakQueryFragment;
 import com.PrivacyGuard.Application.Fragments.LeakReportFragment;
 import com.PrivacyGuard.Application.Fragments.LeakSummaryFragment;
 import com.PrivacyGuard.Application.Helpers.ActivityRequestCodes;
@@ -37,6 +38,7 @@ public class AppDataActivity extends AppCompatActivity implements AppDataInterfa
 
     private LeakReportFragment leakReportFragment;
     private LeakSummaryFragment leakSummaryFragment;
+    private LeakQueryFragment leakQueryFragment;
 
     private List<DataLeak> locationLeaks;
     private List<DataLeak> contactLeaks;
@@ -58,6 +60,7 @@ public class AppDataActivity extends AppCompatActivity implements AppDataInterfa
 
         leakReportFragment = new LeakReportFragment();
         leakSummaryFragment = new LeakSummaryFragment();
+        leakQueryFragment = new LeakQueryFragment();
 
         DatabaseHandler databaseHandler = new DatabaseHandler(this);
         locationLeaks = databaseHandler.getAppLeaks(packageName, LeakReport.LeakCategory.LOCATION.name());
@@ -106,11 +109,9 @@ public class AppDataActivity extends AppCompatActivity implements AppDataInterfa
 
     public class CustomFragmentPagerAdapter extends FragmentPagerAdapter {
         private String tabTitles[] = new String[] { "Report", "Summary", "Query"};
-        private Context context;
 
         public CustomFragmentPagerAdapter(FragmentManager fm, Context context) {
             super(fm);
-            this.context = context;
         }
 
         @Override
@@ -125,9 +126,11 @@ public class AppDataActivity extends AppCompatActivity implements AppDataInterfa
                     return leakReportFragment;
                 case 1:
                     return leakSummaryFragment;
+                case 2:
+                    return leakQueryFragment;
+                default:
+                    return null;
             }
-
-            return new Fragment();
         }
 
         @Override
