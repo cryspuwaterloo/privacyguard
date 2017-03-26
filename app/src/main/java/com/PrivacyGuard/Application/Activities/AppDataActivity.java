@@ -14,29 +14,37 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
+import com.PrivacyGuard.Application.Database.DataLeak;
+import com.PrivacyGuard.Application.Database.DatabaseHandler;
 import com.PrivacyGuard.Application.Fragments.LeakReportFragment;
 import com.PrivacyGuard.Application.Fragments.LeakSummaryFragment;
 import com.PrivacyGuard.Application.Helpers.ActivityRequestCodes;
+import com.PrivacyGuard.Application.Interfaces.AppDataInterface;
+import com.PrivacyGuard.Plugin.LeakReport;
+
+import java.util.List;
 
 /**
  * Created by lucas on 16/02/17.
  */
 
-public class AppDataActivity extends AppCompatActivity {
+public class AppDataActivity extends AppCompatActivity implements AppDataInterface {
 
     public static final String APP_NAME_INTENT = "APP_NAME";
     public static final String APP_PACKAGE_INTENT = "PACKAGE_NAME";
 
-    public static final String APP_NAME_BUNDLE = "APP_NAME_BUNDLE";
-    public static final String APP_PACKAGE_BUNDLE = "PACKAGE_NAME_BUNDLE";
-
     private static final int TAB_COUNT = 3;
+
+    private LeakReportFragment leakReportFragment;
+    private LeakSummaryFragment leakSummaryFragment;
+
+    private List<DataLeak> locationLeaks;
+    private List<DataLeak> contactLeaks;
+    private List<DataLeak> deviceLeaks;
+    private List<DataLeak> keywordLeaks;
 
     private String packageName;
     private String appName;
-
-    private LeakReportFragment leakReportFragment = null;
-    private LeakSummaryFragment leakSummaryFragment = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -47,6 +55,16 @@ public class AppDataActivity extends AppCompatActivity {
         Intent i = getIntent();
         appName = i.getStringExtra(APP_NAME_INTENT);
         packageName = i.getStringExtra(APP_PACKAGE_INTENT);
+
+        leakReportFragment = new LeakReportFragment();
+        leakSummaryFragment = new LeakSummaryFragment();
+
+        DatabaseHandler databaseHandler = new DatabaseHandler(this);
+        locationLeaks = databaseHandler.getAppLeaks(packageName, LeakReport.LeakCategory.LOCATION.name());
+        contactLeaks = databaseHandler.getAppLeaks(packageName, LeakReport.LeakCategory.CONTACT.name());
+        deviceLeaks = databaseHandler.getAppLeaks(packageName, LeakReport.LeakCategory.DEVICE.name());
+        keywordLeaks = databaseHandler.getAppLeaks(packageName, LeakReport.LeakCategory.KEYWORD.name());
+        databaseHandler.close();
 
         ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
         viewPager.setAdapter(new CustomFragmentPagerAdapter(getSupportFragmentManager(), this));
@@ -87,7 +105,7 @@ public class AppDataActivity extends AppCompatActivity {
     }
 
     public class CustomFragmentPagerAdapter extends FragmentPagerAdapter {
-        private String tabTitles[] = new String[] { "Report", "Summary", "Analysis" };
+        private String tabTitles[] = new String[] { "Report", "Summary", "Query"};
         private Context context;
 
         public CustomFragmentPagerAdapter(FragmentManager fm, Context context) {
@@ -104,24 +122,9 @@ public class AppDataActivity extends AppCompatActivity {
         public Fragment getItem(int position) {
             switch (position) {
                 case 0:
-                    if (leakReportFragment == null) {
-                        leakReportFragment = new LeakReportFragment();
-                        Bundle bundle = new Bundle();
-                        bundle.putString(APP_NAME_BUNDLE, appName);
-                        bundle.putString(APP_PACKAGE_BUNDLE, packageName);
-                        leakReportFragment.setArguments(bundle);
-                    }
                     return leakReportFragment;
                 case 1:
-                    if (leakSummaryFragment == null) {
-                        leakSummaryFragment = new LeakSummaryFragment();
-                        Bundle bundle = new Bundle();
-                        bundle.putString(APP_NAME_BUNDLE, appName);
-                        bundle.putString(APP_PACKAGE_BUNDLE, packageName);
-                        leakSummaryFragment.setArguments(bundle);
-                    }
                     return leakSummaryFragment;
-
             }
 
             return new Fragment();
@@ -131,5 +134,30 @@ public class AppDataActivity extends AppCompatActivity {
         public CharSequence getPageTitle(int position) {
             return tabTitles[position];
         }
+    }
+
+    @Override
+    public String getAppName() {
+        return appName;
+    }
+
+    @Override
+    public String getAppPackageName() {
+        return packageName;
+    }
+
+    @Override
+    public List<DataLeak> getLeaks(LeakReport.LeakCategory category) {
+        switch (category) {
+            case LOCATION:
+                return locationLeaks;
+            case CONTACT:
+                return contactLeaks;
+            case DEVICE:
+                return deviceLeaks;
+            case KEYWORD:
+                return keywordLeaks;
+        }
+        return null;
     }
 }

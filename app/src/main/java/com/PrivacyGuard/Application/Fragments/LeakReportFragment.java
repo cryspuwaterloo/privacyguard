@@ -22,12 +22,11 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.PrivacyGuard.Application.Activities.AppDataActivity;
 import com.PrivacyGuard.Application.Activities.R;
 import com.PrivacyGuard.Application.Database.DataLeak;
-import com.PrivacyGuard.Application.Database.DatabaseHandler;
 import com.PrivacyGuard.Application.Helpers.ActivityRequestCodes;
 import com.PrivacyGuard.Application.Helpers.PreferenceHelper;
+import com.PrivacyGuard.Application.Interfaces.AppDataInterface;
 import com.PrivacyGuard.Plugin.LeakReport;
 import com.androidplot.xy.BoundaryMode;
 import com.androidplot.xy.LineAndPointFormatter;
@@ -58,9 +57,6 @@ import java.util.concurrent.TimeUnit;
 @TargetApi(22)
 public class LeakReportFragment extends Fragment {
 
-    private String packageName;
-    private String appName;
-
     private boolean invalidAndroidVersion = false;
     private boolean setUpGraph = false;
 
@@ -72,7 +68,6 @@ public class LeakReportFragment extends Fragment {
     private TextView graphTitleText;
 
     private UsageStatsManager usageStatsManager;
-    private DatabaseHandler databaseHandler;
 
     //Maps a date to an int[] that contains the count of each type of leak.
     private Map<Date, int[]> leakMap = new HashMap<>();
@@ -80,12 +75,12 @@ public class LeakReportFragment extends Fragment {
     private int currentKeyIndex = -1;
     private XYPlot plot;
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        appName = getArguments().getString(AppDataActivity.APP_NAME_BUNDLE);
-        packageName = getArguments().getString(AppDataActivity.APP_PACKAGE_BUNDLE);
+    private AppDataInterface activity;
 
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        activity = (AppDataInterface)context;
     }
 
     @Override
@@ -106,7 +101,6 @@ public class LeakReportFragment extends Fragment {
         }
 
         usageStatsManager = (UsageStatsManager) getContext().getSystemService(Context.USAGE_STATS_SERVICE);
-        databaseHandler = new DatabaseHandler(getContext());
 
         Button turnOnPermissionButton = (Button)view.findViewById(R.id.turn_on_permission_button);
         turnOnPermissionButton.setOnClickListener(new View.OnClickListener() {
@@ -142,13 +136,13 @@ public class LeakReportFragment extends Fragment {
         PackageManager pm = getContext().getPackageManager();
         ImageView appIcon = (ImageView)view.findViewById(R.id.app_icon);
         try {
-            appIcon.setImageDrawable(pm.getApplicationIcon(packageName));
+            appIcon.setImageDrawable(pm.getApplicationIcon(activity.getAppPackageName()));
         } catch (PackageManager.NameNotFoundException e) {
             appIcon.setImageResource(R.drawable.default_icon);
         }
 
         TextView appNameText = (TextView)view.findViewById(R.id.app_name);
-        appNameText.setText(appName);
+        appNameText.setText(activity.getAppName());
 
         setViewVisibility();
 
@@ -249,7 +243,7 @@ public class LeakReportFragment extends Fragment {
         while (usageEvents.hasNextEvent()) {
             UsageEvents.Event event = new UsageEvents.Event();
             usageEvents.getNextEvent(event);
-            if (event.getPackageName().equals(packageName) &&
+            if (event.getPackageName().equals(activity.getAppPackageName()) &&
                     (event.getEventType() == UsageEvents.Event.MOVE_TO_BACKGROUND ||
                             event.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND)) {
                 appUsageEvents.add(event);
@@ -260,7 +254,7 @@ public class LeakReportFragment extends Fragment {
 
         //Next, aggregate the leaks for the app by date and category.
         for (LeakReport.LeakCategory category : LeakReport.LeakCategory.values()) {
-            List<DataLeak> leaks = databaseHandler.getAppLeaks(packageName, category.name());
+            List<DataLeak> leaks = activity.getLeaks(category);
             for (DataLeak leak : leaks) {
                 int[] summary = leakMap.get(leak.timestampDate);
                 if (summary == null) {
