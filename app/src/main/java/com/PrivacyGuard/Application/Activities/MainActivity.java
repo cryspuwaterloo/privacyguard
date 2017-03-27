@@ -132,6 +132,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        FloatingActionButton statsButton = (FloatingActionButton)findViewById(R.id.stats_button);
+        statsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(getApplicationContext(), AllAppsDataActivity.class);
+                startActivity(i);
+            }
+        });
+
         /** use bound service here because stopservice() doesn't immediately trigger onDestroy of VPN service */
         mSc = new ServiceConnection() {
             @Override

@@ -144,6 +144,13 @@ public class LeakReportFragment extends Fragment {
         TextView appNameText = (TextView)view.findViewById(R.id.app_name);
         appNameText.setText(activity.getAppName());
 
+        //In the case where the app package is null, we are displaying all app leaks on the graph.
+        //Hence, there is no notion of foreground/background and we remove this part of the legend.
+        if (activity.getAppPackageName() == null) {
+            View legend = view.findViewById(R.id.foreground_background_legend);
+            legend.setVisibility(View.GONE);
+        }
+
         setViewVisibility();
 
         if (!invalidAndroidVersion && hasUsageAccessPermission()) {

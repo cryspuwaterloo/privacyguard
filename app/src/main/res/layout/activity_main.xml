@@ -32,6 +32,31 @@
     <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        app:layout_anchorGravity="left|start"
+        android:layout_gravity="bottom|start"
+        app:layout_anchor="@+id/vpn_toggle">
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/stats_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:fabSize="normal"
+            app:rippleColor="@color/background_floating_material_dark"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"/>
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center"
+            android:src="@drawable/graph"
+            android:elevation="10dp"/>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@id/vpn_toggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         app:layout_anchorGravity="bottom|right"
         app:layout_anchor="@id/leaksList">
 
@@ -41,13 +66,20 @@
             android:layout_height="wrap_content"
             app:fabSize="normal"
             app:rippleColor="@color/background_floating_material_dark"
-            android:layout_margin="16dp"/>
+            android:layout_marginRight="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
+            android:layout_marginLeft="@dimen/main_activity_fab_spacing"
+            android:layout_marginStart="@dimen/main_activity_fab_spacing"/>
 
         <ImageView
             android:layout_width="40dp"
             android:layout_height="30dp"
             android:layout_gravity="center"
             android:src="@drawable/vpn"
+            android:layout_marginRight="@dimen/main_activity_fab_spacing_half"
+            android:layout_marginEnd="@dimen/main_activity_fab_spacing_half"
             android:elevation="10dp"/>
 
         <TextView
@@ -56,7 +88,7 @@
             android:layout_height="30dp"
             android:paddingTop="3dp"
             android:gravity="center_horizontal"
-            android:layout_marginStart="25dp"
+            android:layout_marginStart="20dp"
             android:layout_gravity="center_horizontal"
             android:background="@drawable/chat_bubble"
             android:backgroundTint="@color/vpn_green"
@@ -70,7 +102,7 @@
             android:layout_height="30dp"
             android:paddingTop="3dp"
             android:gravity="center_horizontal"
-            android:layout_marginStart="25dp"
+            android:layout_marginStart="20dp"
             android:layout_gravity="center_horizontal"
             android:background="@drawable/chat_bubble"
             android:backgroundTint="@color/vpn_red"
@@ -87,7 +119,7 @@
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:gravity="center_horizontal"
-            android:layout_marginStart="25dp"
+            android:layout_marginStart="20dp"
             android:layout_gravity="center_horizontal"
             android:background="@drawable/chat_bubble"
             android:backgroundTint="@color/vpn_yellow"
