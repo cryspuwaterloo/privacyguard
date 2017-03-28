@@ -3,8 +3,13 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
 
-    <dimen name="main_activity_fab_spacing">8dp</dimen>
-    <dimen name="main_activity_fab_spacing_half">4dp</dimen>
+    <dimen name="main_activity_fab_margin">16dp</dimen>
+    <dimen name="main_activity_fab_spacing">12dp</dimen>
+
+    <!-- (main_activity_fab_margin - main_activity_fab_spacing)/2 -->
+    <dimen name="main_activity_fab_spacing_half">2dp</dimen>
+
+    <dimen name="data_leak_margin">10dp</dimen>
 
     <dimen name="android_plot_legend_text_height">20dp</dimen>
     <dimen name="android_plot_legend_text_width">70dp</dimen>

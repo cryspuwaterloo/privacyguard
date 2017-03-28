@@ -12,16 +12,21 @@ import android.widget.ArrayAdapter;
 import android.widget.DatePicker;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.PrivacyGuard.Application.Activities.R;
+import com.PrivacyGuard.Application.Database.DataLeak;
 import com.PrivacyGuard.Application.Interfaces.AppDataInterface;
+import com.PrivacyGuard.Plugin.LeakReport;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -36,7 +41,10 @@ public class LeakQueryFragment extends Fragment {
     private Date endDate;
 
     private static final String DATE_FORMAT_DISPLAY = "E, MMM d, yyyy";
-    private static final DateFormat dateFormatDispay = new SimpleDateFormat(DATE_FORMAT_DISPLAY, Locale.CANADA);
+    private static final DateFormat dateFormatDisplay = new SimpleDateFormat(DATE_FORMAT_DISPLAY, Locale.CANADA);
+
+    private LinearLayout leaksList;
+    private TextView totalNumber;
 
     private AppDataInterface activity;
 
@@ -58,6 +66,9 @@ public class LeakQueryFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.leak_query_fragment, null);
 
+        leaksList = (LinearLayout)view.findViewById(R.id.list_view);
+        totalNumber = (TextView)view.findViewById(R.id.total_number);
+
         PackageManager pm = getContext().getPackageManager();
         ImageView appIcon = (ImageView)view.findViewById(R.id.app_icon);
         try {
@@ -69,13 +80,13 @@ public class LeakQueryFragment extends Fragment {
         TextView appNameText = (TextView)view.findViewById(R.id.app_name);
         appNameText.setText(activity.getAppName());
 
-        Spinner spinnerCategory = (Spinner) view.findViewById(R.id.spinner_category);
+        final Spinner spinnerCategory = (Spinner) view.findViewById(R.id.spinner_category);
         ArrayAdapter<CharSequence> adapterCategory = ArrayAdapter.createFromResource(getContext(),
                 R.array.spinner_category_values, R.layout.simple_spinner_item);
         adapterCategory.setDropDownViewResource(R.layout.simple_spinner_dropdown_item);
         spinnerCategory.setAdapter(adapterCategory);
 
-        Spinner spinnerStatus = (Spinner) view.findViewById(R.id.spinner_status);
+        final Spinner spinnerStatus = (Spinner) view.findViewById(R.id.spinner_status);
         ArrayAdapter<CharSequence> adapterStatus = ArrayAdapter.createFromResource(getContext(),
                 R.array.spinner_status_values, R.layout.simple_spinner_item);
         adapterStatus.setDropDownViewResource(R.layout.simple_spinner_dropdown_item);
@@ -124,16 +135,68 @@ public class LeakQueryFragment extends Fragment {
         });
 
         ImageButton query = (ImageButton)view.findViewById(R.id.query);
+        query.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                leaksList.removeAllViews();
+
+                List<DataLeak> leaks = new ArrayList<>();
+                String category = spinnerCategory.getSelectedItem().toString().toUpperCase();
+                String status = spinnerStatus.getSelectedItem().toString();
+
+                if (category.equals("ALL")) {
+                    for (LeakReport.LeakCategory cat : LeakReport.LeakCategory.values()) {
+                        leaks.addAll(activity.getLeaks(cat));
+                    }
+                } else {
+                    LeakReport.LeakCategory categoryValue = LeakReport.LeakCategory.valueOf(category);
+                    leaks.addAll(activity.getLeaks(categoryValue));
+                }
+
+                List<DataLeak> revisedLeaks = new ArrayList<>();
+
+                for (DataLeak dataLeak : leaks) {
+                    long time = dataLeak.timestampDate.getTime();
+                    if (time >= startDate.getTime() && time <= endDate.getTime()) {
+                        revisedLeaks.add(dataLeak);
+                    }
+                }
+
+                totalNumber.setText(String.format("%s Results", revisedLeaks.size()));
+
+                for (DataLeak dataLeak : revisedLeaks) {
+                    LinearLayout layout = (LinearLayout)LayoutInflater.from(getContext()).inflate(R.layout.data_leak, null);
+
+                    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT );
+                    params.setMargins(35, 35, 35, 35);
+                    layout.setLayoutParams(params);
+
+                    TextView categoryText = (TextView)layout.findViewById(R.id.category);
+                    TextView typeText = (TextView)layout.findViewById(R.id.type);
+                    TextView timeStampText = (TextView)layout.findViewById(R.id.time_stamp);
+                    TextView contentText = (TextView)layout.findViewById(R.id.content);
+
+                    String categoryCamelCase = dataLeak.category.toLowerCase();
+                    categoryCamelCase = categoryCamelCase.substring(0,1).toUpperCase() + categoryCamelCase.substring(1);
+
+                    categoryText.setText(categoryCamelCase);
+                    typeText.setText(dataLeak.type);
+                    timeStampText.setText(formatDisplayDate(dataLeak.timestampDate));
+                    contentText.setText(dataLeak.leakContent);
+
+                    leaksList.addView(layout);
+                }
+            }
+        });
 
         return view;
     }
 
     private String formatDisplayDate(Date date) {
-        return dateFormatDispay.format(date);
+        return dateFormatDisplay.format(date);
     }
 
     private Date getStartOfDay(int year, int month, int day) {
-        Calendar calendar = Calendar.getInstance(Locale.CANADA);
         calendar.clear();
         calendar.set(Calendar.YEAR, year);
         calendar.set(Calendar.MONTH, month);
@@ -146,7 +209,6 @@ public class LeakQueryFragment extends Fragment {
     }
 
     private Date getEndOfDay(int year, int month, int day) {
-        Calendar calendar = Calendar.getInstance(Locale.CANADA);
         calendar.clear();
         calendar.set(Calendar.YEAR, year);
         calendar.set(Calendar.MONTH, month);

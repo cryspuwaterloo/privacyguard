@@ -42,8 +42,8 @@
             android:layout_height="wrap_content"
             app:fabSize="normal"
             app:rippleColor="@color/background_floating_material_dark"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp"/>
+            android:layout_marginTop="@dimen/main_activity_fab_margin"
+            android:layout_marginBottom="@dimen/main_activity_fab_margin"/>
 
         <ImageView
             android:layout_width="40dp"
@@ -66,10 +66,10 @@
             android:layout_height="wrap_content"
             app:fabSize="normal"
             app:rippleColor="@color/background_floating_material_dark"
-            android:layout_marginRight="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="16dp"
+            android:layout_marginRight="@dimen/main_activity_fab_margin"
+            android:layout_marginEnd="@dimen/main_activity_fab_margin"
+            android:layout_marginTop="@dimen/main_activity_fab_margin"
+            android:layout_marginBottom="@dimen/main_activity_fab_margin"
             android:layout_marginLeft="@dimen/main_activity_fab_spacing"
             android:layout_marginStart="@dimen/main_activity_fab_spacing"/>
 
