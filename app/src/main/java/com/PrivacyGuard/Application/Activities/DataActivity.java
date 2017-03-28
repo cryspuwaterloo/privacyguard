@@ -28,7 +28,7 @@ import com.PrivacyGuard.Plugin.LeakReport;
 
 import java.util.List;
 
-public class DataActivity extends AppCompatActivity implements AppDataInterface {
+public abstract class DataActivity extends AppCompatActivity implements AppDataInterface {
 
     private static final int TAB_COUNT = 3;
 

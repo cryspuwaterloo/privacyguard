@@ -35,4 +35,19 @@
         <item>86400</item>
         <item>432000</item>
     </string-array>
+
+    <!-- Spinners -->
+    <string-array name="spinner_category_values">
+        <item>All</item>
+        <item>Location</item>
+        <item>Contact</item>
+        <item>Device</item>
+        <item>Keyword</item>
+    </string-array>
+
+    <string-array name="spinner_status_values">
+        <item>All</item>
+        <item>Foreground</item>
+        <item>Background</item>
+    </string-array>
 </resources>
