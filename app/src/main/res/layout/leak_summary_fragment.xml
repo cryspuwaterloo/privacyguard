@@ -48,9 +48,11 @@
             android:padding="@dimen/android_plot_legend_padding">
 
             <TextView
-                android:layout_width="@dimen/android_plot_legend_large_height"
-                android:layout_height="@dimen/android_plot_legend_large_height"
+                android:layout_width="@dimen/android_plot_legend_medium_height"
+                android:layout_height="@dimen/android_plot_legend_medium_height"
                 android:background="@drawable/circle_background"
+                android:layout_marginRight="@dimen/android_plot_legend_spacing"
+                android:layout_marginEnd="@dimen/android_plot_legend_spacing"
                 android:backgroundTint="@color/location_color"/>
 
             <TextView
@@ -58,18 +60,13 @@
                 android:layout_height="@dimen/android_plot_legend_large_height"
                 android:textSize="@dimen/android_plot_legend_large_text"
                 android:text="@string/location_category"
-                android:paddingTop="0dp"
-                android:paddingLeft="4dp"
-                android:paddingStart="4dp"/>
+                android:gravity="center_vertical"/>
 
             <TextView
                 android:id="@+id/location_percentage"
                 android:layout_width="@dimen/android_plot_legend_percentage_width"
                 android:layout_height="@dimen/android_plot_legend_large_height"
-                android:textSize="@dimen/android_plot_legend_large_text"
-                android:paddingTop="0dp"
-                android:paddingLeft="4dp"
-                android:paddingStart="4dp"/>
+                android:textSize="@dimen/android_plot_legend_large_text"/>
         </LinearLayout>
 
         <LinearLayout
@@ -81,9 +78,11 @@
             android:padding="@dimen/android_plot_legend_padding">
 
             <TextView
-                android:layout_width="@dimen/android_plot_legend_large_height"
-                android:layout_height="@dimen/android_plot_legend_large_height"
+                android:layout_width="@dimen/android_plot_legend_medium_height"
+                android:layout_height="@dimen/android_plot_legend_medium_height"
                 android:background="@drawable/circle_background"
+                android:layout_marginRight="@dimen/android_plot_legend_spacing"
+                android:layout_marginEnd="@dimen/android_plot_legend_spacing"
                 android:backgroundTint="@color/contact_color"/>
 
             <TextView
@@ -91,18 +90,13 @@
                 android:layout_height="@dimen/android_plot_legend_large_height"
                 android:textSize="@dimen/android_plot_legend_large_text"
                 android:text="@string/contact_category"
-                android:gravity="center_vertical"
-                android:paddingLeft="4dp"
-                android:paddingStart="4dp"/>
+                android:gravity="center_vertical"/>
 
             <TextView
                 android:id="@+id/contact_percentage"
                 android:layout_width="@dimen/android_plot_legend_percentage_width"
                 android:layout_height="@dimen/android_plot_legend_large_height"
-                android:textSize="@dimen/android_plot_legend_large_text"
-                android:paddingTop="0dp"
-                android:paddingLeft="4dp"
-                android:paddingStart="4dp"/>
+                android:textSize="@dimen/android_plot_legend_large_text"/>
         </LinearLayout>
 
         <LinearLayout
@@ -114,9 +108,11 @@
             android:padding="@dimen/android_plot_legend_padding">
 
             <TextView
-                android:layout_width="@dimen/android_plot_legend_large_height"
-                android:layout_height="@dimen/android_plot_legend_large_height"
+                android:layout_width="@dimen/android_plot_legend_medium_height"
+                android:layout_height="@dimen/android_plot_legend_medium_height"
                 android:background="@drawable/circle_background"
+                android:layout_marginRight="@dimen/android_plot_legend_spacing"
+                android:layout_marginEnd="@dimen/android_plot_legend_spacing"
                 android:backgroundTint="@color/device_color"/>
 
             <TextView
@@ -124,18 +120,13 @@
                 android:layout_height="@dimen/android_plot_legend_large_height"
                 android:textSize="@dimen/android_plot_legend_large_text"
                 android:text="@string/device_category"
-                android:gravity="center_vertical"
-                android:paddingLeft="4dp"
-                android:paddingStart="4dp"/>
+                android:gravity="center_vertical"/>
 
             <TextView
                 android:id="@+id/device_percentage"
                 android:layout_width="@dimen/android_plot_legend_percentage_width"
                 android:layout_height="@dimen/android_plot_legend_large_height"
-                android:textSize="@dimen/android_plot_legend_large_text"
-                android:paddingTop="0dp"
-                android:paddingLeft="4dp"
-                android:paddingStart="4dp"/>
+                android:textSize="@dimen/android_plot_legend_large_text" />
         </LinearLayout>
 
         <LinearLayout
@@ -147,9 +138,11 @@
             android:padding="@dimen/android_plot_legend_padding">
 
             <TextView
-                android:layout_width="@dimen/android_plot_legend_large_height"
-                android:layout_height="@dimen/android_plot_legend_large_height"
+                android:layout_width="@dimen/android_plot_legend_medium_height"
+                android:layout_height="@dimen/android_plot_legend_medium_height"
                 android:background="@drawable/circle_background"
+                android:layout_marginRight="@dimen/android_plot_legend_spacing"
+                android:layout_marginEnd="@dimen/android_plot_legend_spacing"
                 android:backgroundTint="@color/keyword_color"/>
 
             <TextView
@@ -157,18 +150,13 @@
                 android:layout_height="@dimen/android_plot_legend_large_height"
                 android:textSize="@dimen/android_plot_legend_large_text"
                 android:text="@string/keyword_category"
-                android:gravity="center_vertical"
-                android:paddingLeft="4dp"
-                android:paddingStart="4dp"/>
+                android:gravity="center_vertical" />
 
             <TextView
                 android:id="@+id/keyword_percentage"
                 android:layout_width="@dimen/android_plot_legend_percentage_width"
                 android:layout_height="@dimen/android_plot_legend_large_height"
-                android:textSize="@dimen/android_plot_legend_large_text"
-                android:paddingTop="0dp"
-                android:paddingLeft="4dp"
-                android:paddingStart="4dp"/>
+                android:textSize="@dimen/android_plot_legend_large_text" />
         </LinearLayout>
     </LinearLayout>
 
@@ -178,5 +166,4 @@
         android:layout_width="match_parent"
         android:layout_height="fill_parent"
         android:layout_below="@id/legend"/>
-
 </RelativeLayout>
