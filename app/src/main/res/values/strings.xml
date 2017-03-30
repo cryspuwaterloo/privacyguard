@@ -46,6 +46,11 @@
     <string name="time_label">Time</string>
     <string name="content_label">Content</string>
 
+    <string name="category_label_colon">Category:</string>
+    <string name="type_label_colon">Type:</string>
+    <string name="time_label_colon">Time:</string>
+    <string name="content_label_colon">Content:</string>
+
     <!-- Leak Categories -->
     <string name="location_category">Location</string>
     <string name="contact_category">Contact</string>
@@ -56,5 +61,15 @@
     <string name="graph_message">This feature allows you to see when your apps are leaking compared to when the app is in the foreground or background.</string>
     <string name="dialog_accept">OK</string>
     <string name="leak_report_title">Leak Report</string>
+    <string name="app_status_foreground">Foreground</string>
+    <string name="app_status_background">Background</string>
+    <string name="app_status_no_data">No Data</string>
+    <string name="app_data_info">Info</string>
+
+    <!-- Spinners -->
+    <string name="spinner_category">Category:</string>
+    <string name="spinner_status">Status:</string>
+    <string name="start_date">Start Date:</string>
+    <string name="end_date">End Date:</string>
 
 </resources>

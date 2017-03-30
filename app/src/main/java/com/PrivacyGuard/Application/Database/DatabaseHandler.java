@@ -244,6 +244,22 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return leakList;
     }
 
+    public List<DataLeak> getAppLeaks(String category) {
+        List<DataLeak> leakList = new ArrayList<>();
+        Cursor cursor = mDB.query(TABLE_DATA_LEAKS, new String[]{KEY_TYPE, KEY_CONTENT, KEY_TIME_STAMP}, KEY_CATEGORY + "=?", new String[]{category}, null, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                do {
+                    DataLeak leak = new DataLeak(category, cursor.getString(0), cursor.getString(1), cursor.getString(2));
+                    leakList.add(leak);
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
+        }
+        // return contact list
+        return leakList;
+    }
+
     // w3kim@uwaterloo.ca : simple helper
     private boolean isHttpMethod(String s) {
         return s.equals("GET")

@@ -47,7 +47,6 @@ public class AppSummaryActivity extends AppCompatActivity {
         TextView subtitle = (TextView) findViewById(R.id.summary_subtitle);
         subtitle.setText("[" + packageName+"]");
 
-
         notificationSwitch = (Switch) findViewById(R.id.summary_switch);
         notificationSwitch.setChecked(ignore == 1);
         notificationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -66,7 +65,6 @@ public class AppSummaryActivity extends AppCompatActivity {
                 db.close();
             }
         });
-
 
         list = (ListView) findViewById(R.id.summary_list);
         list.setOnItemClickListener(new AdapterView.OnItemClickListener() {

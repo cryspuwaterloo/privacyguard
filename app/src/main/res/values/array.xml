@@ -23,7 +23,7 @@
         <item>1 Hour</item>
         <item>10 Hours</item>
         <item>1 Day</item>
-        <item>1 Week</item>
+        <item>5 Days</item>
     </string-array>
 
     <string-array name="pref_graph_domain_size_values">
@@ -33,6 +33,21 @@
         <item>3600</item>
         <item>36000</item>
         <item>86400</item>
-        <item>604800</item>
+        <item>432000</item>
+    </string-array>
+
+    <!-- Spinners -->
+    <string-array name="spinner_category_values">
+        <item>All</item>
+        <item>Location</item>
+        <item>Contact</item>
+        <item>Device</item>
+        <item>Keyword</item>
+    </string-array>
+
+    <string-array name="spinner_status_values">
+        <item>All</item>
+        <item>Foreground</item>
+        <item>Background</item>
     </string-array>
 </resources>
