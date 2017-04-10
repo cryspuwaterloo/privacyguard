@@ -60,6 +60,8 @@ public class LeakReportFragment extends Fragment {
     private boolean invalidAndroidVersion = false;
     private boolean setUpGraph = false;
 
+    private static final int DOMAIN_STEPS_PER_HALF_DOMAIN = 5;
+
     private View invalidAndroidVersionView;
     private View permissionDisabledView;
     private RelativeLayout contentView;
@@ -117,7 +119,18 @@ public class LeakReportFragment extends Fragment {
         navigateLeft.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                currentKeyIndex--;
+                Date centerDate = leakMapKeys.get(currentKeyIndex);
+                long centerMillis = centerDate.getTime();
+                int halfRange = PreferenceHelper.getLeakReportGraphDomainSize(getContext())/2;
+                int domainStep = (halfRange/DOMAIN_STEPS_PER_HALF_DOMAIN) * 1000;
+
+                long newMillis = centerMillis;
+                while (centerMillis - newMillis < domainStep) {
+                    if (currentKeyIndex == 0) break;
+                    currentKeyIndex--;
+                    newMillis = leakMapKeys.get(currentKeyIndex).getTime();
+                }
+
                 setGraphBounds();
                 setUpDisplay();
             }
@@ -125,7 +138,18 @@ public class LeakReportFragment extends Fragment {
         navigateRight.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                currentKeyIndex++;
+                Date centerDate = leakMapKeys.get(currentKeyIndex);
+                long centerMillis = centerDate.getTime();
+                int halfRange = PreferenceHelper.getLeakReportGraphDomainSize(getContext())/2;
+                int domainStep = (halfRange/ DOMAIN_STEPS_PER_HALF_DOMAIN) * 1000;
+
+                long newMillis = centerMillis;
+                while (newMillis - centerMillis < domainStep) {
+                    if (currentKeyIndex == leakMapKeys.size() - 1) break;
+                    currentKeyIndex++;
+                    newMillis = leakMapKeys.get(currentKeyIndex).getTime();
+                }
+
                 setGraphBounds();
                 setUpDisplay();
             }
@@ -193,7 +217,7 @@ public class LeakReportFragment extends Fragment {
         long domainLowerBound = centerMillis - range;
         long domainUpperBound = centerMillis + range;
         plot.setDomainBoundaries(domainLowerBound, domainUpperBound, BoundaryMode.FIXED);
-        plot.setDomainStep(StepMode.INCREMENT_BY_VAL, (halfRange/5) * 1000);
+        plot.setDomainStep(StepMode.INCREMENT_BY_VAL, (halfRange/ DOMAIN_STEPS_PER_HALF_DOMAIN) * 1000);
 
         DateFormat dateFormat = new SimpleDateFormat("MMMM d, yyyy", Locale.CANADA);
         String lowerBoundDate = dateFormat.format(new Date(domainLowerBound));
