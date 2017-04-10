@@ -67,7 +67,6 @@ public class MainActivity extends AppCompatActivity {
 
     private ListView listLeak;
     private MainListViewAdapter adapter;
-    private DatabaseHandler mDbHandler; // [w3kim@uwaterloo.ca] : factored out as an instance var
 
     private View onIndicator;
     private View offIndicator;
@@ -159,8 +158,6 @@ public class MainActivity extends AppCompatActivity {
                 Logger.d(TAG, "VPN Service disconnected");
             }
         };
-
-        mDbHandler = new DatabaseHandler(this);
 
         GcmNetworkManager manager = GcmNetworkManager.getInstance(this);
 
@@ -264,9 +261,8 @@ public class MainActivity extends AppCompatActivity {
     public void populateLeakList() {
         // -----------------------------------------------------------------------
         // Database Fetch
-        DatabaseHandler db = new DatabaseHandler(this);
+        DatabaseHandler db = DatabaseHandler.getInstance(this);
         List<AppSummary> apps = db.getAllApps();
-        db.close();
 
         if (apps == null) {
             return;
@@ -287,9 +283,9 @@ public class MainActivity extends AppCompatActivity {
 
                     AppSummary app = (AppSummary) parent.getItemAtPosition(position);
 
-                    intent.putExtra(PrivacyGuard.EXTRA_PACKAGE_NAME, app.packageName);
-                    intent.putExtra(PrivacyGuard.EXTRA_APP_NAME, app.appName);
-                    intent.putExtra(PrivacyGuard.EXTRA_IGNORE, app.ignore);
+                    intent.putExtra(PrivacyGuard.EXTRA_PACKAGE_NAME, app.getPackageName());
+                    intent.putExtra(PrivacyGuard.EXTRA_APP_NAME, app.getAppName());
+                    intent.putExtra(PrivacyGuard.EXTRA_IGNORE, app.getIgnore());
 
                     startActivity(intent);
                 }

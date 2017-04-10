@@ -24,12 +24,64 @@ import java.util.regex.Matcher;
  * Created by MAK on 03/11/2015.
  */
 public class DatabaseHandler extends SQLiteOpenHelper {
-    // All Static variables
     // Database Version
     private static final int DATABASE_VERSION = 1;
 
     // Database Name
     private static final String DATABASE_NAME = "dataLeaksManager";
+
+    private static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+
+    private SQLiteDatabase mDB;
+
+    private static DatabaseHandler sInstance = null;
+
+    //The singleton pattern is used here because multiple threads could potentially be writing to the database.
+    //Because of this patten, only one DataBaseHandler is created for the application lifecycle.
+    //As a result, do not call .close() on a DatabaseHandler instance.
+    public static synchronized DatabaseHandler getInstance(Context context) {
+        if (sInstance == null) {
+            sInstance = new DatabaseHandler(context.getApplicationContext());
+        }
+        return sInstance;
+    }
+
+    private DatabaseHandler(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        mDB = getReadableDatabase();
+    }
+
+    public String[] getTables() {
+        return new String[]{TABLE_DATA_LEAKS, TABLE_LEAK_SUMMARY, TABLE_URL, TABLE_APP_STATUS_EVENTS};
+    }
+
+    public static SimpleDateFormat getDateFormat() {
+        return DATE_FORMAT;
+    }
+
+    // Creating Tables
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        //create table data_leaks
+        db.execSQL(CREATE_DATA_LEAKS_TABLE);
+        db.execSQL(CREATE_LEAK_SUMMARY_TABLE);
+        db.execSQL(CREATE_APP_STATUS_TABLE);
+        // w3kim@uwaterloo.ca
+        db.execSQL(CREATE_URL_TABLE);
+    }
+
+    // Upgrading database
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // Drop older table if existed
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_DATA_LEAKS);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_LEAK_SUMMARY);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_APP_STATUS_EVENTS);
+        // w3kim@uwaterloo.ca
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_URL);
+        // Create tables again
+        onCreate(db);
+    }
 
     // DataLeaks table name
     private static final String TABLE_DATA_LEAKS = "data_leaks";
@@ -43,6 +95,16 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_TYPE = "type";
     private static final String KEY_CONTENT = "content";
     private static final String KEY_TIME_STAMP = "time_stamp";
+
+    // App status events table name
+    private static final String TABLE_APP_STATUS_EVENTS = "app_status_events";
+    // App status events Table Columns names
+    private static final String KEY_FOREGROUND_BACKGROUND = "category";
+    private static final String CREATE_APP_STATUS_TABLE = "CREATE TABLE " + TABLE_APP_STATUS_EVENTS + "("
+            + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+            + KEY_PACKAGE + " TEXT,"
+            + KEY_TIME_STAMP + " INTEGER,"
+            + KEY_FOREGROUND_BACKGROUND + " INTEGER )";
 
     // ------------------------------ w3kim@uwaterloo.ca -----------------------------
 
@@ -82,7 +144,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             + KEY_TYPE + " TEXT,"
             + KEY_CONTENT + " TEXT,"
             + KEY_TIME_STAMP + " TEXT" + ")";
-    private static final String[] DATA_LEAK_TABLE_COLUMNS = new String[]{KEY_ID, KEY_PACKAGE, KEY_NAME, KEY_CATEGORY, KEY_TYPE, KEY_CONTENT, KEY_TIME_STAMP};
     private static final String CREATE_LEAK_SUMMARY_TABLE = "CREATE TABLE " + TABLE_LEAK_SUMMARY + "("
             + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
             + KEY_PACKAGE + " TEXT,"
@@ -90,40 +151,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             + KEY_CATEGORY + " TEXT,"
             + KEY_FREQUENCY + " INTEGER,"
             + KEY_IGNORE + " INTEGER" + ")";
-    private static final String[] LEAK_SUMMARY_TABLE_COLUMNS = new String[]{KEY_ID, KEY_PACKAGE, KEY_NAME, KEY_CATEGORY, KEY_FREQUENCY, KEY_IGNORE};
-    public static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-    private SQLiteDatabase mDB;
-
-    public DatabaseHandler(Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
-        mDB = getReadableDatabase();
-    }
-
-    public String[] getTables() {
-        return new String[]{TABLE_DATA_LEAKS, TABLE_LEAK_SUMMARY, TABLE_URL};
-    }
-
-    // Creating Tables
-    @Override
-    public void onCreate(SQLiteDatabase db) {
-        //create table data_leaks
-        db.execSQL(CREATE_DATA_LEAKS_TABLE);
-        db.execSQL(CREATE_LEAK_SUMMARY_TABLE);
-        // w3kim@uwaterloo.ca
-        db.execSQL(CREATE_URL_TABLE);
-    }
-
-    // Upgrading database
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // Drop older table if existed
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_DATA_LEAKS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_LEAK_SUMMARY);
-        // w3kim@uwaterloo.ca
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_URL);
-        // Create tables again
-        onCreate(db);
-    }
 
     /**
      * All CRUD(Create, Read, Update, Delete) Operations
@@ -161,21 +188,22 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(KEY_CATEGORY, category);
         values.put(KEY_TYPE, type); // Leak type
         values.put(KEY_CONTENT, content);
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-        values.put(KEY_TIME_STAMP, dateFormat.format(new Date())); // Leak time stamp
+        values.put(KEY_TIME_STAMP, DATE_FORMAT.format(new Date())); // Leak time stamp
 
         // Inserting Row
         mDB.insert(TABLE_DATA_LEAKS, null, values);
     }
 
-    public Date getDateFromTimestamp(String timestamp) {
-        Date date = null;
-        try {
-            date = DATE_FORMAT.parse(timestamp);
-        }
-        catch (ParseException ex) {}
+    public void addAppStatusEvent(String packageName, long timeStamp, int foreground) {
+        if (foreground != 0 && foreground != 1) throw new RuntimeException("Must be 0 or 1");
 
-        return date;
+        ContentValues values = new ContentValues();
+        values.put(KEY_PACKAGE, packageName);
+        values.put(KEY_TIME_STAMP, timeStamp);
+        values.put(KEY_FOREGROUND_BACKGROUND, foreground);
+
+        // Inserting Row
+        mDB.insert(TABLE_APP_STATUS_EVENTS, null, values);
     }
 
     private void addLeakSummary(LeakReport rpt) {
@@ -188,18 +216,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         mDB.insert(TABLE_LEAK_SUMMARY, null, values);
     }
 
-
     public List<AppSummary> getAllApps() {
         List<AppSummary> apps = new ArrayList<>();
         Cursor cursor = mDB.query(TABLE_LEAK_SUMMARY, new String[]{KEY_PACKAGE, KEY_NAME, "SUM(" + KEY_FREQUENCY + ")", "MIN(" + KEY_IGNORE + ")"}, null, null, KEY_PACKAGE + ", " + KEY_NAME, null, null);
         if (cursor != null) {
             if (cursor.moveToFirst()) {
                 do {
-                    AppSummary app = new AppSummary();
-                    app.packageName = cursor.getString(0);
-                    app.appName = cursor.getString(1);
-                    app.totalLeaks = cursor.getInt(2);
-                    app.ignore = cursor.getInt(3);
+                    AppSummary app = new AppSummary(cursor.getString(0), cursor.getString(1), cursor.getInt(2), cursor.getInt(3));
                     apps.add(app);
                 } while (cursor.moveToNext());
 
@@ -207,6 +230,22 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             cursor.close();
         }
         return apps;
+    }
+
+    public List<AppStatusEvent> getAppStatusEvents() {
+        List<AppStatusEvent> appStatusEvents = new ArrayList<>();
+        Cursor cursor = mDB.query(TABLE_APP_STATUS_EVENTS, new String[]{KEY_PACKAGE, KEY_TIME_STAMP, KEY_FOREGROUND_BACKGROUND}, null, null, null, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                do {
+                    AppStatusEvent appStatusEvent = new AppStatusEvent(cursor.getString(0), cursor.getLong(1), cursor.getInt(2));
+                    appStatusEvents.add(appStatusEvent);
+                } while (cursor.moveToNext());
+
+            }
+            cursor.close();
+        }
+        return appStatusEvents;
     }
 
     public List<CategorySummary> getAppDetail(String packageName) {

@@ -4,10 +4,10 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
 
     <dimen name="main_activity_fab_margin">16dp</dimen>
-    <dimen name="main_activity_fab_spacing">12dp</dimen>
+    <dimen name="main_activity_fab_spacing">10dp</dimen>
 
     <!-- (main_activity_fab_margin - main_activity_fab_spacing)/2 -->
-    <dimen name="main_activity_fab_spacing_half">2dp</dimen>
+    <dimen name="main_activity_fab_spacing_half">3dp</dimen>
 
     <dimen name="data_leak_margin">10dp</dimen>
 

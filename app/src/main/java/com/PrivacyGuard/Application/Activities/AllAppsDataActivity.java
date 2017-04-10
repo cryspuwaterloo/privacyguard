@@ -15,12 +15,11 @@ public class AllAppsDataActivity extends DataActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        DatabaseHandler databaseHandler = new DatabaseHandler(this);
+        DatabaseHandler databaseHandler = DatabaseHandler.getInstance(this);
         locationLeaks = databaseHandler.getAppLeaks(LeakReport.LeakCategory.LOCATION.name());
         contactLeaks = databaseHandler.getAppLeaks(LeakReport.LeakCategory.CONTACT.name());
         deviceLeaks = databaseHandler.getAppLeaks(LeakReport.LeakCategory.DEVICE.name());
         keywordLeaks = databaseHandler.getAppLeaks(LeakReport.LeakCategory.KEYWORD.name());
-        databaseHandler.close();
     }
 
     @Override

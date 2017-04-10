@@ -57,7 +57,7 @@ public class DetailActivity extends AppCompatActivity {
         notificationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                DatabaseHandler db = new DatabaseHandler(DetailActivity.this);
+                DatabaseHandler db = DatabaseHandler.getInstance(DetailActivity.this);
                 if (isChecked) {
                     // The toggle is enabled
                     db.setIgnoreAppCategory(notifyId, true);
@@ -67,7 +67,6 @@ public class DetailActivity extends AppCompatActivity {
                     db.setIgnoreAppCategory(notifyId, false);
                     ignore = 0;
                 }
-                db.close();
             }
         });
 
@@ -82,9 +81,8 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void updateList() {
-        DatabaseHandler db = new DatabaseHandler(this);
+        DatabaseHandler db = DatabaseHandler.getInstance(this);
         List<DataLeak> details = db.getAppLeaks(packageName, category);
-        db.close();
 
         if (details == null) {
             return;

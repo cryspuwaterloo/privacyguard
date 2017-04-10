@@ -67,7 +67,7 @@ public class LocationDetailActivity extends AppCompatActivity implements OnMapRe
         notificationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                DatabaseHandler db = new DatabaseHandler(LocationDetailActivity.this);
+                DatabaseHandler db = DatabaseHandler.getInstance(LocationDetailActivity.this);
                 if (isChecked) {
                     // The toggle is enabled
                     db.setIgnoreAppCategory(notifyId, true);
@@ -77,7 +77,6 @@ public class LocationDetailActivity extends AppCompatActivity implements OnMapRe
                     db.setIgnoreAppCategory(notifyId, false);
                     ignore = 0;
                 }
-                db.close();
             }
         });
 
@@ -110,9 +109,8 @@ public class LocationDetailActivity extends AppCompatActivity implements OnMapRe
     }
 
     private void updateList() {
-        DatabaseHandler db = new DatabaseHandler(this);
+        DatabaseHandler db = DatabaseHandler.getInstance(this);
         List<DataLeak> details = db.getAppLeaks(packageName, category);
-        db.close();
 
         if (details == null) {
             return;

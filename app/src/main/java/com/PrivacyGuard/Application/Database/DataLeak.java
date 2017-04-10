@@ -18,7 +18,7 @@ public class DataLeak {
         this.timestamp = timestamp;
 
         try {
-            this.timestampDate = DatabaseHandler.DATE_FORMAT.parse(timestamp);
+            this.timestampDate = DatabaseHandler.getDateFormat().parse(timestamp);
         }
         catch (ParseException ex) {
             throw new RuntimeException("Invalid timestamp for DataLeak, tried to parse: " + timestamp);

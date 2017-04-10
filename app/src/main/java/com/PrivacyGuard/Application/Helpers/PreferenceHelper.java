@@ -44,23 +44,23 @@ public class PreferenceHelper {
     private static Comparator<AppSummary> INCREASING_ORDER_BY_NUMBER_OF_LEAKS = new Comparator<AppSummary>() {
         @Override
         public int compare(AppSummary lhs, AppSummary rhs) {
-            if (lhs.totalLeaks == rhs.totalLeaks) return 0;
-            return lhs.totalLeaks < rhs.totalLeaks ? -1 : 1;
+            if (lhs.getTotalLeaks() == rhs.getTotalLeaks()) return 0;
+            return lhs.getTotalLeaks() < rhs.getTotalLeaks() ? -1 : 1;
         }
     };
 
     private static Comparator<AppSummary> DECREASING_ORDER_BY_NUMBER_OF_LEAKS = new Comparator<AppSummary>() {
         @Override
         public int compare(AppSummary lhs, AppSummary rhs) {
-            if (lhs.totalLeaks == rhs.totalLeaks) return 0;
-            return lhs.totalLeaks < rhs.totalLeaks ? 1 : -1;
+            if (lhs.getTotalLeaks() == rhs.getTotalLeaks()) return 0;
+            return lhs.getTotalLeaks() < rhs.getTotalLeaks() ? 1 : -1;
         }
     };
 
     private static Comparator<AppSummary> ALPHABETICAL_ORDER = new Comparator<AppSummary>() {
         @Override
         public int compare(AppSummary lhs, AppSummary rhs) {
-            return lhs.appName.compareTo(rhs.appName);
+            return lhs.getAppName().compareTo(rhs.getAppName());
         }
     };
 }

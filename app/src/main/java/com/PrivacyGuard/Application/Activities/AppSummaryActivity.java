@@ -52,7 +52,7 @@ public class AppSummaryActivity extends AppCompatActivity {
         notificationSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                DatabaseHandler db = new DatabaseHandler(AppSummaryActivity.this);
+                DatabaseHandler db = DatabaseHandler.getInstance(AppSummaryActivity.this);
                 if (isChecked) {
                     // The toggle is enabled
                     db.setIgnoreApp(packageName, true);
@@ -62,7 +62,6 @@ public class AppSummaryActivity extends AppCompatActivity {
                     db.setIgnoreApp(packageName, false);
                     ignore = 0;
                 }
-                db.close();
             }
         });
 
@@ -108,9 +107,8 @@ public class AppSummaryActivity extends AppCompatActivity {
     }
 
     private void updateList(){
-        DatabaseHandler db = new DatabaseHandler(this);
+        DatabaseHandler db = DatabaseHandler.getInstance(this);
         List<CategorySummary> details = db.getAppDetail(packageName);
-        db.close();
 
         if (details == null) {
             return;
