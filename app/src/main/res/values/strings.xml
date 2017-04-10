@@ -46,6 +46,7 @@
     <string name="time_label">Time</string>
     <string name="content_label">Content</string>
 
+    <string name="application_label_colon">Application:</string>
     <string name="category_label_colon">Category:</string>
     <string name="type_label_colon">Type:</string>
     <string name="time_label_colon">Time:</string>

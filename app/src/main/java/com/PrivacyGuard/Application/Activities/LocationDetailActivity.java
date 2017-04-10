@@ -86,7 +86,7 @@ public class LocationDetailActivity extends AppCompatActivity implements OnMapRe
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 DataLeak leak = (DataLeak) parent.getItemAtPosition(position);
-                String location = leak.leakContent;
+                String location = leak.getLeakContent();
                 String[] point = location.split(":");
                 if (point.length == 2) {
                     double lat = Double.parseDouble(point[0]);
@@ -141,7 +141,7 @@ public class LocationDetailActivity extends AppCompatActivity implements OnMapRe
 
         for(int i = 0; i < adapter.getCount(); i++){
             DataLeak leak = (DataLeak) adapter.getItem(i);
-            String location = leak.leakContent;
+            String location = leak.getLeakContent();
             String[] point = location.split(":");
             if(point.length == 2){
                 double lat = Double.parseDouble(point[0]);
@@ -155,7 +155,7 @@ public class LocationDetailActivity extends AppCompatActivity implements OnMapRe
                 // Setting latitude and longitude for the marker
                 markerOptions.position(loc);
                 markerOptions.title("Time");
-                markerOptions.snippet(leak.timestamp);
+                markerOptions.snippet(leak.getTimestamp());
 
                 // Adding marker on the Google Map
                 map.addMarker(markerOptions);

@@ -5,13 +5,17 @@ import java.util.Date;
 
 public class DataLeak {
 
-    public String category;
-    public String type;
-    public String leakContent;
-    public String timestamp;
-    public Date timestampDate;
+    private String packageName;
+    private String appName;
+    private String category;
+    private String type;
+    private String leakContent;
+    private String timestamp;
+    private Date timestampDate;
 
-    public DataLeak(String category, String type, String content, String timestamp){
+    public DataLeak(String packageName, String appName, String category, String type, String content, String timestamp){
+        this.packageName = packageName;
+        this.appName = appName;
         this.category = category;
         this.type = type;
         this.leakContent = content;
@@ -23,5 +27,33 @@ public class DataLeak {
         catch (ParseException ex) {
             throw new RuntimeException("Invalid timestamp for DataLeak, tried to parse: " + timestamp);
         }
+    }
+
+    public String getPackageName() {
+        return packageName;
+    }
+
+    public String getAppName() {
+        return appName;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getLeakContent() {
+        return leakContent;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public Date getTimestampDate() {
+        return timestampDate;
     }
 }

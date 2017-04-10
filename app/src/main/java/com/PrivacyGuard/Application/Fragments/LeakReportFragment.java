@@ -287,10 +287,10 @@ public class LeakReportFragment extends Fragment {
         for (LeakReport.LeakCategory category : LeakReport.LeakCategory.values()) {
             List<DataLeak> leaks = activity.getLeaks(category);
             for (DataLeak leak : leaks) {
-                int[] summary = leakMap.get(leak.timestampDate);
+                int[] summary = leakMap.get(leak.getTimestampDate());
                 if (summary == null) {
                     summary = new int[LeakReport.LeakCategory.values().length];
-                    leakMap.put(leak.timestampDate, summary);
+                    leakMap.put(leak.getTimestampDate(), summary);
                 }
                 summary[category.ordinal()]++;
                 int value = summary[category.ordinal()];

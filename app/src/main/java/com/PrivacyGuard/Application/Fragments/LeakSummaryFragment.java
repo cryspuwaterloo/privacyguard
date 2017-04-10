@@ -122,6 +122,6 @@ public class LeakSummaryFragment extends Fragment {
     }
 
     private String getStringPercentage(int size, double total) {
-        return String.valueOf((int)(size*100/total)) + "%";
+        return String.valueOf((int)Math.round(size*100/total)) + "%";
     }
 }

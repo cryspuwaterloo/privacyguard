@@ -12,11 +12,11 @@ import com.PrivacyGuard.Application.Logger;
 import com.PrivacyGuard.Plugin.LeakInstance;
 import com.PrivacyGuard.Plugin.LeakReport;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 
@@ -30,7 +30,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     // Database Name
     private static final String DATABASE_NAME = "dataLeaksManager";
 
-    private static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+    private static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.CANADA);
 
     private SQLiteDatabase mDB;
 
@@ -269,11 +269,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     public List<DataLeak> getAppLeaks(String packageName, String category) {
         List<DataLeak> leakList = new ArrayList<>();
-        Cursor cursor = mDB.query(TABLE_DATA_LEAKS, new String[]{KEY_TYPE, KEY_CONTENT, KEY_TIME_STAMP}, KEY_PACKAGE + "=? AND " + KEY_CATEGORY + "=?", new String[]{packageName, category}, null, null, null);
+        Cursor cursor = mDB.query(TABLE_DATA_LEAKS, new String[]{KEY_PACKAGE, KEY_NAME, KEY_TYPE, KEY_CONTENT, KEY_TIME_STAMP}, KEY_PACKAGE + "=? AND " + KEY_CATEGORY + "=?", new String[]{packageName, category}, null, null, null);
         if (cursor != null) {
             if (cursor.moveToFirst()) {
                 do {
-                    DataLeak leak = new DataLeak(category, cursor.getString(0), cursor.getString(1), cursor.getString(2));
+                    DataLeak leak = new DataLeak(cursor.getString(0), cursor.getString(1), category, cursor.getString(2), cursor.getString(3), cursor.getString(4));
                     leakList.add(leak);
                 } while (cursor.moveToNext());
             }
@@ -285,11 +285,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     public List<DataLeak> getAppLeaks(String category) {
         List<DataLeak> leakList = new ArrayList<>();
-        Cursor cursor = mDB.query(TABLE_DATA_LEAKS, new String[]{KEY_TYPE, KEY_CONTENT, KEY_TIME_STAMP}, KEY_CATEGORY + "=?", new String[]{category}, null, null, null);
+        Cursor cursor = mDB.query(TABLE_DATA_LEAKS, new String[]{KEY_PACKAGE, KEY_NAME, KEY_TYPE, KEY_CONTENT, KEY_TIME_STAMP}, KEY_CATEGORY + "=?", new String[]{category}, null, null, null);
         if (cursor != null) {
             if (cursor.moveToFirst()) {
                 do {
-                    DataLeak leak = new DataLeak(category, cursor.getString(0), cursor.getString(1), cursor.getString(2));
+                    DataLeak leak = new DataLeak(cursor.getString(0), cursor.getString(1), category, cursor.getString(2), cursor.getString(3), cursor.getString(4));
                     leakList.add(leak);
                 } while (cursor.moveToNext());
             }
