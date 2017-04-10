@@ -9,12 +9,12 @@ android {
             storePassword 'privacyguard'
         }
     }
-    compileSdkVersion 22
+    compileSdkVersion 23
     buildToolsVersion '25.0.2'
     defaultConfig {
         applicationId "com.PrivacyGuard"
         minSdkVersion 18
-        targetSdkVersion 22
+        targetSdkVersion 23
     }
     buildTypes {
         release {
@@ -40,9 +40,10 @@ dependencies {
     compile files('libs/jnetutils.jar')
     compile files('libs/sandroproxylib.jar')
     compile files('libs/opencsv-3.8.jar')
-    compile 'com.android.support:support-v4:22.2.1'
-    compile 'com.android.support:appcompat-v7:22.2.1'
-    compile 'com.android.support:design:22.2.1'
-    compile 'com.google.android.gms:play-services-maps:8.4.0'
-    compile "com.androidplot:androidplot-core:1.4.1"
+    compile 'com.android.support:support-v4:23.2.1'
+    compile 'com.android.support:appcompat-v7:23.2.1'
+    compile 'com.android.support:design:23.2.1'
+    compile 'com.google.android.gms:play-services-gcm:10.2.1'
+    compile 'com.google.android.gms:play-services-maps:10.2.1'
+    compile 'com.androidplot:androidplot-core:1.4.1'
 }

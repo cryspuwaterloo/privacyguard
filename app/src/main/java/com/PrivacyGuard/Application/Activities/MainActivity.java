@@ -41,6 +41,7 @@ import android.widget.ListView;
 
 import com.PrivacyGuard.Application.Database.AppSummary;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
+import com.PrivacyGuard.Application.Database.RecordAppStatusService;
 import com.PrivacyGuard.Application.Helpers.ActivityRequestCodes;
 import com.PrivacyGuard.Application.Helpers.PreferenceHelper;
 import com.PrivacyGuard.Application.Logger;
@@ -48,10 +49,13 @@ import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService;
 import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService.MyVpnServiceBinder;
 import com.PrivacyGuard.Application.PrivacyGuard;
 import com.PrivacyGuard.Utilities.CertificateManager;
+import com.google.android.gms.gcm.GcmNetworkManager;
+import com.google.android.gms.gcm.PeriodicTask;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.security.cert.Certificate;
 import javax.security.cert.CertificateEncodingException;
@@ -59,6 +63,7 @@ import javax.security.cert.CertificateEncodingException;
 public class MainActivity extends AppCompatActivity {
 
     private static String TAG = "MainActivity";
+    private static String RECORD_APP_STATUS_TAG = "record_application_status_tag";
 
     private ListView listLeak;
     private MainListViewAdapter adapter;
@@ -156,6 +161,18 @@ public class MainActivity extends AppCompatActivity {
         };
 
         mDbHandler = new DatabaseHandler(this);
+
+        GcmNetworkManager manager = GcmNetworkManager.getInstance(this);
+
+        PeriodicTask task = new PeriodicTask.Builder()
+                .setService(RecordAppStatusService.class)
+                .setTag(RECORD_APP_STATUS_TAG)
+                .setPersisted(true)
+                .setPeriod(TimeUnit.DAYS.toSeconds(5))
+                .setFlex(TimeUnit.DAYS.toSeconds(1))
+                .build();
+
+        manager.schedule(task);
     }
 
     @Override
