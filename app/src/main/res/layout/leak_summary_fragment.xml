@@ -29,134 +29,208 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@id/legend"
-        android:padding="4dp"
-        android:layout_below="@id/graph_title"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:orientation="vertical"
-        android:background="@color/black"
-        android:gravity="center_horizontal">
+        android:orientation="horizontal"
+        android:gravity="center">
 
         <LinearLayout
+            android:id="@+id/category_legend"
+            android:padding="4dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:baselineAligned="false"
-            android:gravity="center"
-            android:padding="@dimen/android_plot_legend_padding">
+            android:orientation="vertical"
+            android:background="@color/black">
 
-            <TextView
-                android:layout_width="@dimen/android_plot_legend_medium_height"
-                android:layout_height="@dimen/android_plot_legend_medium_height"
-                android:background="@drawable/circle_background"
-                android:layout_marginRight="@dimen/android_plot_legend_spacing"
-                android:layout_marginEnd="@dimen/android_plot_legend_spacing"
-                android:backgroundTint="@color/location_color"/>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:baselineAligned="false"
+                android:gravity="center"
+                android:padding="@dimen/android_plot_legend_padding">
 
-            <TextView
-                android:layout_width="@dimen/android_plot_legend_large_width"
-                android:layout_height="@dimen/android_plot_legend_large_height"
-                android:textSize="@dimen/android_plot_legend_large_text"
-                android:text="@string/location_category"
-                android:gravity="center_vertical"/>
+                <TextView
+                    android:layout_width="@dimen/android_plot_legend_medium_height"
+                    android:layout_height="@dimen/android_plot_legend_medium_height"
+                    android:background="@drawable/circle_background"
+                    android:layout_marginRight="@dimen/android_plot_legend_spacing"
+                    android:layout_marginEnd="@dimen/android_plot_legend_spacing"
+                    android:backgroundTint="@color/location_color"/>
 
-            <TextView
-                android:id="@+id/location_percentage"
-                android:layout_width="@dimen/android_plot_legend_percentage_width"
-                android:layout_height="@dimen/android_plot_legend_large_height"
-                android:textSize="@dimen/android_plot_legend_large_text"/>
+                <TextView
+                    android:layout_width="@dimen/android_plot_legend_large_width"
+                    android:layout_height="@dimen/android_plot_legend_large_height"
+                    android:textSize="@dimen/android_plot_legend_large_text"
+                    android:text="@string/location_category"
+                    android:gravity="center_vertical"/>
+
+                <TextView
+                    android:id="@+id/location_percentage"
+                    android:layout_width="@dimen/android_plot_legend_percentage_width"
+                    android:layout_height="@dimen/android_plot_legend_large_height"
+                    android:textSize="@dimen/android_plot_legend_large_text"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:baselineAligned="false"
+                android:gravity="center"
+                android:padding="@dimen/android_plot_legend_padding">
+
+                <TextView
+                    android:layout_width="@dimen/android_plot_legend_medium_height"
+                    android:layout_height="@dimen/android_plot_legend_medium_height"
+                    android:background="@drawable/circle_background"
+                    android:layout_marginRight="@dimen/android_plot_legend_spacing"
+                    android:layout_marginEnd="@dimen/android_plot_legend_spacing"
+                    android:backgroundTint="@color/contact_color"/>
+
+                <TextView
+                    android:layout_width="@dimen/android_plot_legend_large_width"
+                    android:layout_height="@dimen/android_plot_legend_large_height"
+                    android:textSize="@dimen/android_plot_legend_large_text"
+                    android:text="@string/contact_category"
+                    android:gravity="center_vertical"/>
+
+                <TextView
+                    android:id="@+id/contact_percentage"
+                    android:layout_width="@dimen/android_plot_legend_percentage_width"
+                    android:layout_height="@dimen/android_plot_legend_large_height"
+                    android:textSize="@dimen/android_plot_legend_large_text"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:baselineAligned="false"
+                android:gravity="center"
+                android:padding="@dimen/android_plot_legend_padding">
+
+                <TextView
+                    android:layout_width="@dimen/android_plot_legend_medium_height"
+                    android:layout_height="@dimen/android_plot_legend_medium_height"
+                    android:background="@drawable/circle_background"
+                    android:layout_marginRight="@dimen/android_plot_legend_spacing"
+                    android:layout_marginEnd="@dimen/android_plot_legend_spacing"
+                    android:backgroundTint="@color/device_color"/>
+
+                <TextView
+                    android:layout_width="@dimen/android_plot_legend_large_width"
+                    android:layout_height="@dimen/android_plot_legend_large_height"
+                    android:textSize="@dimen/android_plot_legend_large_text"
+                    android:text="@string/device_category"
+                    android:gravity="center_vertical"/>
+
+                <TextView
+                    android:id="@+id/device_percentage"
+                    android:layout_width="@dimen/android_plot_legend_percentage_width"
+                    android:layout_height="@dimen/android_plot_legend_large_height"
+                    android:textSize="@dimen/android_plot_legend_large_text" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:baselineAligned="false"
+                android:gravity="center"
+                android:padding="@dimen/android_plot_legend_padding">
+
+                <TextView
+                    android:layout_width="@dimen/android_plot_legend_medium_height"
+                    android:layout_height="@dimen/android_plot_legend_medium_height"
+                    android:background="@drawable/circle_background"
+                    android:layout_marginRight="@dimen/android_plot_legend_spacing"
+                    android:layout_marginEnd="@dimen/android_plot_legend_spacing"
+                    android:backgroundTint="@color/keyword_color"/>
+
+                <TextView
+                    android:layout_width="@dimen/android_plot_legend_large_width"
+                    android:layout_height="@dimen/android_plot_legend_large_height"
+                    android:textSize="@dimen/android_plot_legend_large_text"
+                    android:text="@string/keyword_category"
+                    android:gravity="center_vertical" />
+
+                <TextView
+                    android:id="@+id/keyword_percentage"
+                    android:layout_width="@dimen/android_plot_legend_percentage_width"
+                    android:layout_height="@dimen/android_plot_legend_large_height"
+                    android:textSize="@dimen/android_plot_legend_large_text" />
+            </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/status_legend"
+            android:padding="4dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:baselineAligned="false"
-            android:gravity="center"
-            android:padding="@dimen/android_plot_legend_padding">
+            android:orientation="vertical"
+            android:background="@color/black"
+            android:gravity="center_horizontal">
 
-            <TextView
-                android:layout_width="@dimen/android_plot_legend_medium_height"
-                android:layout_height="@dimen/android_plot_legend_medium_height"
-                android:background="@drawable/circle_background"
-                android:layout_marginRight="@dimen/android_plot_legend_spacing"
-                android:layout_marginEnd="@dimen/android_plot_legend_spacing"
-                android:backgroundTint="@color/contact_color"/>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:baselineAligned="false"
+                android:gravity="center"
+                android:padding="@dimen/android_plot_legend_padding">
 
-            <TextView
-                android:layout_width="@dimen/android_plot_legend_large_width"
-                android:layout_height="@dimen/android_plot_legend_large_height"
-                android:textSize="@dimen/android_plot_legend_large_text"
-                android:text="@string/contact_category"
-                android:gravity="center_vertical"/>
+                <TextView
+                    android:layout_width="@dimen/android_plot_legend_medium_height"
+                    android:layout_height="@dimen/android_plot_legend_medium_height"
+                    android:background="@drawable/circle_background"
+                    android:layout_marginRight="@dimen/android_plot_legend_spacing"
+                    android:layout_marginEnd="@dimen/android_plot_legend_spacing"
+                    android:backgroundTint="@color/app_status_green"/>
 
-            <TextView
-                android:id="@+id/contact_percentage"
-                android:layout_width="@dimen/android_plot_legend_percentage_width"
-                android:layout_height="@dimen/android_plot_legend_large_height"
-                android:textSize="@dimen/android_plot_legend_large_text"/>
-        </LinearLayout>
+                <TextView
+                    android:layout_width="@dimen/android_plot_legend_large_width"
+                    android:layout_height="@dimen/android_plot_legend_large_height"
+                    android:textSize="@dimen/android_plot_legend_large_text"
+                    android:text="@string/app_status_foreground"
+                    android:gravity="center_vertical"/>
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:baselineAligned="false"
-            android:gravity="center"
-            android:padding="@dimen/android_plot_legend_padding">
+                <TextView
+                    android:id="@+id/foreground_percentage"
+                    android:layout_width="@dimen/android_plot_legend_percentage_width"
+                    android:layout_height="@dimen/android_plot_legend_large_height"
+                    android:textSize="@dimen/android_plot_legend_large_text"/>
+            </LinearLayout>
 
-            <TextView
-                android:layout_width="@dimen/android_plot_legend_medium_height"
-                android:layout_height="@dimen/android_plot_legend_medium_height"
-                android:background="@drawable/circle_background"
-                android:layout_marginRight="@dimen/android_plot_legend_spacing"
-                android:layout_marginEnd="@dimen/android_plot_legend_spacing"
-                android:backgroundTint="@color/device_color"/>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:baselineAligned="false"
+                android:gravity="center"
+                android:padding="@dimen/android_plot_legend_padding">
 
-            <TextView
-                android:layout_width="@dimen/android_plot_legend_large_width"
-                android:layout_height="@dimen/android_plot_legend_large_height"
-                android:textSize="@dimen/android_plot_legend_large_text"
-                android:text="@string/device_category"
-                android:gravity="center_vertical"/>
+                <TextView
+                    android:layout_width="@dimen/android_plot_legend_medium_height"
+                    android:layout_height="@dimen/android_plot_legend_medium_height"
+                    android:background="@drawable/circle_background"
+                    android:layout_marginRight="@dimen/android_plot_legend_spacing"
+                    android:layout_marginEnd="@dimen/android_plot_legend_spacing"
+                    android:backgroundTint="@color/app_status_red"/>
 
-            <TextView
-                android:id="@+id/device_percentage"
-                android:layout_width="@dimen/android_plot_legend_percentage_width"
-                android:layout_height="@dimen/android_plot_legend_large_height"
-                android:textSize="@dimen/android_plot_legend_large_text" />
-        </LinearLayout>
+                <TextView
+                    android:layout_width="@dimen/android_plot_legend_large_width"
+                    android:layout_height="@dimen/android_plot_legend_large_height"
+                    android:textSize="@dimen/android_plot_legend_large_text"
+                    android:text="@string/app_status_background"
+                    android:gravity="center_vertical"/>
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:baselineAligned="false"
-            android:gravity="center"
-            android:padding="@dimen/android_plot_legend_padding">
-
-            <TextView
-                android:layout_width="@dimen/android_plot_legend_medium_height"
-                android:layout_height="@dimen/android_plot_legend_medium_height"
-                android:background="@drawable/circle_background"
-                android:layout_marginRight="@dimen/android_plot_legend_spacing"
-                android:layout_marginEnd="@dimen/android_plot_legend_spacing"
-                android:backgroundTint="@color/keyword_color"/>
-
-            <TextView
-                android:layout_width="@dimen/android_plot_legend_large_width"
-                android:layout_height="@dimen/android_plot_legend_large_height"
-                android:textSize="@dimen/android_plot_legend_large_text"
-                android:text="@string/keyword_category"
-                android:gravity="center_vertical" />
-
-            <TextView
-                android:id="@+id/keyword_percentage"
-                android:layout_width="@dimen/android_plot_legend_percentage_width"
-                android:layout_height="@dimen/android_plot_legend_large_height"
-                android:textSize="@dimen/android_plot_legend_large_text" />
+                <TextView
+                    android:id="@+id/background_percentage"
+                    android:layout_width="@dimen/android_plot_legend_percentage_width"
+                    android:layout_height="@dimen/android_plot_legend_large_height"
+                    android:textSize="@dimen/android_plot_legend_large_text"/>
+            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 

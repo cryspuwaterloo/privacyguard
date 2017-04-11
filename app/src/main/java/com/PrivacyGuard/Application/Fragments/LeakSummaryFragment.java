@@ -47,9 +47,9 @@ public class LeakSummaryFragment extends Fragment {
         List<DataLeak> deviceLeaks = activity.getLeaks(LeakReport.LeakCategory.DEVICE);
         List<DataLeak> keywordLeaks = activity.getLeaks(LeakReport.LeakCategory.KEYWORD);
 
-        double foreground = 0;
-        double background = 0;
-        double unspecified = 0;
+        int foreground = 0;
+        int background = 0;
+        int unspecified = 0;
         for (DataLeak leak : locationLeaks) {
             if (leak.getForegroundStatus() == 1) foreground++;
             if (leak.getForegroundStatus() == 0) background++;
@@ -84,6 +84,12 @@ public class LeakSummaryFragment extends Fragment {
 
         TextView keywordPercentage = (TextView)view.findViewById(R.id.keyword_percentage);
         keywordPercentage.setText(getStringPercentage(keywordLeaks.size(), total));
+
+        TextView foregroundPercentage = (TextView)view.findViewById(R.id.foreground_percentage);
+        foregroundPercentage.setText(getStringPercentage(foreground, total));
+
+        TextView backgroundPercentage = (TextView)view.findViewById(R.id.background_percentage);
+        backgroundPercentage.setText(getStringPercentage(background, total));
 
         PackageManager pm = getContext().getPackageManager();
         ImageView appIcon = (ImageView)view.findViewById(R.id.app_icon);
