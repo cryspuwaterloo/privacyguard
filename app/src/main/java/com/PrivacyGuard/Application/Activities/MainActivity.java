@@ -40,6 +40,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.PrivacyGuard.Application.Database.AppStatusEvent;
 import com.PrivacyGuard.Application.Database.AppSummary;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
 import com.PrivacyGuard.Application.Database.RecordAppStatusService;
@@ -50,13 +51,10 @@ import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService;
 import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService.MyVpnServiceBinder;
 import com.PrivacyGuard.Application.PrivacyGuard;
 import com.PrivacyGuard.Utilities.CertificateManager;
-import com.google.android.gms.gcm.GcmNetworkManager;
-import com.google.android.gms.gcm.PeriodicTask;
 
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import javax.security.cert.Certificate;
 import javax.security.cert.CertificateEncodingException;
@@ -66,6 +64,8 @@ public class MainActivity extends AppCompatActivity {
     private static String TAG = "MainActivity";
     private static String RECORD_APP_STATUS_TAG = "record_application_status_tag";
 
+    private static float DISABLED_ALPHA = 0.3f;
+
     private ListView listLeak;
     private MainListViewAdapter adapter;
 
@@ -73,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
     private View offIndicator;
     private View loadingIndicator;
     private FloatingActionButton vpnToggle;
+    private FloatingActionButton statsButton;
 
     private boolean bounded = false;
     private boolean keyChainInstalled = false;
@@ -137,17 +138,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        FloatingActionButton statsButton = (FloatingActionButton)findViewById(R.id.stats_button);
+        statsButton = (FloatingActionButton)findViewById(R.id.stats_button);
         statsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                DatabaseHandler databaseHandler = DatabaseHandler.getInstance(MainActivity.this);
-                if (databaseHandler.getAllApps().size() > 0) {
-                    Intent i = new Intent(getApplicationContext(), AllAppsDataActivity.class);
-                    startActivity(i);
-                } else {
-                    Toast.makeText(MainActivity.this, "No Leaks Recorded", Toast.LENGTH_SHORT).show();
-                }
+                List<AppStatusEvent> list = DatabaseHandler.getInstance(MainActivity.this).getAppStatusEvents();
+                Toast.makeText(MainActivity.this, "Yoo: " + list.size(), Toast.LENGTH_SHORT).show();
+
+                Intent i = new Intent(getApplicationContext(), AllAppsDataActivity.class);
+                startActivity(i);
             }
         });
 
@@ -165,17 +164,10 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        GcmNetworkManager manager = GcmNetworkManager.getInstance(this);
-
-        PeriodicTask task = new PeriodicTask.Builder()
-                .setService(RecordAppStatusService.class)
-                .setTag(RECORD_APP_STATUS_TAG)
-                .setPersisted(true)
-                .setPeriod(TimeUnit.DAYS.toSeconds(5))
-                .setFlex(TimeUnit.DAYS.toSeconds(1))
-                .build();
-
-        manager.schedule(task);
+        final IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_BOOT_COMPLETED);
+        getApplicationContext().registerReceiver(new RecordAppStatusService(), filter);
     }
 
     @Override
@@ -239,7 +231,7 @@ public class MainActivity extends AppCompatActivity {
         loadingIndicator.setVisibility(status == Status.VPN_STARTING ? View.VISIBLE : View.GONE);
 
         vpnToggle.setEnabled(status != Status.VPN_STARTING);
-        vpnToggle.setAlpha(status == Status.VPN_STARTING ? 0.3f : 1.0f);
+        vpnToggle.setAlpha(status == Status.VPN_STARTING ? DISABLED_ALPHA : 1.0f);
 
         if (status == Status.VPN_STARTING) {
             loadingViewShownTime = System.currentTimeMillis();
@@ -265,13 +257,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void populateLeakList() {
-        // -----------------------------------------------------------------------
-        // Database Fetch
         DatabaseHandler db = DatabaseHandler.getInstance(this);
         List<AppSummary> apps = db.getAllApps();
 
-        if (apps == null) {
-            return;
+        if (apps.isEmpty()) {
+            statsButton.setEnabled(false);
+            statsButton.setAlpha(DISABLED_ALPHA);
+        }
+        else {
+            statsButton.setEnabled(true);
+            statsButton.setAlpha(1.0f);
         }
 
         Comparator<AppSummary> comparator = PreferenceHelper.getAppLeakOrder(getApplicationContext());

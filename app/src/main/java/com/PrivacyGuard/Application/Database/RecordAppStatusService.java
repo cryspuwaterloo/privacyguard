@@ -4,12 +4,10 @@ import android.annotation.TargetApi;
 import android.app.AppOpsManager;
 import android.app.usage.UsageEvents;
 import android.app.usage.UsageStatsManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
-
-import com.google.android.gms.gcm.GcmNetworkManager;
-import com.google.android.gms.gcm.GcmTaskService;
-import com.google.android.gms.gcm.TaskParams;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -22,20 +20,26 @@ import java.util.concurrent.TimeUnit;
  */
 
 @TargetApi(22)
-public class RecordAppStatusService extends GcmTaskService {
+public class RecordAppStatusService extends BroadcastReceiver {
+    private Context context;
+
     private boolean hasUsageAccessPermission() {
-        AppOpsManager appOps = (AppOpsManager)getApplicationContext().getSystemService(Context.APP_OPS_SERVICE);
-        int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), getApplicationContext().getPackageName());
+        AppOpsManager appOps = (AppOpsManager)context.getSystemService(Context.APP_OPS_SERVICE);
+        int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), context.getPackageName());
         return mode == AppOpsManager.MODE_ALLOWED;
     }
 
     @Override
-    public int onRunTask(TaskParams params) {
+    public void onReceive(Context context, Intent intent) {
+        this.context = context;
+        String strAction = intent.getAction();
+        if (!strAction.equals(Intent.ACTION_SCREEN_ON)) throw new RuntimeException("Nooo");
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP_MR1 || !hasUsageAccessPermission()) {
-            return GcmNetworkManager.RESULT_SUCCESS;
+            return;
         }
 
-        DatabaseHandler databaseHandler = DatabaseHandler.getInstance(getApplicationContext());
+        DatabaseHandler databaseHandler = DatabaseHandler.getInstance(context);
 
         List<AppSummary> apps = databaseHandler.getAllApps();
         HashSet<String> appPackageNames = new HashSet<>();
@@ -43,7 +47,7 @@ public class RecordAppStatusService extends GcmTaskService {
             appPackageNames.add(summary.getPackageName());
         }
 
-        UsageStatsManager usageStatsManager = (UsageStatsManager)getApplicationContext().getSystemService(Context.USAGE_STATS_SERVICE);
+        UsageStatsManager usageStatsManager = (UsageStatsManager)context.getSystemService(Context.USAGE_STATS_SERVICE);
         long currentTime = (new Date()).getTime();
 
         UsageEvents usageEvents = usageStatsManager.queryEvents(currentTime - TimeUnit.DAYS.toMillis(30), currentTime);
@@ -69,7 +73,5 @@ public class RecordAppStatusService extends GcmTaskService {
                 databaseHandler.addAppStatusEvent(event.getPackageName(), event.getTimeStamp(), foreground);
             }
         }
-
-        return GcmNetworkManager.RESULT_SUCCESS;
     }
 }
