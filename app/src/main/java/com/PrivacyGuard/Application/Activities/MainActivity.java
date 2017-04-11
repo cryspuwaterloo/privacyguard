@@ -38,6 +38,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.PrivacyGuard.Application.Database.AppSummary;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
@@ -140,8 +141,13 @@ public class MainActivity extends AppCompatActivity {
         statsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(getApplicationContext(), AllAppsDataActivity.class);
-                startActivity(i);
+                DatabaseHandler databaseHandler = DatabaseHandler.getInstance(MainActivity.this);
+                if (databaseHandler.getAllApps().size() > 0) {
+                    Intent i = new Intent(getApplicationContext(), AllAppsDataActivity.class);
+                    startActivity(i);
+                } else {
+                    Toast.makeText(MainActivity.this, "No Leaks Recorded", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 

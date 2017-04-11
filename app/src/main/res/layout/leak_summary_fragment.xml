@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:gravity="center"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/black">
@@ -9,8 +11,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_alignParentTop="true"
-        android:layout_centerInParent="true"
         android:layout_marginTop="10dp">
 
         <TextView
@@ -162,8 +162,15 @@
 
     <com.androidplot.pie.PieChart
         style="@style/APDefacto.Dark"
-        android:id="@+id/mySimplePieChart"
+        android:id="@+id/category_pie_chart"
         android:layout_width="match_parent"
-        android:layout_height="fill_parent"
-        android:layout_below="@id/legend"/>
-</RelativeLayout>
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <com.androidplot.pie.PieChart
+        style="@style/APDefacto.Dark"
+        android:id="@+id/foreground_pie_chart"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+</LinearLayout>

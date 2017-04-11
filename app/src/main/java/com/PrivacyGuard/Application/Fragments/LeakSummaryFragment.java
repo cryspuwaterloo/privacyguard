@@ -30,13 +30,6 @@ import java.util.List;
 
 public class LeakSummaryFragment extends Fragment {
 
-    public PieChart pie;
-
-    private Segment locationSegment = null;
-    private Segment contactSegment = null;
-    private Segment deviceSegment = null;
-    private Segment keywordSegment = null;
-
     private AppDataInterface activity;
 
     @Override
@@ -53,6 +46,30 @@ public class LeakSummaryFragment extends Fragment {
         List<DataLeak> contactLeaks = activity.getLeaks(LeakReport.LeakCategory.CONTACT);
         List<DataLeak> deviceLeaks = activity.getLeaks(LeakReport.LeakCategory.DEVICE);
         List<DataLeak> keywordLeaks = activity.getLeaks(LeakReport.LeakCategory.KEYWORD);
+
+        double foreground = 0;
+        double background = 0;
+        double unspecified = 0;
+        for (DataLeak leak : locationLeaks) {
+            if (leak.getForegroundStatus() == 1) foreground++;
+            if (leak.getForegroundStatus() == 0) background++;
+            if (leak.getForegroundStatus() == -1) unspecified++;
+        }
+        for (DataLeak leak : contactLeaks) {
+            if (leak.getForegroundStatus() == 1) foreground++;
+            if (leak.getForegroundStatus() == 0) background++;
+            if (leak.getForegroundStatus() == -1) unspecified++;
+        }
+        for (DataLeak leak : deviceLeaks) {
+            if (leak.getForegroundStatus() == 1) foreground++;
+            if (leak.getForegroundStatus() == 0) background++;
+            if (leak.getForegroundStatus() == -1) unspecified++;
+        }
+        for (DataLeak leak : keywordLeaks) {
+            if (leak.getForegroundStatus() == 1) foreground++;
+            if (leak.getForegroundStatus() == 0) background++;
+            if (leak.getForegroundStatus() == -1) unspecified++;
+        }
 
         double total = locationLeaks.size() + contactLeaks.size() + deviceLeaks.size() + keywordLeaks.size();
 
@@ -79,12 +96,26 @@ public class LeakSummaryFragment extends Fragment {
         TextView appNameText = (TextView)view.findViewById(R.id.app_name);
         appNameText.setText(activity.getAppName());
 
-        pie = (PieChart) view.findViewById(R.id.mySimplePieChart);
+        Segment locationSegment = null;
+        Segment contactSegment = null;
+        Segment deviceSegment = null;
+        Segment keywordSegment = null;
+
+        Segment foregroundSegment = null;
+        Segment backgroundSegment = null;
+        Segment unspecifiedSegment = null;
+
+        PieChart categoryPieChart = (PieChart) view.findViewById(R.id.category_pie_chart);
+        PieChart foregroundPieChart = (PieChart) view.findViewById(R.id.foreground_pie_chart);
 
         if (locationLeaks.size() > 0) locationSegment = new Segment("", locationLeaks.size());
         if (contactLeaks.size() > 0) contactSegment = new Segment("", contactLeaks.size());
         if (deviceLeaks.size() > 0) deviceSegment = new Segment("", deviceLeaks.size());
         if (keywordLeaks.size() > 0) keywordSegment = new Segment("", keywordLeaks.size());
+
+        if (foreground > 0) foregroundSegment = new Segment("", foreground);
+        if (background > 0) backgroundSegment = new Segment("", background);
+        if (unspecified > 0) unspecifiedSegment = new Segment("", unspecified);
 
         final float fontSize = PixelUtils.spToPix(30);
 
@@ -111,12 +142,32 @@ public class LeakSummaryFragment extends Fragment {
         sfKeyword.getLabelPaint().setShadowLayer(3, 0, 0, Color.BLACK);
         sfKeyword.getFillPaint().setMaskFilter(emf);
 
-        if (locationSegment != null) pie.addSegment(locationSegment, sfLocation);
-        if (contactSegment != null) pie.addSegment(contactSegment, sfContact);
-        if (deviceSegment != null) pie.addSegment(deviceSegment, sfDevice);
-        if (keywordSegment != null) pie.addSegment(keywordSegment, sfKeyword);
+        SegmentFormatter sfForeground = new SegmentFormatter(getResources().getColor(R.color.app_status_green));
+        sfForeground.getLabelPaint().setTextSize(fontSize);
+        sfForeground.getLabelPaint().setShadowLayer(3, 0, 0, Color.BLACK);
+        sfForeground.getFillPaint().setMaskFilter(emf);
 
-        pie.getRenderer(PieRenderer.class).setDonutSize(0, PieRenderer.DonutMode.PERCENT);
+        SegmentFormatter sfBackground = new SegmentFormatter(getResources().getColor(R.color.app_status_red));
+        sfBackground.getLabelPaint().setTextSize(fontSize);
+        sfBackground.getLabelPaint().setShadowLayer(3, 0, 0, Color.BLACK);
+        sfBackground.getFillPaint().setMaskFilter(emf);
+
+        SegmentFormatter sfUnspecified = new SegmentFormatter(getResources().getColor(R.color.blue));
+        sfUnspecified.getLabelPaint().setTextSize(fontSize);
+        sfUnspecified.getLabelPaint().setShadowLayer(3, 0, 0, Color.BLACK);
+        sfUnspecified.getFillPaint().setMaskFilter(emf);
+
+        if (locationSegment != null) categoryPieChart.addSegment(locationSegment, sfLocation);
+        if (contactSegment != null) categoryPieChart.addSegment(contactSegment, sfContact);
+        if (deviceSegment != null) categoryPieChart.addSegment(deviceSegment, sfDevice);
+        if (keywordSegment != null) categoryPieChart.addSegment(keywordSegment, sfKeyword);
+
+        if (foregroundSegment != null) foregroundPieChart.addSegment(foregroundSegment, sfForeground);
+        if (backgroundSegment != null) foregroundPieChart.addSegment(backgroundSegment, sfBackground);
+        if (unspecifiedSegment != null) foregroundPieChart.addSegment(unspecifiedSegment, sfUnspecified);
+
+        categoryPieChart.getRenderer(PieRenderer.class).setDonutSize(0, PieRenderer.DonutMode.PERCENT);
+        foregroundPieChart.getRenderer(PieRenderer.class).setDonutSize(0, PieRenderer.DonutMode.PERCENT);
 
         return view;
     }

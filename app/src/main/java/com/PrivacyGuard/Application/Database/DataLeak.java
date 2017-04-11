@@ -12,14 +12,16 @@ public class DataLeak {
     private String leakContent;
     private String timestamp;
     private Date timestampDate;
+    private int foregroundStatus;
 
-    public DataLeak(String packageName, String appName, String category, String type, String content, String timestamp){
+    public DataLeak(String packageName, String appName, String category, String type, String content, String timestamp, int foregroundStatus){
         this.packageName = packageName;
         this.appName = appName;
         this.category = category;
         this.type = type;
         this.leakContent = content;
         this.timestamp = timestamp;
+        this.foregroundStatus = foregroundStatus;
 
         try {
             this.timestampDate = DatabaseHandler.getDateFormat().parse(timestamp);
@@ -55,5 +57,9 @@ public class DataLeak {
 
     public Date getTimestampDate() {
         return timestampDate;
+    }
+
+    public int getForegroundStatus() {
+        return foregroundStatus;
     }
 }

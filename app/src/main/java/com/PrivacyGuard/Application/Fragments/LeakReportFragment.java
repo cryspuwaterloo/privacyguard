@@ -382,7 +382,7 @@ public class LeakReportFragment extends Fragment {
 
         if (lastEvent != null) {
             if (lastEvent.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND) {
-                throw new RuntimeException("Should not happen.");
+                //TODO: Why would this happen?  Are the events not sorted by time?
             }
             if (lastEvent.getEventType() == UsageEvents.Event.MOVE_TO_BACKGROUND) {
                 seriesBackground.addLast(currentTime, maxNumberOfLeaks);

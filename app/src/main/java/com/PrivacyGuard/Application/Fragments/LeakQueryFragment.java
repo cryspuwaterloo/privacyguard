@@ -159,6 +159,14 @@ public class LeakQueryFragment extends Fragment {
                 List<DataLeak> revisedLeaks = new ArrayList<>();
 
                 for (DataLeak dataLeak : leaks) {
+                    if (status.equals("Foreground") && dataLeak.getForegroundStatus() != 1) {
+                        continue;
+                    }
+
+                    if (status.equals("Background") && dataLeak.getForegroundStatus() != 0) {
+                        continue;
+                    }
+
                     long time = dataLeak.getTimestampDate().getTime();
                     if (time >= startDate.getTime() && time <= endDate.getTime()) {
                         revisedLeaks.add(dataLeak);
@@ -179,6 +187,7 @@ public class LeakQueryFragment extends Fragment {
                     TextView typeText = (TextView)layout.findViewById(R.id.type);
                     TextView timeStampText = (TextView)layout.findViewById(R.id.time_stamp);
                     TextView contentText = (TextView)layout.findViewById(R.id.content);
+                    TextView statusText = (TextView)layout.findViewById(R.id.status);
 
                     String categoryCamelCase = dataLeak.getCategory().toLowerCase();
                     categoryCamelCase = categoryCamelCase.substring(0,1).toUpperCase() + categoryCamelCase.substring(1);
@@ -188,6 +197,7 @@ public class LeakQueryFragment extends Fragment {
                     typeText.setText(dataLeak.getType());
                     timeStampText.setText(dateFormatDisplaySpecific.format(dataLeak.getTimestampDate()));
                     contentText.setText(dataLeak.getLeakContent());
+                    statusText.setText(dataLeak.getForegroundStatus() == 1 ? "Foreground" : "Background");
 
                     leaksList.addView(layout);
                 }

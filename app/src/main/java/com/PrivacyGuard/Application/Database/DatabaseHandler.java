@@ -24,22 +24,23 @@ import java.util.regex.Matcher;
  * Created by MAK on 03/11/2015.
  */
 public class DatabaseHandler extends SQLiteOpenHelper {
-    // Database Version
     private static final int DATABASE_VERSION = 1;
-
-    // Database Name
     private static final String DATABASE_NAME = "dataLeaksManager";
-
     private static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.CANADA);
-
     private SQLiteDatabase mDB;
+    public static final String LEAK_ID_KEY = "leak_id_key";
 
     private static DatabaseHandler sInstance = null;
+
+    private Context applicationContext = null;
 
     //The singleton pattern is used here because multiple threads could potentially be writing to the database.
     //Because of this patten, only one DataBaseHandler is created for the application lifecycle.
     //As a result, do not call .close() on a DatabaseHandler instance.
     public static synchronized DatabaseHandler getInstance(Context context) {
+        // Use the application context, which will ensure that you
+        // don't accidentally leak an Activity's context.
+        // See this article for more information: http://bit.ly/6LRzfx
         if (sInstance == null) {
             sInstance = new DatabaseHandler(context.getApplicationContext());
         }
@@ -48,6 +49,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     private DatabaseHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        applicationContext = context;
         mDB = getReadableDatabase();
     }
 
@@ -96,15 +98,17 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_CONTENT = "content";
     private static final String KEY_TIME_STAMP = "time_stamp";
 
+    //Note: foreground status is either 1 for foreground, 0 for background, or -1 if not specified.
+    private static final String KEY_FOREGROUND_STATUS = "foreground_status";
+
     // App status events table name
     private static final String TABLE_APP_STATUS_EVENTS = "app_status_events";
     // App status events Table Columns names
-    private static final String KEY_FOREGROUND_BACKGROUND = "category";
     private static final String CREATE_APP_STATUS_TABLE = "CREATE TABLE " + TABLE_APP_STATUS_EVENTS + "("
             + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
             + KEY_PACKAGE + " TEXT,"
             + KEY_TIME_STAMP + " INTEGER,"
-            + KEY_FOREGROUND_BACKGROUND + " INTEGER )";
+            + KEY_FOREGROUND_STATUS + " INTEGER )";
 
     // ------------------------------ w3kim@uwaterloo.ca -----------------------------
 
@@ -143,7 +147,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             + KEY_CATEGORY + " TEXT,"
             + KEY_TYPE + " TEXT,"
             + KEY_CONTENT + " TEXT,"
-            + KEY_TIME_STAMP + " TEXT" + ")";
+            + KEY_TIME_STAMP + " TEXT,"
+            + KEY_FOREGROUND_STATUS + " INTEGER" + ")";
     private static final String CREATE_LEAK_SUMMARY_TABLE = "CREATE TABLE " + TABLE_LEAK_SUMMARY + "("
             + KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
             + KEY_PACKAGE + " TEXT,"
@@ -155,16 +160,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     /**
      * All CRUD(Create, Read, Update, Delete) Operations
      */
-
-    void resetDataLeakTable() {
-        mDB.execSQL("DROP TABLE IF EXISTS " + TABLE_DATA_LEAKS);
-        mDB.execSQL(CREATE_DATA_LEAKS_TABLE);
-    }
-
-    void resetLeakSummaryTable() {
-        mDB.execSQL("DROP TABLE IF EXISTS " + TABLE_LEAK_SUMMARY);
-        mDB.execSQL(CREATE_LEAK_SUMMARY_TABLE);
-    }
 
     // w3kim@uwaterloo.ca
     private void addUrl(String appName, String packageName, String url, String host, String res, String queryParams) {
@@ -189,9 +184,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(KEY_TYPE, type); // Leak type
         values.put(KEY_CONTENT, content);
         values.put(KEY_TIME_STAMP, DATE_FORMAT.format(new Date())); // Leak time stamp
+        values.put(KEY_FOREGROUND_STATUS, -1); // Leak foreground status
 
         // Inserting Row
-        mDB.insert(TABLE_DATA_LEAKS, null, values);
+        long id = mDB.insert(TABLE_DATA_LEAKS, null, values);
+
+        // Update the status on a background thread to prevent delays.
+        new UpdateLeakForegroundStatus(applicationContext).execute(id);
     }
 
     public void addAppStatusEvent(String packageName, long timeStamp, int foreground) {
@@ -200,7 +199,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put(KEY_PACKAGE, packageName);
         values.put(KEY_TIME_STAMP, timeStamp);
-        values.put(KEY_FOREGROUND_BACKGROUND, foreground);
+        values.put(KEY_FOREGROUND_STATUS, foreground);
 
         // Inserting Row
         mDB.insert(TABLE_APP_STATUS_EVENTS, null, values);
@@ -234,7 +233,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     public List<AppStatusEvent> getAppStatusEvents() {
         List<AppStatusEvent> appStatusEvents = new ArrayList<>();
-        Cursor cursor = mDB.query(TABLE_APP_STATUS_EVENTS, new String[]{KEY_PACKAGE, KEY_TIME_STAMP, KEY_FOREGROUND_BACKGROUND}, null, null, null, null, null);
+        Cursor cursor = mDB.query(TABLE_APP_STATUS_EVENTS, new String[]{KEY_PACKAGE, KEY_TIME_STAMP, KEY_FOREGROUND_STATUS}, null, null, null, null, null);
         if (cursor != null) {
             if (cursor.moveToFirst()) {
                 do {
@@ -266,14 +265,27 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return categories;
     }
 
+    public DataLeak getLeakById(long id) {
+        Cursor cursor = mDB.query(TABLE_DATA_LEAKS, new String[]{KEY_PACKAGE, KEY_NAME, KEY_CATEGORY, KEY_TYPE, KEY_CONTENT, KEY_TIME_STAMP, KEY_FOREGROUND_STATUS}, KEY_ID + "=?", new String[]{String.valueOf(id)}, null, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                DataLeak leak = new DataLeak(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getString(4), cursor.getString(5), cursor.getInt(6));
+                cursor.close();
+                return leak;
+            }
+            cursor.close();
+        }
+        return null;
+    }
+
 
     public List<DataLeak> getAppLeaks(String packageName, String category) {
         List<DataLeak> leakList = new ArrayList<>();
-        Cursor cursor = mDB.query(TABLE_DATA_LEAKS, new String[]{KEY_PACKAGE, KEY_NAME, KEY_TYPE, KEY_CONTENT, KEY_TIME_STAMP}, KEY_PACKAGE + "=? AND " + KEY_CATEGORY + "=?", new String[]{packageName, category}, null, null, null);
+        Cursor cursor = mDB.query(TABLE_DATA_LEAKS, new String[]{KEY_PACKAGE, KEY_NAME, KEY_TYPE, KEY_CONTENT, KEY_TIME_STAMP, KEY_FOREGROUND_STATUS}, KEY_PACKAGE + "=? AND " + KEY_CATEGORY + "=?", new String[]{packageName, category}, null, null, null);
         if (cursor != null) {
             if (cursor.moveToFirst()) {
                 do {
-                    DataLeak leak = new DataLeak(cursor.getString(0), cursor.getString(1), category, cursor.getString(2), cursor.getString(3), cursor.getString(4));
+                    DataLeak leak = new DataLeak(cursor.getString(0), cursor.getString(1), category, cursor.getString(2), cursor.getString(3), cursor.getString(4), cursor.getInt(5));
                     leakList.add(leak);
                 } while (cursor.moveToNext());
             }
@@ -285,11 +297,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     public List<DataLeak> getAppLeaks(String category) {
         List<DataLeak> leakList = new ArrayList<>();
-        Cursor cursor = mDB.query(TABLE_DATA_LEAKS, new String[]{KEY_PACKAGE, KEY_NAME, KEY_TYPE, KEY_CONTENT, KEY_TIME_STAMP}, KEY_CATEGORY + "=?", new String[]{category}, null, null, null);
+        Cursor cursor = mDB.query(TABLE_DATA_LEAKS, new String[]{KEY_PACKAGE, KEY_NAME, KEY_TYPE, KEY_CONTENT, KEY_TIME_STAMP, KEY_FOREGROUND_STATUS}, KEY_CATEGORY + "=?", new String[]{category}, null, null, null);
         if (cursor != null) {
             if (cursor.moveToFirst()) {
                 do {
-                    DataLeak leak = new DataLeak(cursor.getString(0), cursor.getString(1), category, cursor.getString(2), cursor.getString(3), cursor.getString(4));
+                    DataLeak leak = new DataLeak(cursor.getString(0), cursor.getString(1), category, cursor.getString(2), cursor.getString(3), cursor.getString(4), cursor.getInt(5));
                     leakList.add(leak);
                 } while (cursor.moveToNext());
             }
@@ -362,7 +374,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     public int findNotificationId(LeakReport rpt) {
-
         Cursor cursor = mDB.query(TABLE_LEAK_SUMMARY,
                 new String[]{KEY_ID, KEY_FREQUENCY, KEY_IGNORE},
                 KEY_PACKAGE + "=? AND " + KEY_CATEGORY + "=?",
@@ -381,13 +392,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 cursor.close();
                 return -1;
             }
-            int notifyId = -1;
-            int frequency = 0;
-            int ignore = 0;
 
-            notifyId = cursor.getInt(0);
-            frequency = cursor.getInt(1);
-            ignore = cursor.getInt(2);
+            int notifyId = cursor.getInt(0);
+            int frequency = cursor.getInt(1);
+            int ignore = cursor.getInt(2);
 
             cursor.close();
 
@@ -435,6 +443,24 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return -1;
     }
 
+    public void setDataLeakStatus(long id, int status) {
+        if (status != 0 && status != 1 && status != -1) throw new RuntimeException("Must be 0, 1, or -1");
+        ContentValues values = new ContentValues();
+        values.put(KEY_FOREGROUND_STATUS, status);
+
+        String selection = KEY_ID + " =?";
+        String[] selectionArgs = {String.valueOf(id)};
+
+        int count = mDB.update(
+                TABLE_DATA_LEAKS,
+                values,
+                selection,
+                selectionArgs);
+
+        if (count == 0) {
+            Logger.i("DBHandler", "fail to set status for id: " + id);
+        }
+    }
 
     public void setIgnoreApp(String packageName, boolean ignore) {
         ContentValues values = new ContentValues();
