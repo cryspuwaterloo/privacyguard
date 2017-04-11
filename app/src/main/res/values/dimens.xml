@@ -16,11 +16,11 @@
     <dimen name="android_plot_legend_text_width_large">80dp</dimen>
     <dimen name="android_plot_legend_logo_height">10dp</dimen>
 
-    <dimen name="android_plot_legend_spacing">18dp</dimen>
+    <dimen name="android_plot_legend_spacing">10dp</dimen>
     <dimen name="android_plot_legend_large_height">20dp</dimen>
     <dimen name="android_plot_legend_medium_height">15dp</dimen>
-    <dimen name="android_plot_legend_large_width">85dp</dimen>
-    <dimen name="android_plot_legend_percentage_width">50dp</dimen>
+    <dimen name="android_plot_legend_large_width">95dp</dimen>
+    <dimen name="android_plot_legend_percentage_width">40dp</dimen>
     <dimen name="android_plot_legend_large_text">16sp</dimen>
     <dimen name="android_plot_legend_padding">2dp</dimen>
 </resources>

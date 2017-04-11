@@ -25,6 +25,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -172,6 +174,16 @@ public class LeakQueryFragment extends Fragment {
                         revisedLeaks.add(dataLeak);
                     }
                 }
+
+                Collections.sort(revisedLeaks, new Comparator<DataLeak>() {
+                    @Override
+                    public int compare(DataLeak lhs, DataLeak rhs) {
+                        long lt = lhs.getTimestampDate().getTime();
+                        long rt = rhs.getTimestampDate().getTime();
+                        if (lt == rt) return 0;
+                        return lt < rt ? -1 : 1;
+                    }
+                });
 
                 totalNumber.setText(String.format("%s Results", revisedLeaks.size()));
 

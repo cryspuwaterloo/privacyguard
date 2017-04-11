@@ -30,13 +30,15 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:orientation="horizontal"
         android:gravity="center">
 
         <LinearLayout
             android:id="@+id/category_legend"
-            android:padding="4dp"
+            android:paddingLeft="8dp"
+            android:paddingStart="8dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -163,9 +165,25 @@
             </LinearLayout>
         </LinearLayout>
 
+        <com.androidplot.pie.PieChart
+            style="@style/APDefacto.Dark"
+            android:id="@+id/category_pie_chart"
+            android:layout_width="fill_parent"
+            android:layout_height="match_parent"/>
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:gravity="center">
+
         <LinearLayout
             android:id="@+id/status_legend"
-            android:padding="4dp"
+            android:paddingLeft="8dp"
+            android:paddingStart="8dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -232,19 +250,11 @@
                     android:textSize="@dimen/android_plot_legend_large_text"/>
             </LinearLayout>
         </LinearLayout>
+
+        <com.androidplot.pie.PieChart
+            style="@style/APDefacto.Dark"
+            android:id="@+id/foreground_pie_chart"
+            android:layout_width="fill_parent"
+            android:layout_height="match_parent" />
     </LinearLayout>
-
-    <com.androidplot.pie.PieChart
-        style="@style/APDefacto.Dark"
-        android:id="@+id/category_pie_chart"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
-
-    <com.androidplot.pie.PieChart
-        style="@style/APDefacto.Dark"
-        android:id="@+id/foreground_pie_chart"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
 </LinearLayout>
