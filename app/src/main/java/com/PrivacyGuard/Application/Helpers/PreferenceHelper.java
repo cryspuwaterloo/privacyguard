@@ -8,12 +8,24 @@ import com.PrivacyGuard.Application.Activities.R;
 import com.PrivacyGuard.Application.Database.AppSummary;
 
 import java.util.Comparator;
+import java.util.Date;
 
 /**
  * Created by lucas on 05/02/17.
  */
 
 public class PreferenceHelper {
+    private static final String RECORD_APP_STATUS_SERVICE_LAST_TIME_RUN = "record_app_status_service_last_time_run";
+
+    public static void setRecordAppStatusServiceLastTimeRun(Context context) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+        sp.edit().putLong(RECORD_APP_STATUS_SERVICE_LAST_TIME_RUN, (new Date()).getTime()).apply();
+    }
+
+    public static long getRecordAppStatusServiceLastTimeRun(Context context) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+        return sp.getLong(RECORD_APP_STATUS_SERVICE_LAST_TIME_RUN, 0);
+    }
 
     public static int getLeakReportGraphDomainSize(Context context) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);

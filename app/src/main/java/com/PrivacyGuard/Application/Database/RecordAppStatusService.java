@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 
+import com.PrivacyGuard.Application.Helpers.PreferenceHelper;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -32,12 +34,16 @@ public class RecordAppStatusService extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         this.context = context;
-        String strAction = intent.getAction();
-        if (!strAction.equals(Intent.ACTION_SCREEN_ON)) throw new RuntimeException("Nooo");
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP_MR1 || !hasUsageAccessPermission()) {
             return;
         }
+
+        if ((new Date()).getTime() - PreferenceHelper.getRecordAppStatusServiceLastTimeRun(context) < TimeUnit.DAYS.toMillis(5)) {
+            return;
+        }
+
+        PreferenceHelper.setRecordAppStatusServiceLastTimeRun(context);
 
         DatabaseHandler databaseHandler = DatabaseHandler.getInstance(context);
 

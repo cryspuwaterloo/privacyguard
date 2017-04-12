@@ -165,8 +165,7 @@ public class MainActivity extends AppCompatActivity {
         };
 
         final IntentFilter filter = new IntentFilter();
-        filter.addAction(Intent.ACTION_SCREEN_ON);
-        filter.addAction(Intent.ACTION_BOOT_COMPLETED);
+        filter.addAction(Intent.ACTION_USER_PRESENT);
         getApplicationContext().registerReceiver(new RecordAppStatusService(), filter);
     }
 
