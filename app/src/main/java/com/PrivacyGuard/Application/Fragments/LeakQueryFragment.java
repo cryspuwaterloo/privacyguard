@@ -149,7 +149,7 @@ public class LeakQueryFragment extends Fragment {
                         leaks.addAll(activity.getLeaks(cat));
                     }
                 } else {
-                    LeakReport.LeakCategory categoryValue = LeakReport.LeakCategory.valueOf(category);
+                    LeakReport.LeakCategory categoryValue = LeakReport.LeakCategory.valueOf(category.toUpperCase());
                     leaks.addAll(activity.getLeaks(categoryValue));
                 }
 
