@@ -73,7 +73,8 @@ public class RecordAppStatusService extends BroadcastReceiver {
         databaseStatusEvents.addAll(databaseHandler.getAppStatusEvents());
 
         for (UsageEvents.Event event : appUsageEvents) {
-            int foreground = event.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND ? 1 : 0;
+            int foreground = event.getEventType() ==
+                    UsageEvents.Event.MOVE_TO_FOREGROUND ? DatabaseHandler.FOREGROUND_STATUS : DatabaseHandler.BACKGROUND_STATUS;
             AppStatusEvent temp = new AppStatusEvent(event.getPackageName(), event.getTimeStamp(), foreground);
             if (!databaseStatusEvents.contains(temp)) {
                 databaseHandler.addAppStatusEvent(event.getPackageName(), event.getTimeStamp(), foreground);

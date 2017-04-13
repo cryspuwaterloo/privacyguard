@@ -1,10 +1,12 @@
 package com.PrivacyGuard.Application.Database;
 
+import android.support.annotation.NonNull;
+
 /**
  * Created by lucas on 10/04/17.
  */
 
-public class AppStatusEvent {
+public class AppStatusEvent implements Comparable<AppStatusEvent> {
     private String packageName;
     private long timeStamp;
     private boolean foreground;
@@ -12,7 +14,7 @@ public class AppStatusEvent {
     public AppStatusEvent(String packageName, long timeStamp, int foreground) {
         this.packageName = packageName;
         this.timeStamp = timeStamp;
-        this.foreground = foreground == 1;
+        this.foreground = foreground == DatabaseHandler.FOREGROUND_STATUS;
     }
 
     public String getPackageName() {
@@ -48,4 +50,10 @@ public class AppStatusEvent {
         result = 31 * result + Boolean.valueOf(foreground).hashCode();
         return result;
     }
+
+    @Override
+    public int compareTo(@NonNull AppStatusEvent event) {
+        return timeStamp < event.timeStamp ? -1 : (timeStamp == event.timeStamp ? 0 : 1);
+    }
+
 }

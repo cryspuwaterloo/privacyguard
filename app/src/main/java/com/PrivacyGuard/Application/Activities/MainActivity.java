@@ -142,9 +142,6 @@ public class MainActivity extends AppCompatActivity {
         statsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                List<AppStatusEvent> list = DatabaseHandler.getInstance(MainActivity.this).getAppStatusEvents();
-                Toast.makeText(MainActivity.this, "Yoo: " + list.size(), Toast.LENGTH_SHORT).show();
-
                 Intent i = new Intent(getApplicationContext(), AllAppsDataActivity.class);
                 startActivity(i);
             }

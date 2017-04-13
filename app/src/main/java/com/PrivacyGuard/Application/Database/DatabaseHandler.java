@@ -247,6 +247,22 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return appStatusEvents;
     }
 
+    public List<AppStatusEvent> getAppStatusEvents(String packageName) {
+        List<AppStatusEvent> appStatusEvents = new ArrayList<>();
+        Cursor cursor = mDB.query(TABLE_APP_STATUS_EVENTS, new String[]{KEY_PACKAGE, KEY_TIME_STAMP, KEY_FOREGROUND_STATUS}, KEY_PACKAGE + "=?", new String[]{packageName}, null, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                do {
+                    AppStatusEvent appStatusEvent = new AppStatusEvent(cursor.getString(0), cursor.getLong(1), cursor.getInt(2));
+                    appStatusEvents.add(appStatusEvent);
+                } while (cursor.moveToNext());
+
+            }
+            cursor.close();
+        }
+        return appStatusEvents;
+    }
+
     public List<CategorySummary> getAppDetail(String packageName) {
         List<CategorySummary> categories = new ArrayList<>();
         Cursor cursor = mDB.query(TABLE_LEAK_SUMMARY, new String[]{KEY_ID, KEY_CATEGORY, KEY_FREQUENCY, KEY_IGNORE}, KEY_PACKAGE + "=?", new String[]{packageName}, null, null, null);
@@ -443,8 +459,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return -1;
     }
 
+    public static final int FOREGROUND_STATUS = 1;
+    public static final int BACKGROUND_STATUS = 0;
+
     public void setDataLeakStatus(long id, int status) {
-        if (status != 0 && status != 1 && status != -1) throw new RuntimeException("Must be 0, 1, or -1");
+        if (status != BACKGROUND_STATUS && status != FOREGROUND_STATUS) throw new RuntimeException("Invalid status value.");
         ContentValues values = new ContentValues();
         values.put(KEY_FOREGROUND_STATUS, status);
 
@@ -457,9 +476,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 selection,
                 selectionArgs);
 
-        if (count == 0) {
-            Logger.i("DBHandler", "fail to set status for id: " + id);
-        }
+        if (count == 0) Logger.i("DBHandler", "fail to set status for id: " + id);
     }
 
     public void setIgnoreApp(String packageName, boolean ignore) {

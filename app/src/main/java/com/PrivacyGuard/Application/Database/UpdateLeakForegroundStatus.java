@@ -39,7 +39,6 @@ public class UpdateLeakForegroundStatus extends AsyncTask<Long, Void, Void> {
         long id = params[0];
         DatabaseHandler databaseHandler = DatabaseHandler.getInstance(context);
         DataLeak leak = databaseHandler.getLeakById(id);
-        if (leak == null) throw new RuntimeException("Failed to retrieve leak with id: " + id);
 
         long leakTime = leak.getTimestampDate().getTime();
 
@@ -56,7 +55,7 @@ public class UpdateLeakForegroundStatus extends AsyncTask<Long, Void, Void> {
 
             if (event.getPackageName().equals(leak.getPackageName()) &&
                     (event.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND ||
-                            event.getEventType() == UsageEvents.Event.MOVE_TO_BACKGROUND)) {
+                     event.getEventType() == UsageEvents.Event.MOVE_TO_BACKGROUND)) {
                 lastEvent = event;
             }
         }
@@ -64,10 +63,10 @@ public class UpdateLeakForegroundStatus extends AsyncTask<Long, Void, Void> {
         if (lastEvent == null) throw new RuntimeException("Failed to retrieve app status.");
 
         if (lastEvent.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND) {
-            databaseHandler.setDataLeakStatus(id, 1);
+            databaseHandler.setDataLeakStatus(id, DatabaseHandler.FOREGROUND_STATUS);
         }
         else {
-            databaseHandler.setDataLeakStatus(id, 0);
+            databaseHandler.setDataLeakStatus(id, DatabaseHandler.BACKGROUND_STATUS);
         }
 
         return null;

@@ -23,7 +23,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.PrivacyGuard.Application.Activities.R;
+import com.PrivacyGuard.Application.Database.AppStatusEvent;
 import com.PrivacyGuard.Application.Database.DataLeak;
+import com.PrivacyGuard.Application.Database.DatabaseHandler;
 import com.PrivacyGuard.Application.Helpers.ActivityRequestCodes;
 import com.PrivacyGuard.Application.Helpers.PreferenceHelper;
 import com.PrivacyGuard.Application.Interfaces.AppDataInterface;
@@ -45,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -266,19 +269,35 @@ public class LeakReportFragment extends Fragment {
         }
         setUpGraph = true;
 
-        //First, aggregate the usage events for the app that we are interested in (Foreground/Background).
+        List<AppStatusEvent> appStatusEventList = new ArrayList<>();
         long currentTime = System.currentTimeMillis();
-        UsageEvents usageEvents = usageStatsManager.queryEvents(currentTime - TimeUnit.DAYS.toMillis(30), currentTime);
 
-        List<UsageEvents.Event> appUsageEvents = new ArrayList<>();
-        while (usageEvents.hasNextEvent()) {
-            UsageEvents.Event event = new UsageEvents.Event();
-            usageEvents.getNextEvent(event);
-            if (event.getPackageName().equals(activity.getAppPackageName()) &&
-                    (event.getEventType() == UsageEvents.Event.MOVE_TO_BACKGROUND ||
-                            event.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND)) {
-                appUsageEvents.add(event);
+        //It only makes sense to look up background/foreground events if we are considering a single app.
+        if (activity.getAppPackageName() != null) {
+            UsageEvents usageEvents = usageStatsManager.queryEvents(currentTime - TimeUnit.DAYS.toMillis(30), currentTime);
+
+            HashSet<AppStatusEvent> appStatusEvents = new HashSet<>();
+            while (usageEvents.hasNextEvent()) {
+                UsageEvents.Event event = new UsageEvents.Event();
+                usageEvents.getNextEvent(event);
+                if (event.getPackageName().equals(activity.getAppPackageName()) &&
+                        (event.getEventType() == UsageEvents.Event.MOVE_TO_BACKGROUND ||
+                                event.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND)) {
+
+                    int foreground = event.getEventType() ==
+                            UsageEvents.Event.MOVE_TO_FOREGROUND ? DatabaseHandler.FOREGROUND_STATUS : DatabaseHandler.BACKGROUND_STATUS;
+                    AppStatusEvent temp = new AppStatusEvent(event.getPackageName(), event.getTimeStamp(), foreground);
+                    appStatusEvents.add(temp);
+                }
             }
+
+            DatabaseHandler databaseHandler = DatabaseHandler.getInstance(getContext());
+            List<AppStatusEvent> storedEvents = databaseHandler.getAppStatusEvents(activity.getAppPackageName());
+            appStatusEvents.addAll(storedEvents);
+
+            appStatusEventList.addAll(appStatusEvents);
+
+            Collections.sort(appStatusEventList);
         }
 
         int maxNumberOfLeaks = 0;
@@ -350,16 +369,16 @@ public class LeakReportFragment extends Fragment {
         SimpleXYSeries seriesForeground = new SimpleXYSeries(null);
         SimpleXYSeries seriesBackground = new SimpleXYSeries(null);
         SimpleXYSeries seriesNoData = new SimpleXYSeries(null);
-        UsageEvents.Event lastEvent = null;
-        UsageEvents.Event firstEvent = null;
-        for (UsageEvents.Event event : appUsageEvents) {
-            if (event.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+        AppStatusEvent lastEvent = null;
+        AppStatusEvent firstEvent = null;
+        for (AppStatusEvent event : appStatusEventList) {
+            if (event.getForeground()) {
                 seriesForeground.addLast(event.getTimeStamp(), 0);
                 seriesForeground.addLast(event.getTimeStamp(), maxNumberOfLeaks);
 
                 seriesBackground.addLast(event.getTimeStamp(), maxNumberOfLeaks);
                 seriesBackground.addLast(event.getTimeStamp(), 0);
-            } else if (event.getEventType() == UsageEvents.Event.MOVE_TO_BACKGROUND) {
+            } else {
                 seriesForeground.addLast(event.getTimeStamp(), maxNumberOfLeaks);
                 seriesForeground.addLast(event.getTimeStamp(), 0);
 
@@ -381,10 +400,10 @@ public class LeakReportFragment extends Fragment {
         }
 
         if (lastEvent != null) {
-            if (lastEvent.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND) {
-                //TODO: Why would this happen?  Are the events not sorted by time?
+            if (lastEvent.getForeground()) {
+                throw new RuntimeException("This should not happen.");
             }
-            if (lastEvent.getEventType() == UsageEvents.Event.MOVE_TO_BACKGROUND) {
+            else {
                 seriesBackground.addLast(currentTime, maxNumberOfLeaks);
             }
         }
