@@ -26,12 +26,11 @@ public class AppDataActivity extends DataActivity {
         appName = i.getStringExtra(APP_NAME_INTENT);
         packageName = i.getStringExtra(APP_PACKAGE_INTENT);
 
-        DatabaseHandler databaseHandler = new DatabaseHandler(this);
+        DatabaseHandler databaseHandler = DatabaseHandler.getInstance(this);
         locationLeaks = databaseHandler.getAppLeaks(packageName, LeakReport.LeakCategory.LOCATION.name());
         contactLeaks = databaseHandler.getAppLeaks(packageName, LeakReport.LeakCategory.CONTACT.name());
         deviceLeaks = databaseHandler.getAppLeaks(packageName, LeakReport.LeakCategory.DEVICE.name());
         keywordLeaks = databaseHandler.getAppLeaks(packageName, LeakReport.LeakCategory.KEYWORD.name());
-        databaseHandler.close();
     }
 
     @Override

@@ -41,6 +41,7 @@ import android.widget.ListView;
 
 import com.PrivacyGuard.Application.Database.AppSummary;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
+import com.PrivacyGuard.Application.Database.RecordAppStatusService;
 import com.PrivacyGuard.Application.Helpers.ActivityRequestCodes;
 import com.PrivacyGuard.Application.Helpers.PreferenceHelper;
 import com.PrivacyGuard.Application.Logger;
@@ -60,14 +61,16 @@ public class MainActivity extends AppCompatActivity {
 
     private static String TAG = "MainActivity";
 
+    private static float DISABLED_ALPHA = 0.3f;
+
     private ListView listLeak;
     private MainListViewAdapter adapter;
-    private DatabaseHandler mDbHandler; // [w3kim@uwaterloo.ca] : factored out as an instance var
 
     private View onIndicator;
     private View offIndicator;
     private View loadingIndicator;
     private FloatingActionButton vpnToggle;
+    private FloatingActionButton statsButton;
 
     private boolean bounded = false;
     private boolean keyChainInstalled = false;
@@ -132,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        FloatingActionButton statsButton = (FloatingActionButton)findViewById(R.id.stats_button);
+        statsButton = (FloatingActionButton)findViewById(R.id.stats_button);
         statsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -155,7 +158,9 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        mDbHandler = new DatabaseHandler(this);
+        final IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_USER_PRESENT);
+        getApplicationContext().registerReceiver(new RecordAppStatusService(), filter);
     }
 
     @Override
@@ -219,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
         loadingIndicator.setVisibility(status == Status.VPN_STARTING ? View.VISIBLE : View.GONE);
 
         vpnToggle.setEnabled(status != Status.VPN_STARTING);
-        vpnToggle.setAlpha(status == Status.VPN_STARTING ? 0.3f : 1.0f);
+        vpnToggle.setAlpha(status == Status.VPN_STARTING ? DISABLED_ALPHA : 1.0f);
 
         if (status == Status.VPN_STARTING) {
             loadingViewShownTime = System.currentTimeMillis();
@@ -245,14 +250,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void populateLeakList() {
-        // -----------------------------------------------------------------------
-        // Database Fetch
-        DatabaseHandler db = new DatabaseHandler(this);
+        DatabaseHandler db = DatabaseHandler.getInstance(this);
         List<AppSummary> apps = db.getAllApps();
-        db.close();
 
-        if (apps == null) {
-            return;
+        if (apps.isEmpty()) {
+            statsButton.setEnabled(false);
+            statsButton.setAlpha(DISABLED_ALPHA);
+        }
+        else {
+            statsButton.setEnabled(true);
+            statsButton.setAlpha(1.0f);
         }
 
         Comparator<AppSummary> comparator = PreferenceHelper.getAppLeakOrder(getApplicationContext());
@@ -270,9 +277,9 @@ public class MainActivity extends AppCompatActivity {
 
                     AppSummary app = (AppSummary) parent.getItemAtPosition(position);
 
-                    intent.putExtra(PrivacyGuard.EXTRA_PACKAGE_NAME, app.packageName);
-                    intent.putExtra(PrivacyGuard.EXTRA_APP_NAME, app.appName);
-                    intent.putExtra(PrivacyGuard.EXTRA_IGNORE, app.ignore);
+                    intent.putExtra(PrivacyGuard.EXTRA_PACKAGE_NAME, app.getPackageName());
+                    intent.putExtra(PrivacyGuard.EXTRA_APP_NAME, app.getAppName());
+                    intent.putExtra(PrivacyGuard.EXTRA_IGNORE, app.getIgnore());
 
                     startActivity(intent);
                 }

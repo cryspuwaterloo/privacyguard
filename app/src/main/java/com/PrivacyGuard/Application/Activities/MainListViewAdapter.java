@@ -66,11 +66,11 @@ public class MainListViewAdapter extends BaseAdapter{
             holder = (ViewHolder)convertView.getTag();
         }
         AppSummary app = list.get(position);
-        holder.appName.setText(app.appName);
-        holder.leakCount.setText(String.valueOf(app.totalLeaks));
-        holder.leakString.setText(app.totalLeaks == 1 ? R.string.leak_singular : R.string.leak_plural);
+        holder.appName.setText(app.getAppName());
+        holder.leakCount.setText(String.valueOf(app.getTotalLeaks()));
+        holder.leakString.setText(app.getTotalLeaks() == 1 ? R.string.leak_singular : R.string.leak_plural);
         try {
-            holder.appIcon.setImageDrawable(pm.getApplicationIcon(app.packageName));
+            holder.appIcon.setImageDrawable(pm.getApplicationIcon(app.getPackageName()));
         } catch (PackageManager.NameNotFoundException e) {
             holder.appIcon.setImageResource(R.drawable.default_icon);
             Logger.w(TAG, e.getMessage());

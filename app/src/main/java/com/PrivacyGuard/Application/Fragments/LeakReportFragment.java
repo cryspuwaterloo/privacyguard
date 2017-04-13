@@ -23,7 +23,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.PrivacyGuard.Application.Activities.R;
+import com.PrivacyGuard.Application.Database.AppStatusEvent;
 import com.PrivacyGuard.Application.Database.DataLeak;
+import com.PrivacyGuard.Application.Database.DatabaseHandler;
 import com.PrivacyGuard.Application.Helpers.ActivityRequestCodes;
 import com.PrivacyGuard.Application.Helpers.PreferenceHelper;
 import com.PrivacyGuard.Application.Interfaces.AppDataInterface;
@@ -45,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -59,6 +62,8 @@ public class LeakReportFragment extends Fragment {
 
     private boolean invalidAndroidVersion = false;
     private boolean setUpGraph = false;
+
+    private static final int DOMAIN_STEPS_PER_HALF_DOMAIN = 5;
 
     private View invalidAndroidVersionView;
     private View permissionDisabledView;
@@ -117,7 +122,19 @@ public class LeakReportFragment extends Fragment {
         navigateLeft.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                currentKeyIndex--;
+                Date centerDate = leakMapKeys.get(currentKeyIndex);
+                long centerMillis = centerDate.getTime();
+                int halfRange = PreferenceHelper.getLeakReportGraphDomainSize(getContext())/2;
+                int domainStep = (halfRange/DOMAIN_STEPS_PER_HALF_DOMAIN) * 1000;
+
+                //Center the next leak that is at least 1 domain step away.
+                long newMillis = centerMillis;
+                while (centerMillis - newMillis < domainStep) {
+                    if (currentKeyIndex == 0) break;
+                    currentKeyIndex--;
+                    newMillis = leakMapKeys.get(currentKeyIndex).getTime();
+                }
+
                 setGraphBounds();
                 setUpDisplay();
             }
@@ -125,7 +142,19 @@ public class LeakReportFragment extends Fragment {
         navigateRight.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                currentKeyIndex++;
+                Date centerDate = leakMapKeys.get(currentKeyIndex);
+                long centerMillis = centerDate.getTime();
+                int halfRange = PreferenceHelper.getLeakReportGraphDomainSize(getContext())/2;
+                int domainStep = (halfRange/ DOMAIN_STEPS_PER_HALF_DOMAIN) * 1000;
+
+                //Center the next leak that is at least 1 domain step away.
+                long newMillis = centerMillis;
+                while (newMillis - centerMillis < domainStep) {
+                    if (currentKeyIndex == leakMapKeys.size() - 1) break;
+                    currentKeyIndex++;
+                    newMillis = leakMapKeys.get(currentKeyIndex).getTime();
+                }
+
                 setGraphBounds();
                 setUpDisplay();
             }
@@ -193,7 +222,7 @@ public class LeakReportFragment extends Fragment {
         long domainLowerBound = centerMillis - range;
         long domainUpperBound = centerMillis + range;
         plot.setDomainBoundaries(domainLowerBound, domainUpperBound, BoundaryMode.FIXED);
-        plot.setDomainStep(StepMode.INCREMENT_BY_VAL, (halfRange/5) * 1000);
+        plot.setDomainStep(StepMode.INCREMENT_BY_VAL, (halfRange/ DOMAIN_STEPS_PER_HALF_DOMAIN) * 1000);
 
         DateFormat dateFormat = new SimpleDateFormat("MMMM d, yyyy", Locale.CANADA);
         String lowerBoundDate = dateFormat.format(new Date(domainLowerBound));
@@ -242,19 +271,35 @@ public class LeakReportFragment extends Fragment {
         }
         setUpGraph = true;
 
-        //First, aggregate the usage events for the app that we are interested in (Foreground/Background).
+        List<AppStatusEvent> appStatusEventList = new ArrayList<>();
         long currentTime = System.currentTimeMillis();
-        UsageEvents usageEvents = usageStatsManager.queryEvents(currentTime - TimeUnit.DAYS.toMillis(30), currentTime);
 
-        List<UsageEvents.Event> appUsageEvents = new ArrayList<>();
-        while (usageEvents.hasNextEvent()) {
-            UsageEvents.Event event = new UsageEvents.Event();
-            usageEvents.getNextEvent(event);
-            if (event.getPackageName().equals(activity.getAppPackageName()) &&
-                    (event.getEventType() == UsageEvents.Event.MOVE_TO_BACKGROUND ||
-                            event.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND)) {
-                appUsageEvents.add(event);
+        //It only makes sense to look up background/foreground events if we are considering a single app.
+        if (activity.getAppPackageName() != null) {
+            UsageEvents usageEvents = usageStatsManager.queryEvents(currentTime - TimeUnit.DAYS.toMillis(30), currentTime);
+
+            HashSet<AppStatusEvent> appStatusEvents = new HashSet<>();
+            while (usageEvents.hasNextEvent()) {
+                UsageEvents.Event event = new UsageEvents.Event();
+                usageEvents.getNextEvent(event);
+                if (event.getPackageName().equals(activity.getAppPackageName()) &&
+                        (event.getEventType() == UsageEvents.Event.MOVE_TO_BACKGROUND ||
+                                event.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND)) {
+
+                    int foreground = event.getEventType() ==
+                            UsageEvents.Event.MOVE_TO_FOREGROUND ? DatabaseHandler.FOREGROUND_STATUS : DatabaseHandler.BACKGROUND_STATUS;
+                    AppStatusEvent temp = new AppStatusEvent(event.getPackageName(), event.getTimeStamp(), foreground);
+                    appStatusEvents.add(temp);
+                }
             }
+
+            DatabaseHandler databaseHandler = DatabaseHandler.getInstance(getContext());
+            List<AppStatusEvent> storedEvents = databaseHandler.getAppStatusEvents(activity.getAppPackageName());
+            appStatusEvents.addAll(storedEvents);
+
+            appStatusEventList.addAll(appStatusEvents);
+
+            Collections.sort(appStatusEventList);
         }
 
         int maxNumberOfLeaks = 0;
@@ -263,10 +308,10 @@ public class LeakReportFragment extends Fragment {
         for (LeakReport.LeakCategory category : LeakReport.LeakCategory.values()) {
             List<DataLeak> leaks = activity.getLeaks(category);
             for (DataLeak leak : leaks) {
-                int[] summary = leakMap.get(leak.timestampDate);
+                int[] summary = leakMap.get(leak.getTimestampDate());
                 if (summary == null) {
                     summary = new int[LeakReport.LeakCategory.values().length];
-                    leakMap.put(leak.timestampDate, summary);
+                    leakMap.put(leak.getTimestampDate(), summary);
                 }
                 summary[category.ordinal()]++;
                 int value = summary[category.ordinal()];
@@ -326,16 +371,16 @@ public class LeakReportFragment extends Fragment {
         SimpleXYSeries seriesForeground = new SimpleXYSeries(null);
         SimpleXYSeries seriesBackground = new SimpleXYSeries(null);
         SimpleXYSeries seriesNoData = new SimpleXYSeries(null);
-        UsageEvents.Event lastEvent = null;
-        UsageEvents.Event firstEvent = null;
-        for (UsageEvents.Event event : appUsageEvents) {
-            if (event.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+        AppStatusEvent lastEvent = null;
+        AppStatusEvent firstEvent = null;
+        for (AppStatusEvent event : appStatusEventList) {
+            if (event.getForeground()) {
                 seriesForeground.addLast(event.getTimeStamp(), 0);
                 seriesForeground.addLast(event.getTimeStamp(), maxNumberOfLeaks);
 
                 seriesBackground.addLast(event.getTimeStamp(), maxNumberOfLeaks);
                 seriesBackground.addLast(event.getTimeStamp(), 0);
-            } else if (event.getEventType() == UsageEvents.Event.MOVE_TO_BACKGROUND) {
+            } else {
                 seriesForeground.addLast(event.getTimeStamp(), maxNumberOfLeaks);
                 seriesForeground.addLast(event.getTimeStamp(), 0);
 
@@ -357,10 +402,10 @@ public class LeakReportFragment extends Fragment {
         }
 
         if (lastEvent != null) {
-            if (lastEvent.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND) {
-                throw new RuntimeException("Should not happen.");
+            if (lastEvent.getForeground()) {
+                throw new RuntimeException("This should not happen.");
             }
-            if (lastEvent.getEventType() == UsageEvents.Event.MOVE_TO_BACKGROUND) {
+            else {
                 seriesBackground.addLast(currentTime, maxNumberOfLeaks);
             }
         }
