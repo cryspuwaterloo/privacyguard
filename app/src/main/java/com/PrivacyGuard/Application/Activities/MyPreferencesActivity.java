@@ -130,7 +130,7 @@ public class MyPreferencesActivity extends AppCompatActivity {
      * Export DB contents to CSV files
      */
     public void exportData() {
-        DatabaseHandler mDbHandler = new DatabaseHandler(this);
+        DatabaseHandler mDbHandler = DatabaseHandler.getInstance(this);
 
         File exportDir = new File(Environment.getExternalStorageDirectory(), "privacyguard");
         if (!exportDir.exists()) {

@@ -18,6 +18,7 @@ import android.widget.TextView;
 
 import com.PrivacyGuard.Application.Activities.R;
 import com.PrivacyGuard.Application.Database.DataLeak;
+import com.PrivacyGuard.Application.Database.DatabaseHandler;
 import com.PrivacyGuard.Application.Interfaces.AppDataInterface;
 import com.PrivacyGuard.Plugin.LeakReport;
 
@@ -25,6 +26,8 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -42,6 +45,9 @@ public class LeakQueryFragment extends Fragment {
 
     private static final String DATE_FORMAT_DISPLAY = "E, MMM d, yyyy";
     private static final DateFormat dateFormatDisplay = new SimpleDateFormat(DATE_FORMAT_DISPLAY, Locale.CANADA);
+
+    private static final String DATE_FORMAT_DISPLAY_SPECIFIC = "h:mm:ss a, E, MMM d, yyyy";
+    private static final DateFormat dateFormatDisplaySpecific = new SimpleDateFormat(DATE_FORMAT_DISPLAY_SPECIFIC, Locale.CANADA);
 
     private LinearLayout leaksList;
     private TextView totalNumber;
@@ -97,14 +103,14 @@ public class LeakQueryFragment extends Fragment {
         ImageView startDateCalendar = (ImageView)view.findViewById(R.id.start_date_calendar);
         ImageView endDateCalendar = (ImageView)view.findViewById(R.id.end_date_calendar);
 
-        startEditText.setText(formatDisplayDate(startDate));
-        endEditText.setText(formatDisplayDate(endDate));
+        startEditText.setText(dateFormatDisplay.format(startDate));
+        endEditText.setText(dateFormatDisplay.format(endDate));
 
         final DatePickerDialog.OnDateSetListener startDateListener = new DatePickerDialog.OnDateSetListener() {
             @Override
             public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
                 startDate = getStartOfDay(year, month, dayOfMonth);
-                startEditText.setText(formatDisplayDate(startDate));
+                startEditText.setText(dateFormatDisplay.format(startDate));
             }
         };
 
@@ -112,7 +118,7 @@ public class LeakQueryFragment extends Fragment {
             @Override
             public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
                 endDate = getEndOfDay(year, month, dayOfMonth);
-                endEditText.setText(formatDisplayDate(endDate));
+                endEditText.setText(dateFormatDisplay.format(endDate));
             }
         };
 
@@ -140,11 +146,15 @@ public class LeakQueryFragment extends Fragment {
             public void onClick(View v) {
                 leaksList.removeAllViews();
 
+                String foreground = "Foreground";
+                String background = "Background";
+                String all = "All";
+
                 List<DataLeak> leaks = new ArrayList<>();
-                String category = spinnerCategory.getSelectedItem().toString().toUpperCase();
+                String category = spinnerCategory.getSelectedItem().toString();
                 String status = spinnerStatus.getSelectedItem().toString();
 
-                if (category.equals("ALL")) {
+                if (category.equals(all)) {
                     for (LeakReport.LeakCategory cat : LeakReport.LeakCategory.values()) {
                         leaks.addAll(activity.getLeaks(cat));
                     }
@@ -156,11 +166,34 @@ public class LeakQueryFragment extends Fragment {
                 List<DataLeak> revisedLeaks = new ArrayList<>();
 
                 for (DataLeak dataLeak : leaks) {
-                    long time = dataLeak.timestampDate.getTime();
-                    if (time >= startDate.getTime() && time <= endDate.getTime()) {
-                        revisedLeaks.add(dataLeak);
+                    if (status.equals(foreground) && dataLeak.getForegroundStatus() != DatabaseHandler.FOREGROUND_STATUS) {
+                        continue;
                     }
+
+                    if (status.equals(background) && dataLeak.getForegroundStatus() != DatabaseHandler.BACKGROUND_STATUS) {
+                        continue;
+                    }
+
+                    if (dataLeak.getTimestampDate().getTime() < startDate.getTime()) {
+                        continue;
+                    }
+
+                    if (dataLeak.getTimestampDate().getTime() > endDate.getTime()) {
+                        continue;
+                    }
+
+                    revisedLeaks.add(dataLeak);
                 }
+
+                Collections.sort(revisedLeaks, new Comparator<DataLeak>() {
+                    @Override
+                    public int compare(DataLeak lhs, DataLeak rhs) {
+                        long lt = lhs.getTimestampDate().getTime();
+                        long rt = rhs.getTimestampDate().getTime();
+                        if (lt == rt) return 0;
+                        return lt < rt ? -1 : 1;
+                    }
+                });
 
                 totalNumber.setText(String.format("%s Results", revisedLeaks.size()));
 
@@ -171,18 +204,22 @@ public class LeakQueryFragment extends Fragment {
                     params.setMargins(35, 35, 35, 35);
                     layout.setLayoutParams(params);
 
+                    TextView appNameText = (TextView)layout.findViewById(R.id.app_name);
                     TextView categoryText = (TextView)layout.findViewById(R.id.category);
                     TextView typeText = (TextView)layout.findViewById(R.id.type);
                     TextView timeStampText = (TextView)layout.findViewById(R.id.time_stamp);
                     TextView contentText = (TextView)layout.findViewById(R.id.content);
+                    TextView statusText = (TextView)layout.findViewById(R.id.status);
 
-                    String categoryCamelCase = dataLeak.category.toLowerCase();
+                    String categoryCamelCase = dataLeak.getCategory().toLowerCase();
                     categoryCamelCase = categoryCamelCase.substring(0,1).toUpperCase() + categoryCamelCase.substring(1);
 
+                    appNameText.setText(dataLeak.getAppName());
                     categoryText.setText(categoryCamelCase);
-                    typeText.setText(dataLeak.type);
-                    timeStampText.setText(formatDisplayDate(dataLeak.timestampDate));
-                    contentText.setText(dataLeak.leakContent);
+                    typeText.setText(dataLeak.getType());
+                    timeStampText.setText(dateFormatDisplaySpecific.format(dataLeak.getTimestampDate()));
+                    contentText.setText(dataLeak.getLeakContent());
+                    statusText.setText(dataLeak.getForegroundStatus() == DatabaseHandler.FOREGROUND_STATUS ? foreground : background);
 
                     leaksList.addView(layout);
                 }
@@ -190,10 +227,6 @@ public class LeakQueryFragment extends Fragment {
         });
 
         return view;
-    }
-
-    private String formatDisplayDate(Date date) {
-        return dateFormatDisplay.format(date);
     }
 
     private Date getStartOfDay(int year, int month, int day) {

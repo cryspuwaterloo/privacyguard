@@ -246,7 +246,7 @@ public class MyVpnService extends VpnService implements Runnable {
     public void notify(String request, LeakReport leak) {
         //update database
 
-        DatabaseHandler db = new DatabaseHandler(this);
+        DatabaseHandler db = DatabaseHandler.getInstance(this);
 
         // w3kim@uwaterloo.ca
         db.addUrlIfAny(leak.appName, leak.packageName, request);
@@ -257,7 +257,6 @@ public class MyVpnService extends VpnService implements Runnable {
         }
 
         int frequency = db.findNotificationCounter(notifyId, leak.category.name());
-        db.close();
 
         buildNotification(notifyId, frequency, leak);
 

@@ -65,9 +65,9 @@ public class DetailListViewAdapter extends BaseAdapter {
         }
 
         DataLeak leak = list.get(position);
-        holder.type.setText(leak.type);
-        holder.time.setText(leak.timestamp);
-        holder.content.setText(leak.leakContent);
+        holder.type.setText(leak.getType());
+        holder.time.setText(leak.getTimestamp());
+        holder.content.setText(leak.getLeakContent());
         return convertView;
     }
 

@@ -9,6 +9,7 @@
     <color name="yellow">#FFFFFF00</color>
     <color name="transparent">#00000000</color>
     <color name="grey">#545454</color>
+    <color name="grey_alpha">#60545454</color>
 
     <color name="vpn_green">#31d620</color>
     <color name="vpn_red">#fa543b</color>
