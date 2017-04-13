@@ -38,9 +38,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.Toast;
 
-import com.PrivacyGuard.Application.Database.AppStatusEvent;
 import com.PrivacyGuard.Application.Database.AppSummary;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
 import com.PrivacyGuard.Application.Database.RecordAppStatusService;
@@ -62,7 +60,6 @@ import javax.security.cert.CertificateEncodingException;
 public class MainActivity extends AppCompatActivity {
 
     private static String TAG = "MainActivity";
-    private static String RECORD_APP_STATUS_TAG = "record_application_status_tag";
 
     private static float DISABLED_ALPHA = 0.3f;
 

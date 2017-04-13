@@ -98,6 +98,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_CONTENT = "content";
     private static final String KEY_TIME_STAMP = "time_stamp";
 
+    public static final int FOREGROUND_STATUS = 1;
+    public static final int BACKGROUND_STATUS = 0;
+    public static final int UNSPECIFIED_STATUS = -1;
+
     //Note: foreground status is either 1 for foreground, 0 for background, or -1 if not specified.
     private static final String KEY_FOREGROUND_STATUS = "foreground_status";
 
@@ -184,7 +188,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(KEY_TYPE, type); // Leak type
         values.put(KEY_CONTENT, content);
         values.put(KEY_TIME_STAMP, DATE_FORMAT.format(new Date())); // Leak time stamp
-        values.put(KEY_FOREGROUND_STATUS, -1); // Leak foreground status
+        values.put(KEY_FOREGROUND_STATUS, UNSPECIFIED_STATUS); // Leak foreground status
 
         // Inserting Row
         long id = mDB.insert(TABLE_DATA_LEAKS, null, values);
@@ -458,9 +462,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         return -1;
     }
-
-    public static final int FOREGROUND_STATUS = 1;
-    public static final int BACKGROUND_STATUS = 0;
 
     public void setDataLeakStatus(long id, int status) {
         if (status != BACKGROUND_STATUS && status != FOREGROUND_STATUS) throw new RuntimeException("Invalid status value.");

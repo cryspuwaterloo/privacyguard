@@ -18,6 +18,7 @@ import android.widget.TextView;
 
 import com.PrivacyGuard.Application.Activities.R;
 import com.PrivacyGuard.Application.Database.DataLeak;
+import com.PrivacyGuard.Application.Database.DatabaseHandler;
 import com.PrivacyGuard.Application.Interfaces.AppDataInterface;
 import com.PrivacyGuard.Plugin.LeakReport;
 
@@ -145,11 +146,15 @@ public class LeakQueryFragment extends Fragment {
             public void onClick(View v) {
                 leaksList.removeAllViews();
 
+                String foreground = "Foreground";
+                String background = "Background";
+                String all = "All";
+
                 List<DataLeak> leaks = new ArrayList<>();
-                String category = spinnerCategory.getSelectedItem().toString().toUpperCase();
+                String category = spinnerCategory.getSelectedItem().toString();
                 String status = spinnerStatus.getSelectedItem().toString();
 
-                if (category.equals("ALL")) {
+                if (category.equals(all)) {
                     for (LeakReport.LeakCategory cat : LeakReport.LeakCategory.values()) {
                         leaks.addAll(activity.getLeaks(cat));
                     }
@@ -161,18 +166,23 @@ public class LeakQueryFragment extends Fragment {
                 List<DataLeak> revisedLeaks = new ArrayList<>();
 
                 for (DataLeak dataLeak : leaks) {
-                    if (status.equals("Foreground") && dataLeak.getForegroundStatus() != 1) {
+                    if (status.equals(foreground) && dataLeak.getForegroundStatus() != DatabaseHandler.FOREGROUND_STATUS) {
                         continue;
                     }
 
-                    if (status.equals("Background") && dataLeak.getForegroundStatus() != 0) {
+                    if (status.equals(background) && dataLeak.getForegroundStatus() != DatabaseHandler.BACKGROUND_STATUS) {
                         continue;
                     }
 
-                    long time = dataLeak.getTimestampDate().getTime();
-                    if (time >= startDate.getTime() && time <= endDate.getTime()) {
-                        revisedLeaks.add(dataLeak);
+                    if (dataLeak.getTimestampDate().getTime() < startDate.getTime()) {
+                        continue;
                     }
+
+                    if (dataLeak.getTimestampDate().getTime() > endDate.getTime()) {
+                        continue;
+                    }
+
+                    revisedLeaks.add(dataLeak);
                 }
 
                 Collections.sort(revisedLeaks, new Comparator<DataLeak>() {
@@ -209,7 +219,7 @@ public class LeakQueryFragment extends Fragment {
                     typeText.setText(dataLeak.getType());
                     timeStampText.setText(dateFormatDisplaySpecific.format(dataLeak.getTimestampDate()));
                     contentText.setText(dataLeak.getLeakContent());
-                    statusText.setText(dataLeak.getForegroundStatus() == 1 ? "Foreground" : "Background");
+                    statusText.setText(dataLeak.getForegroundStatus() == DatabaseHandler.FOREGROUND_STATUS ? foreground : background);
 
                     leaksList.addView(layout);
                 }

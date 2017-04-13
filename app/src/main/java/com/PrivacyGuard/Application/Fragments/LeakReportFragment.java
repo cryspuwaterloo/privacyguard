@@ -127,6 +127,7 @@ public class LeakReportFragment extends Fragment {
                 int halfRange = PreferenceHelper.getLeakReportGraphDomainSize(getContext())/2;
                 int domainStep = (halfRange/DOMAIN_STEPS_PER_HALF_DOMAIN) * 1000;
 
+                //Center the next leak that is at least 1 domain step away.
                 long newMillis = centerMillis;
                 while (centerMillis - newMillis < domainStep) {
                     if (currentKeyIndex == 0) break;
@@ -146,6 +147,7 @@ public class LeakReportFragment extends Fragment {
                 int halfRange = PreferenceHelper.getLeakReportGraphDomainSize(getContext())/2;
                 int domainStep = (halfRange/ DOMAIN_STEPS_PER_HALF_DOMAIN) * 1000;
 
+                //Center the next leak that is at least 1 domain step away.
                 long newMillis = centerMillis;
                 while (newMillis - centerMillis < domainStep) {
                     if (currentKeyIndex == leakMapKeys.size() - 1) break;

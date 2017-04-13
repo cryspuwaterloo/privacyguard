@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import com.PrivacyGuard.Application.Activities.R;
 import com.PrivacyGuard.Application.Database.DataLeak;
+import com.PrivacyGuard.Application.Database.DatabaseHandler;
 import com.PrivacyGuard.Application.Interfaces.AppDataInterface;
 import com.PrivacyGuard.Plugin.LeakReport;
 import com.androidplot.pie.PieChart;
@@ -22,6 +23,7 @@ import com.androidplot.pie.Segment;
 import com.androidplot.pie.SegmentFormatter;
 import com.androidplot.util.PixelUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -47,31 +49,22 @@ public class LeakSummaryFragment extends Fragment {
         List<DataLeak> deviceLeaks = activity.getLeaks(LeakReport.LeakCategory.DEVICE);
         List<DataLeak> keywordLeaks = activity.getLeaks(LeakReport.LeakCategory.KEYWORD);
 
+        List<DataLeak> allLeaks = new ArrayList<>();
+        allLeaks.addAll(locationLeaks);
+        allLeaks.addAll(contactLeaks);
+        allLeaks.addAll(deviceLeaks);
+        allLeaks.addAll(keywordLeaks);
+
         int foreground = 0;
         int background = 0;
         int unspecified = 0;
-        for (DataLeak leak : locationLeaks) {
-            if (leak.getForegroundStatus() == 1) foreground++;
-            if (leak.getForegroundStatus() == 0) background++;
-            if (leak.getForegroundStatus() == -1) unspecified++;
-        }
-        for (DataLeak leak : contactLeaks) {
-            if (leak.getForegroundStatus() == 1) foreground++;
-            if (leak.getForegroundStatus() == 0) background++;
-            if (leak.getForegroundStatus() == -1) unspecified++;
-        }
-        for (DataLeak leak : deviceLeaks) {
-            if (leak.getForegroundStatus() == 1) foreground++;
-            if (leak.getForegroundStatus() == 0) background++;
-            if (leak.getForegroundStatus() == -1) unspecified++;
-        }
-        for (DataLeak leak : keywordLeaks) {
-            if (leak.getForegroundStatus() == 1) foreground++;
-            if (leak.getForegroundStatus() == 0) background++;
-            if (leak.getForegroundStatus() == -1) unspecified++;
+        for (DataLeak leak : allLeaks) {
+            if (leak.getForegroundStatus() == DatabaseHandler.FOREGROUND_STATUS) foreground++;
+            if (leak.getForegroundStatus() == DatabaseHandler.BACKGROUND_STATUS) background++;
+            if (leak.getForegroundStatus() == DatabaseHandler.UNSPECIFIED_STATUS) unspecified++;
         }
 
-        double total = locationLeaks.size() + contactLeaks.size() + deviceLeaks.size() + keywordLeaks.size();
+        double total = allLeaks.size();
 
         TextView locationPercentage = (TextView)view.findViewById(R.id.location_percentage);
         locationPercentage.setText(getStringPercentage(locationLeaks.size(), total));

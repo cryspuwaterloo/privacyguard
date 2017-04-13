@@ -64,7 +64,7 @@ public class RecordAppStatusService extends BroadcastReceiver {
             usageEvents.getNextEvent(event);
             if (appPackageNames.contains(event.getPackageName()) &&
                     (event.getEventType() == UsageEvents.Event.MOVE_TO_BACKGROUND ||
-                            event.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND)) {
+                     event.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND)) {
                 appUsageEvents.add(event);
             }
         }

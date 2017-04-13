@@ -26,6 +26,6 @@ public class ActionReceiver extends BroadcastReceiver {
         DatabaseHandler db = DatabaseHandler.getInstance(context);
 
         //TODO: set ignore
-        db.setIgnoreAppCategory(notifyId,true);
+        db.setIgnoreAppCategory(notifyId, true);
     }
 }

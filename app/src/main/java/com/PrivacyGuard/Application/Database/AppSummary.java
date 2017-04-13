@@ -1,12 +1,12 @@
 package com.PrivacyGuard.Application.Database;
 
-public class AppSummary{
+public class AppSummary {
     private String packageName;
     private String appName;
     private int totalLeaks;
     private int ignore;
 
-    public AppSummary(String packageName, String appName, int totalLeaks, int ignore){
+    public AppSummary(String packageName, String appName, int totalLeaks, int ignore) {
         this.packageName = packageName;
         this.appName = appName;
         this.totalLeaks = totalLeaks;
