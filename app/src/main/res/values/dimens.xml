@@ -9,7 +9,7 @@
     <!-- (main_activity_fab_margin - main_activity_fab_spacing)/2 -->
     <dimen name="main_activity_fab_spacing_half">3dp</dimen>
 
-    <dimen name="data_leak_margin">10dp</dimen>
+    <dimen name="data_leak_margin">8dp</dimen>
 
     <dimen name="android_plot_legend_text_height">20dp</dimen>
     <dimen name="android_plot_legend_text_width">70dp</dimen>
@@ -23,4 +23,8 @@
     <dimen name="android_plot_legend_percentage_width">40dp</dimen>
     <dimen name="android_plot_legend_large_text">16sp</dimen>
     <dimen name="android_plot_legend_padding">2dp</dimen>
+
+    <dimen name="query_tab_text_size">18sp</dimen>
+    <integer name="data_leak_left_column_weight">2</integer>
+    <integer name="data_leak_right_column_weight">5</integer>
 </resources>
