@@ -19,18 +19,22 @@
 
 package com.PrivacyGuard.Application.Activities;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.net.VpnService;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.security.KeyChain;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -66,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
     private ListView listLeak;
     private MainListViewAdapter adapter;
 
+    private View mainLayout;
     private View onIndicator;
     private View offIndicator;
     private View loadingIndicator;
@@ -111,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
 
         myReceiver = new ReceiveMessages();
 
+        mainLayout = findViewById(R.id.main_layout);
         onIndicator = findViewById(R.id.on_indicator);
         offIndicator = findViewById(R.id.off_indicator);
         loadingIndicator = findViewById(R.id.loading_indicator);
@@ -166,6 +172,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+
         if (!bounded) {
             Intent service = new Intent(this, MyVpnService.class);
             this.bindService(service, mSc, Context.BIND_AUTO_CREATE);
@@ -176,6 +183,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
         populateLeakList();
 
         if (!myReceiverIsRegistered) {
@@ -191,6 +199,10 @@ public class MainActivity extends AppCompatActivity {
             showIndicator(Status.VPN_ON);
         } else {
             showIndicator(Status.VPN_OFF);
+        }
+
+        if (checkPermissions()) {
+            mainLayout.setVisibility(View.VISIBLE);
         }
     }
 
@@ -363,5 +375,63 @@ public class MainActivity extends AppCompatActivity {
             bounded = false;
         }
         mVPN.stopVPN();
+    }
+
+    private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 0;
+    private static final int MY_PERMISSIONS_REQUEST_READ_PHONE_STATE = 1;
+    private static final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 2;
+    private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 3;
+    private static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 4;
+    private static final int MY_PERMISSIONS_REQUEST_ACCESS_COURSE_LOCATION = 5;
+
+    /**
+     * @return Whether the app has all the required permissions.
+     */
+    private boolean checkPermissions() {
+
+        System.out.println("Check permissions called");
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_CONTACTS},
+                    MY_PERMISSIONS_REQUEST_READ_CONTACTS);
+            return false;
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_PHONE_STATE},
+                    MY_PERMISSIONS_REQUEST_READ_PHONE_STATE);
+            return false;
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
+            return false;
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE);
+            return false;
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION);
+            return false;
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                    MY_PERMISSIONS_REQUEST_ACCESS_COURSE_LOCATION);
+            return false;
+        }
+
+        return true;
     }
 }
