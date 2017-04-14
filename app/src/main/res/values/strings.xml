@@ -21,6 +21,8 @@
     <string name="leak_singular">leak</string>
     <string name="leak_plural">leaks</string>
     <string name="settings">Settings</string>
+    <string name="permissions_not_granted_message">To use Privacy Guard, you need to turn on\nall the permissions that it requires.</string>
+
 
     <!-- Preferences -->
     <string name="pref_leak_display_order_key">pref_leak_display_order</string>
