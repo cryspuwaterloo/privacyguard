@@ -57,6 +57,7 @@ public class LeakQueryFragment extends Fragment {
     private ListView leaksList;
     private TextView totalNumber;
     private View progressBar;
+    private ImageButton query;
 
     private AppDataInterface activity;
 
@@ -150,13 +151,15 @@ public class LeakQueryFragment extends Fragment {
             }
         });
 
-        ImageButton query = (ImageButton)view.findViewById(R.id.query);
+        query = (ImageButton)view.findViewById(R.id.query);
         query.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 leaksList.setAdapter(new ListAdapter(getContext(), new ArrayList<DataLeak>()));
                 totalNumber.setVisibility(View.GONE);
                 progressBar.setVisibility(View.VISIBLE);
+                query.setEnabled(false);
+                query.setAlpha(0.3f);
 
                 new LoadQueryData().execute(spinnerCategory.getSelectedItem().toString(),
                         spinnerStatus.getSelectedItem().toString());
@@ -258,6 +261,8 @@ public class LeakQueryFragment extends Fragment {
             leaksList.setAdapter(new ListAdapter(getContext(), result));
             totalNumber.setVisibility(View.VISIBLE);
             progressBar.setVisibility(View.GONE);
+            query.setEnabled(true);
+            query.setAlpha(1.0f);
         }
     }
 
