@@ -14,119 +14,156 @@
      limitations under the License.
 -->
 
-<android.support.design.widget.CoordinatorLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MainActivity"
-    android:id="@+id/main_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:visibility="gone">
+    android:orientation="vertical">
 
-    <ListView android:id="@+id/leaksList"
+    <RelativeLayout
+        android:id="@+id/permission_disabled_message"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingBottom="88dp"
-        android:clipToPadding="false">
-    </ListView>
+        android:gravity="center"
+        android:visibility="gone">
 
-    <FrameLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_anchorGravity="left|start"
-        android:layout_gravity="bottom|start"
-        app:layout_anchor="@+id/vpn_toggle">
-
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/stats_button"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:fabSize="normal"
-            app:rippleColor="@color/background_floating_material_dark"
-            android:layout_marginTop="@dimen/main_activity_fab_margin"
-            android:layout_marginBottom="@dimen/main_activity_fab_margin"/>
+            android:orientation="vertical"
+            android:gravity="center">
 
-        <ImageView
-            android:layout_width="40dp"
-            android:layout_height="30dp"
-            android:layout_gravity="center"
-            android:src="@drawable/graph"
-            android:elevation="10dp"/>
-    </FrameLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/permissions_not_granted_message"/>
 
-    <FrameLayout
-        android:id="@id/vpn_toggle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_anchorGravity="bottom|right"
-        app:layout_anchor="@id/leaksList">
+            <Button
+                android:id="@+id/turn_on_permission_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/turn_on_permission_button"/>
+        </LinearLayout>
+    </RelativeLayout>
 
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/on_off_button"
+    <android.support.design.widget.CoordinatorLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        tools:context=".MainActivity"
+        android:id="@+id/main_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <ListView android:id="@+id/leaksList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingBottom="88dp"
+            android:clipToPadding="false">
+        </ListView>
+
+        <FrameLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:fabSize="normal"
-            app:rippleColor="@color/background_floating_material_dark"
-            android:layout_marginRight="@dimen/main_activity_fab_margin"
-            android:layout_marginEnd="@dimen/main_activity_fab_margin"
-            android:layout_marginTop="@dimen/main_activity_fab_margin"
-            android:layout_marginBottom="@dimen/main_activity_fab_margin"
-            android:layout_marginLeft="@dimen/main_activity_fab_spacing"
-            android:layout_marginStart="@dimen/main_activity_fab_spacing"/>
+            app:layout_anchorGravity="left|start"
+            android:layout_gravity="bottom|start"
+            app:layout_anchor="@+id/vpn_toggle">
 
-        <ImageView
-            android:layout_width="40dp"
-            android:layout_height="30dp"
-            android:layout_gravity="center"
-            android:src="@drawable/vpn"
-            android:layout_marginRight="@dimen/main_activity_fab_spacing_half"
-            android:layout_marginEnd="@dimen/main_activity_fab_spacing_half"
-            android:elevation="10dp"/>
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/stats_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:fabSize="normal"
+                app:rippleColor="@color/background_floating_material_dark"
+                android:layout_marginTop="@dimen/main_activity_fab_margin"
+                android:layout_marginBottom="@dimen/main_activity_fab_margin"/>
 
-        <TextView
-            android:id="@+id/on_indicator"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:paddingTop="3dp"
-            android:gravity="center_horizontal"
-            android:layout_marginStart="20dp"
-            android:layout_gravity="center_horizontal"
-            android:background="@drawable/chat_bubble"
-            android:backgroundTint="@color/vpn_green"
-            android:text="@string/vpn_on"
-            android:elevation="10dp"
-            android:textStyle="bold"/>
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center"
+                android:src="@drawable/graph"
+                android:elevation="10dp"/>
+        </FrameLayout>
 
-        <TextView
-            android:id="@+id/off_indicator"
-            android:layout_width="35dp"
-            android:layout_height="30dp"
-            android:paddingTop="3dp"
-            android:gravity="center_horizontal"
-            android:layout_marginStart="20dp"
-            android:layout_gravity="center_horizontal"
-            android:background="@drawable/chat_bubble"
-            android:backgroundTint="@color/vpn_red"
-            android:text="@string/vpn_off"
-            android:elevation="10dp"
-            android:textStyle="bold"
-            android:visibility="invisible"/>
+        <FrameLayout
+            android:id="@id/vpn_toggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_anchorGravity="bottom|right"
+            app:layout_anchor="@id/leaksList">
 
-        <ProgressBar
-            android:id="@+id/loading_indicator"
-            android:paddingBottom="5dp"
-            android:paddingLeft="5dp"
-            android:paddingRight="5dp"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:gravity="center_horizontal"
-            android:layout_marginStart="20dp"
-            android:layout_gravity="center_horizontal"
-            android:background="@drawable/chat_bubble"
-            android:backgroundTint="@color/vpn_yellow"
-            android:indeterminate="true"
-            android:elevation="10dp"
-            android:visibility="invisible"/>
-    </FrameLayout>
-</android.support.design.widget.CoordinatorLayout>
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/on_off_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:fabSize="normal"
+                app:rippleColor="@color/background_floating_material_dark"
+                android:layout_marginRight="@dimen/main_activity_fab_margin"
+                android:layout_marginEnd="@dimen/main_activity_fab_margin"
+                android:layout_marginTop="@dimen/main_activity_fab_margin"
+                android:layout_marginBottom="@dimen/main_activity_fab_margin"
+                android:layout_marginLeft="@dimen/main_activity_fab_spacing"
+                android:layout_marginStart="@dimen/main_activity_fab_spacing"/>
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="30dp"
+                android:layout_gravity="center"
+                android:src="@drawable/vpn"
+                android:layout_marginRight="@dimen/main_activity_fab_spacing_half"
+                android:layout_marginEnd="@dimen/main_activity_fab_spacing_half"
+                android:elevation="10dp"/>
+
+            <TextView
+                android:id="@+id/on_indicator"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:paddingTop="3dp"
+                android:gravity="center_horizontal"
+                android:layout_marginStart="20dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/chat_bubble"
+                android:backgroundTint="@color/vpn_green"
+                android:text="@string/vpn_on"
+                android:elevation="10dp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/off_indicator"
+                android:layout_width="35dp"
+                android:layout_height="30dp"
+                android:paddingTop="3dp"
+                android:gravity="center_horizontal"
+                android:layout_marginStart="20dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/chat_bubble"
+                android:backgroundTint="@color/vpn_red"
+                android:text="@string/vpn_off"
+                android:elevation="10dp"
+                android:textStyle="bold"
+                android:visibility="invisible"/>
+
+            <ProgressBar
+                android:id="@+id/loading_indicator"
+                android:paddingBottom="5dp"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:gravity="center_horizontal"
+                android:layout_marginStart="20dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/chat_bubble"
+                android:backgroundTint="@color/vpn_yellow"
+                android:indeterminate="true"
+                android:elevation="10dp"
+                android:visibility="invisible"/>
+        </FrameLayout>
+    </android.support.design.widget.CoordinatorLayout>
+</LinearLayout>
