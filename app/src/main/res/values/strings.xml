@@ -22,6 +22,8 @@
     <string name="leak_plural">leaks</string>
     <string name="settings">Settings</string>
     <string name="permissions_not_granted_message">To use Privacy Guard, you need to turn on\nall the permissions that it requires.</string>
+    <string name="delete_package_title">Delete Application Data</string>
+    <string name="delete_package_message">Are you sure you want to delete all the data that Privacy Guard has recorded for %s? This action cannot be undone.</string>
 
 
     <!-- Preferences -->
