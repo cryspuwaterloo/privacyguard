@@ -179,6 +179,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         mDB.insert(TABLE_URL, null, values);
     }
 
+    public void deletePackage(String packageName) {
+        mDB.delete(TABLE_DATA_LEAKS, KEY_PACKAGE + "=?", new String[] {packageName});
+        mDB.delete(TABLE_LEAK_SUMMARY, KEY_PACKAGE + "=?", new String[] {packageName});
+        mDB.delete(TABLE_APP_STATUS_EVENTS, KEY_PACKAGE + "=?", new String[] {packageName});
+        mDB.delete(TABLE_URL, KEY_URL_PACKAGE + "=?", new String[] {packageName});
+    }
+
     // Adding new data leak
     private void addDataLeak(String packageName, String appName, String category, String type, String content) {
         ContentValues values = new ContentValues();

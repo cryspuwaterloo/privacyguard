@@ -23,10 +23,12 @@ import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.net.VpnService;
 import android.os.Bundle;
@@ -37,6 +39,7 @@ import android.security.KeyChain;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -306,13 +309,47 @@ public class MainActivity extends AppCompatActivity {
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     Intent intent = new Intent(MainActivity.this, AppSummaryActivity.class);
 
-                    AppSummary app = (AppSummary) parent.getItemAtPosition(position);
+                    AppSummary app = (AppSummary)parent.getItemAtPosition(position);
 
                     intent.putExtra(PrivacyGuard.EXTRA_PACKAGE_NAME, app.getPackageName());
                     intent.putExtra(PrivacyGuard.EXTRA_APP_NAME, app.getAppName());
                     intent.putExtra(PrivacyGuard.EXTRA_IGNORE, app.getIgnore());
 
                     startActivity(intent);
+                }
+            });
+
+            listLeak.setLongClickable(true);
+            listLeak.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+                @Override
+                public boolean onItemLongClick(final AdapterView<?> parent, View view, final int position, long id) {
+                    final AppSummary app = (AppSummary)parent.getItemAtPosition(position);
+                    PackageManager pm = getPackageManager();
+                    Drawable appIcon;
+                    try {
+                        appIcon = pm.getApplicationIcon(app.getPackageName());
+                    } catch (PackageManager.NameNotFoundException e) {
+                        appIcon = getResources().getDrawable(R.drawable.default_icon);
+                    }
+
+                    new AlertDialog.Builder(MainActivity.this)
+                            .setTitle(R.string.delete_package_title)
+                            .setMessage(String.format(getResources().getString(R.string.delete_package_message), app.getAppName()))
+                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    DatabaseHandler databaseHandler = DatabaseHandler.getInstance(MainActivity.this);
+                                    databaseHandler.deletePackage(app.getPackageName());
+                                    populateLeakList();
+                                }
+                            })
+                            .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    // do nothing
+                                }
+                            })
+                            .setIcon(appIcon)
+                            .show();
+                    return true;
                 }
             });
         } else {
