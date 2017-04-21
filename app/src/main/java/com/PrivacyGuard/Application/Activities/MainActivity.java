@@ -95,8 +95,8 @@ public class MainActivity extends AppCompatActivity {
     ServiceConnection mSc;
     MyVpnService mVPN;
 
-    //When the VPN has started running, remove the loading view so that the user can continue
-    //interacting with the application.
+    // When the VPN has started running, remove the loading view so that the user can continue
+    // interacting with the application.
     private class ReceiveMessages extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -204,7 +204,6 @@ public class MainActivity extends AppCompatActivity {
         // Only enable the app if all required permissions are granted.
         // Otherwise, prompt the user to grant the permissions.
         checkPermissionsAndRequestAndEnableViews();
-        System.out.println("Requesting from onCreate");
 
         final IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_USER_PRESENT);
@@ -221,6 +220,7 @@ public class MainActivity extends AppCompatActivity {
                 permissionDisabledView.setVisibility(View.GONE);
             }
             else {
+                mainLayout.setVisibility(View.GONE);
                 permissionDisabledView.setVisibility(View.VISIBLE);
                 applicationPermissionDisabledView.setVisibility(View.GONE);
                 usageStatsPermissionDisabledView.setVisibility(View.VISIBLE);
@@ -246,21 +246,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
-        // This is a rare edge case. If the user changes the application permissions and then opens
-        // the application from a background state, onCreate is called and the correct behaviour will
-        // happen. If, however, the user changes the Usage Access Permission and then opens the application
-        // from the background state, onCreate is not called and hence the application will still
-        // be accessible to the user even though the permission has been disabled. Hence, check here
-        // if this is the case and adjust the views accordingly. Note that this function does not request permissions
-        // from the user.  Requesting permissions from the user in onResume() can cause an infinite loop
-        // because onResume() is automatically called after returning from a permission request check.
-        if ((PermissionsHelper.validBuildVersionForAppUsageAccess() && !PermissionsHelper.hasUsageAccessPermission(getApplicationContext()))) {
-            mainLayout.setVisibility(View.GONE);
-            permissionDisabledView.setVisibility(View.VISIBLE);
-            applicationPermissionDisabledView.setVisibility(checkPermissions() ? View.GONE : View.VISIBLE);
-            usageStatsPermissionDisabledView.setVisibility(View.VISIBLE);
-        }
 
         populateLeakList();
 
@@ -501,8 +486,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_COURSE_LOCATION = 5;
 
     /**
-     * This function is identical to {@link #checkPermissions()} except that it requests permissions
-     * if they are not granted.
+     * Requests permissions if they are not granted.
      * @return Whether the app has all the required permissions.
      */
     private boolean checkPermissionsAndRequest() {
@@ -551,41 +535,6 @@ public class MainActivity extends AppCompatActivity {
 
         return true;
     }
-
-    /**
-     * This function is identical to {@link #checkPermissionsAndRequest()} except that it does not
-     * request permissions if they are not granted.
-     * @return Whether the app has all the required permissions.
-     */
-    private boolean checkPermissions() {
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
-            return false;
-        }
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            return false;
-        }
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            return false;
-        }
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            return false;
-        }
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return false;
-        }
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return false;
-        }
-
-        return true;
-    }
-
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
