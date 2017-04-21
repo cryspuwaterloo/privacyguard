@@ -1,14 +1,13 @@
 package com.PrivacyGuard.Application.Database;
 
 import android.annotation.TargetApi;
-import android.app.AppOpsManager;
 import android.app.usage.UsageEvents;
 import android.app.usage.UsageStatsManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 
+import com.PrivacyGuard.Application.Helpers.PermissionsHelper;
 import com.PrivacyGuard.Application.Helpers.PreferenceHelper;
 
 import java.util.ArrayList;
@@ -23,26 +22,22 @@ import java.util.concurrent.TimeUnit;
 
 @TargetApi(22)
 public class RecordAppStatusService extends BroadcastReceiver {
-    private Context context;
-
-    private boolean hasUsageAccessPermission() {
-        AppOpsManager appOps = (AppOpsManager)context.getSystemService(Context.APP_OPS_SERVICE);
-        int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), context.getPackageName());
-        return mode == AppOpsManager.MODE_ALLOWED;
-    }
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        this.context = context;
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP_MR1 || !hasUsageAccessPermission()) {
+        // To run this service, build version must be valid and usage access permission must be granted.
+        if (!PermissionsHelper.validBuildVersionForAppUsageAccess() ||
+                !PermissionsHelper.hasUsageAccessPermission(context)) {
             return;
         }
 
+        // Only run this service at most once every 5 days.
         if ((new Date()).getTime() - PreferenceHelper.getRecordAppStatusServiceLastTimeRun(context) < TimeUnit.DAYS.toMillis(5)) {
             return;
         }
 
+        // Record the time of this service being run.
         PreferenceHelper.setRecordAppStatusServiceLastTimeRun(context);
 
         DatabaseHandler databaseHandler = DatabaseHandler.getInstance(context);

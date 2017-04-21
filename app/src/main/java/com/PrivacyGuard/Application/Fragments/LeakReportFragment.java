@@ -1,32 +1,25 @@
 package com.PrivacyGuard.Application.Fragments;
 
 import android.annotation.TargetApi;
-import android.app.AppOpsManager;
 import android.app.usage.UsageEvents;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.PrivacyGuard.Application.Activities.R;
 import com.PrivacyGuard.Application.Database.AppStatusEvent;
 import com.PrivacyGuard.Application.Database.DataLeak;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
-import com.PrivacyGuard.Application.Helpers.ActivityRequestCodes;
 import com.PrivacyGuard.Application.Helpers.PreferenceHelper;
 import com.PrivacyGuard.Application.Interfaces.AppDataInterface;
 import com.PrivacyGuard.Plugin.LeakReport;
@@ -60,14 +53,10 @@ import java.util.concurrent.TimeUnit;
 @TargetApi(22)
 public class LeakReportFragment extends Fragment {
 
-    private boolean invalidAndroidVersion = false;
     private boolean setUpGraph = false;
 
     private static final int DOMAIN_STEPS_PER_HALF_DOMAIN = 5;
 
-    private View invalidAndroidVersionView;
-    private View permissionDisabledView;
-    private RelativeLayout contentView;
     private ImageButton navigateLeft;
     private ImageButton navigateRight;
     private TextView graphTitleText;
@@ -94,31 +83,13 @@ public class LeakReportFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.leak_report_fragment, null);
 
-        invalidAndroidVersionView = view.findViewById(R.id.invalid_android_version);
-        permissionDisabledView = view.findViewById(R.id.permission_disabled_message);
-        contentView = (RelativeLayout)view.findViewById(R.id.content);
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP_MR1) {
-            invalidAndroidVersion = true;
-            TextView message = (TextView)view.findViewById(R.id.invalid_android_version_message);
-            message.setText(getString(R.string.invalid_android_version_message, Build.VERSION.SDK_INT, Build.VERSION_CODES.LOLLIPOP_MR1));
-            return view;
-        }
-
-        usageStatsManager = (UsageStatsManager) getContext().getSystemService(Context.USAGE_STATS_SERVICE);
-
-        Button turnOnPermissionButton = (Button)view.findViewById(R.id.turn_on_permission_button);
-        turnOnPermissionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivityForResult(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS), ActivityRequestCodes.APP_DATA_PERMISSION_REQUEST);
-            }
-        });
+        usageStatsManager = (UsageStatsManager)getContext().getSystemService(Context.USAGE_STATS_SERVICE);
 
         plot = (XYPlot)view.findViewById(R.id.plot);
 
         navigateLeft = (ImageButton)view.findViewById(R.id.navigate_left);
         navigateRight = (ImageButton)view.findViewById(R.id.navigate_right);
+
         navigateLeft.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -127,7 +98,7 @@ public class LeakReportFragment extends Fragment {
                 int halfRange = PreferenceHelper.getLeakReportGraphDomainSize(getContext())/2;
                 int domainStep = (halfRange/DOMAIN_STEPS_PER_HALF_DOMAIN) * 1000;
 
-                //Center the next leak that is at least 1 domain step away.
+                // Center the next leak that is at least 1 domain step away.
                 long newMillis = centerMillis;
                 while (centerMillis - newMillis < domainStep) {
                     if (currentKeyIndex == 0) break;
@@ -139,6 +110,7 @@ public class LeakReportFragment extends Fragment {
                 setUpDisplay();
             }
         });
+
         navigateRight.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -147,7 +119,7 @@ public class LeakReportFragment extends Fragment {
                 int halfRange = PreferenceHelper.getLeakReportGraphDomainSize(getContext())/2;
                 int domainStep = (halfRange/ DOMAIN_STEPS_PER_HALF_DOMAIN) * 1000;
 
-                //Center the next leak that is at least 1 domain step away.
+                // Center the next leak that is at least 1 domain step away.
                 long newMillis = centerMillis;
                 while (newMillis - centerMillis < domainStep) {
                     if (currentKeyIndex == leakMapKeys.size() - 1) break;
@@ -180,28 +152,11 @@ public class LeakReportFragment extends Fragment {
             legend.setVisibility(View.GONE);
         }
 
-        setViewVisibility();
-
-        if (!invalidAndroidVersion && hasUsageAccessPermission()) {
-            setUpGraph();
-            setGraphBounds();
-            setUpDisplay();
-        }
+        setUpGraph();
+        setGraphBounds();
+        setUpDisplay();
 
         return view;
-    }
-
-    private void setViewVisibility() {
-        if (invalidAndroidVersion) {
-            invalidAndroidVersionView.setVisibility(View.VISIBLE);
-            permissionDisabledView.setVisibility(View.INVISIBLE);
-            contentView.setVisibility(View.INVISIBLE);
-            return;
-        }
-
-        boolean hasPermission = hasUsageAccessPermission();
-        permissionDisabledView.setVisibility(hasPermission ? View.INVISIBLE : View.VISIBLE);
-        contentView.setVisibility(hasPermission ? View.VISIBLE : View.INVISIBLE);
     }
 
     private void setUpDisplay() {
@@ -460,21 +415,6 @@ public class LeakReportFragment extends Fragment {
         @Override
         public Object parseObject(String source, ParsePosition pos) {
             return null;
-        }
-    }
-
-    private boolean hasUsageAccessPermission() {
-        AppOpsManager appOps = (AppOpsManager)getContext().getSystemService(Context.APP_OPS_SERVICE);
-        int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), getContext().getPackageName());
-        return mode == AppOpsManager.MODE_ALLOWED;
-    }
-
-    public void permissionSetAttempt() {
-        if (hasUsageAccessPermission()) {
-            setViewVisibility();
-            setUpGraph();
-            setGraphBounds();
-            setUpDisplay();
         }
     }
 }

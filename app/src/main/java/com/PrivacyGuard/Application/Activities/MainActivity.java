@@ -20,6 +20,7 @@
 package com.PrivacyGuard.Application.Activities;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -53,6 +54,7 @@ import com.PrivacyGuard.Application.Database.AppSummary;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
 import com.PrivacyGuard.Application.Database.RecordAppStatusService;
 import com.PrivacyGuard.Application.Helpers.ActivityRequestCodes;
+import com.PrivacyGuard.Application.Helpers.PermissionsHelper;
 import com.PrivacyGuard.Application.Helpers.PreferenceHelper;
 import com.PrivacyGuard.Application.Logger;
 import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService;
@@ -67,6 +69,7 @@ import java.util.List;
 import javax.security.cert.Certificate;
 import javax.security.cert.CertificateEncodingException;
 
+@TargetApi(22)
 public class MainActivity extends AppCompatActivity {
 
     private static String TAG = "MainActivity";
@@ -76,7 +79,10 @@ public class MainActivity extends AppCompatActivity {
     private ListView listLeak;
     private MainListViewAdapter adapter;
 
-    private View permissionDisabledMessage;
+    private View permissionDisabledView;
+    private View applicationPermissionDisabledView;
+    private View usageStatsPermissionDisabledView;
+
     private View mainLayout;
     private View onIndicator;
     private View offIndicator;
@@ -123,7 +129,10 @@ public class MainActivity extends AppCompatActivity {
 
         myReceiver = new ReceiveMessages();
 
-        permissionDisabledMessage = findViewById(R.id.permission_disabled_message);
+        permissionDisabledView = findViewById(R.id.permission_disabled_message);
+        applicationPermissionDisabledView = findViewById(R.id.application_settings_view);
+        usageStatsPermissionDisabledView = findViewById(R.id.usage_status_settings_view);
+
         mainLayout = findViewById(R.id.main_layout);
         onIndicator = findViewById(R.id.on_indicator);
         offIndicator = findViewById(R.id.off_indicator);
@@ -184,15 +193,43 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        Button usageStatsButton = (Button)findViewById(R.id.turn_on_usage_stats_button);
+        usageStatsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivityForResult(new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS), ActivityRequestCodes.USAGE_STATS_PERMISSION_REQUEST);
+            }
+        });
+
         // Only enable the app if all required permissions are granted.
         // Otherwise, prompt the user to grant the permissions.
-        if (checkPermissions()) {
-            mainLayout.setVisibility(View.VISIBLE);
-        }
+        checkPermissionsAndRequestAndEnableViews();
+        System.out.println("Requesting from onCreate");
 
         final IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_USER_PRESENT);
         getApplicationContext().registerReceiver(new RecordAppStatusService(), filter);
+    }
+
+    /**
+     * Check for and request permissions while updating view visibility accordingly.
+     */
+    private void checkPermissionsAndRequestAndEnableViews() {
+        if (checkPermissionsAndRequest()) {
+            if ((!PermissionsHelper.validBuildVersionForAppUsageAccess() || PermissionsHelper.hasUsageAccessPermission(getApplicationContext()))) {
+                mainLayout.setVisibility(View.VISIBLE);
+                permissionDisabledView.setVisibility(View.GONE);
+            }
+            else {
+                permissionDisabledView.setVisibility(View.VISIBLE);
+                applicationPermissionDisabledView.setVisibility(View.GONE);
+                usageStatsPermissionDisabledView.setVisibility(View.VISIBLE);
+            }
+        }
+        else {
+            mainLayout.setVisibility(View.GONE);
+            permissionDisabledView.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -209,6 +246,21 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        // This is a rare edge case. If the user changes the application permissions and then opens
+        // the application from a background state, onCreate is called and the correct behaviour will
+        // happen. If, however, the user changes the Usage Access Permission and then opens the application
+        // from the background state, onCreate is not called and hence the application will still
+        // be accessible to the user even though the permission has been disabled. Hence, check here
+        // if this is the case and adjust the views accordingly. Note that this function does not request permissions
+        // from the user.  Requesting permissions from the user in onResume() can cause an infinite loop
+        // because onResume() is automatically called after returning from a permission request check.
+        if ((PermissionsHelper.validBuildVersionForAppUsageAccess() && !PermissionsHelper.hasUsageAccessPermission(getApplicationContext()))) {
+            mainLayout.setVisibility(View.GONE);
+            permissionDisabledView.setVisibility(View.VISIBLE);
+            applicationPermissionDisabledView.setVisibility(checkPermissions() ? View.GONE : View.VISIBLE);
+            usageStatsPermissionDisabledView.setVisibility(View.VISIBLE);
+        }
 
         populateLeakList();
 
@@ -401,10 +453,11 @@ public class MainActivity extends AppCompatActivity {
         } else if (request == ActivityRequestCodes.PERMISSIONS_SETTINGS) {
             // After giving the user the opportunity to manually turn on
             // the required permissions, check whether they have been granted.
-            if (checkPermissions()) {
-                mainLayout.setVisibility(View.VISIBLE);
-                permissionDisabledMessage.setVisibility(View.GONE);
-            }
+            checkPermissionsAndRequestAndEnableViews();
+        } else if (request == ActivityRequestCodes.USAGE_STATS_PERMISSION_REQUEST) {
+            // After giving the user the opportunity to manually turn on
+            // the usage stats permission, check whether it has been granted.
+            checkPermissionsAndRequestAndEnableViews();
         }
     }
 
@@ -448,11 +501,11 @@ public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_COURSE_LOCATION = 5;
 
     /**
-     * Check for permissions.
-     * If a permission is not granted, prompt the user to grant it.
+     * This function is identical to {@link #checkPermissions()} except that it requests permissions
+     * if they are not granted.
      * @return Whether the app has all the required permissions.
      */
-    private boolean checkPermissions() {
+    private boolean checkPermissionsAndRequest() {
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
@@ -499,6 +552,41 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * This function is identical to {@link #checkPermissionsAndRequest()} except that it does not
+     * request permissions if they are not granted.
+     * @return Whether the app has all the required permissions.
+     */
+    private boolean checkPermissions() {
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            return false;
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            return false;
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            return false;
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            return false;
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return false;
+        }
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return false;
+        }
+
+        return true;
+    }
+
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         String permission = null;
@@ -535,21 +623,22 @@ public class MainActivity extends AppCompatActivity {
         // If request is cancelled, the result arrays are empty.
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             // If an individual permission was granted, check once again.
-            if (checkPermissions()) {
-                mainLayout.setVisibility(View.VISIBLE);
-                permissionDisabledMessage.setVisibility(View.GONE);
-            }
+            checkPermissionsAndRequestAndEnableViews();
         } else {
             // If an individual permission was not granted.
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
                 // If the user did not select "never ask again", check once again.
-                checkPermissions();
+                checkPermissionsAndRequest();
             } else {
                 // In this case, the user has selected "never ask again" and declined a permission.
                 // Since we require all permissions to be granted, and can no longer ask for this
                 // permission, give the user access to the permissions screen to turn on all the
                 // permissions manually.
-                permissionDisabledMessage.setVisibility(View.VISIBLE);
+                mainLayout.setVisibility(View.GONE);
+                permissionDisabledView.setVisibility(View.VISIBLE);
+                applicationPermissionDisabledView.setVisibility(View.VISIBLE);
+                boolean usageStats = (!PermissionsHelper.validBuildVersionForAppUsageAccess() || PermissionsHelper.hasUsageAccessPermission(getApplicationContext()));
+                usageStatsPermissionDisabledView.setVisibility(usageStats ? View.GONE : View.VISIBLE);
             }
         }
     }
