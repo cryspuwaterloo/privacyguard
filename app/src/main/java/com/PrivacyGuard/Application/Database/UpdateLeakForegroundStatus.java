@@ -56,13 +56,21 @@ public class UpdateLeakForegroundStatus extends AsyncTask<Long, Void, Void> {
             }
         }
 
-        if (lastEvent == null) throw new RuntimeException("Failed to retrieve app status.");
-
-        if (lastEvent.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+        if (lastEvent == null) {
+            // Some applications will leak information without a user ever opening the application.
+            // For example, some applications will listen for an internet connection and then
+            // run a service in the background without the application ever being opened. In this case,
+            // there will be no status events to classify this leak, and we classify it as background.
+            databaseHandler.setDataLeakStatus(id, DatabaseHandler.BACKGROUND_STATUS);
+        }
+        else if (lastEvent.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND) {
             databaseHandler.setDataLeakStatus(id, DatabaseHandler.FOREGROUND_STATUS);
         }
-        else {
+        else if (lastEvent.getEventType() == UsageEvents.Event.MOVE_TO_BACKGROUND) {
             databaseHandler.setDataLeakStatus(id, DatabaseHandler.BACKGROUND_STATUS);
+        }
+        else {
+            throw new RuntimeException("A leak's status should always be classified by this task.");
         }
 
         return null;
