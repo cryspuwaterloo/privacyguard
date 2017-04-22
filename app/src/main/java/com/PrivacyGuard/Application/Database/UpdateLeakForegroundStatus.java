@@ -1,12 +1,12 @@
 package com.PrivacyGuard.Application.Database;
 
 import android.annotation.TargetApi;
-import android.app.AppOpsManager;
 import android.app.usage.UsageEvents;
 import android.app.usage.UsageStatsManager;
 import android.content.Context;
 import android.os.AsyncTask;
-import android.os.Build;
+
+import com.PrivacyGuard.Application.Helpers.PermissionsHelper;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -24,15 +24,11 @@ public class UpdateLeakForegroundStatus extends AsyncTask<Long, Void, Void> {
         this.context = context;
     }
 
-    private boolean hasUsageAccessPermission() {
-        AppOpsManager appOps = (AppOpsManager)context.getSystemService(Context.APP_OPS_SERVICE);
-        int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, android.os.Process.myUid(), context.getPackageName());
-        return mode == AppOpsManager.MODE_ALLOWED;
-    }
-
     @Override
     protected Void doInBackground(Long... params) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP_MR1 || !hasUsageAccessPermission()) {
+        // To run this task, build version must be valid and usage access permission must be granted.
+        if (!PermissionsHelper.validBuildVersionForAppUsageAccess() ||
+                !PermissionsHelper.hasUsageAccessPermission(context)) {
             return null;
         }
 
@@ -60,13 +56,21 @@ public class UpdateLeakForegroundStatus extends AsyncTask<Long, Void, Void> {
             }
         }
 
-        if (lastEvent == null) throw new RuntimeException("Failed to retrieve app status.");
-
-        if (lastEvent.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+        if (lastEvent == null) {
+            // Some applications will leak information without a user ever opening the application.
+            // For example, some applications will listen for an internet connection and then
+            // run a service in the background without the application ever being opened. In this case,
+            // there will be no status events to classify this leak, and we classify it as background.
+            databaseHandler.setDataLeakStatus(id, DatabaseHandler.BACKGROUND_STATUS);
+        }
+        else if (lastEvent.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND) {
             databaseHandler.setDataLeakStatus(id, DatabaseHandler.FOREGROUND_STATUS);
         }
-        else {
+        else if (lastEvent.getEventType() == UsageEvents.Event.MOVE_TO_BACKGROUND) {
             databaseHandler.setDataLeakStatus(id, DatabaseHandler.BACKGROUND_STATUS);
+        }
+        else {
+            throw new RuntimeException("A leak's status should always be classified by this task.");
         }
 
         return null;

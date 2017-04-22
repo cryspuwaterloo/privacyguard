@@ -60,13 +60,6 @@ public abstract class DataActivity extends AppCompatActivity implements AppDataI
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == ActivityRequestCodes.APP_DATA_PERMISSION_REQUEST) {
-            leakReportFragment.permissionSetAttempt();
-        }
-    }
-
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.app_data_menu, menu);

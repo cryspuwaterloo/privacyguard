@@ -24,7 +24,7 @@
     <string name="permissions_not_granted_message">To use Privacy Guard, you need to turn on\nall the permissions that it requires.</string>
     <string name="delete_package_title">Delete Application Data</string>
     <string name="delete_package_message">Are you sure you want to delete all the data that Privacy Guard has recorded for %s? This action cannot be undone.</string>
-
+    <string name="category_ignored">ignored</string>
 
     <!-- Preferences -->
     <string name="pref_leak_display_order_key">pref_leak_display_order</string>
@@ -41,7 +41,7 @@
     <string name="update_filter_keywords">Update Filter Keywords</string>
 
     <!-- App Data Activity -->
-    <string name="permission_not_granted_message">To view usage statistics, you need to turn on\nthe Usage Access Permission.</string>
+    <string name="usage_stats_permission_not_granted_message">To view usage statistics, you need to turn on\nthe Usage Access Permission.</string>
     <string name="turn_on_permission_button">Turn On</string>
     <string name="invalid_android_version_message" formatted="false">Your current Android version is: %d.\nYou need at least version %d to use this feature.</string>
 

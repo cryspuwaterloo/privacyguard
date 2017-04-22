@@ -27,8 +27,7 @@
         android:id="@+id/permission_disabled_message"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
-        android:visibility="gone">
+        android:gravity="center">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -36,17 +35,46 @@
             android:orientation="vertical"
             android:gravity="center">
 
-            <TextView
+            <LinearLayout
+                android:id="@+id/application_settings_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:orientation="vertical"
                 android:gravity="center"
-                android:text="@string/permissions_not_granted_message"/>
+                android:layout_margin="10dp">
 
-            <Button
-                android:id="@+id/turn_on_permission_button"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/permissions_not_granted_message"/>
+
+                <Button
+                    android:id="@+id/turn_on_permission_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/turn_on_permission_button"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/usage_status_settings_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/turn_on_permission_button"/>
+                android:orientation="vertical"
+                android:gravity="center"
+                android:layout_margin="10dp">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@string/usage_stats_permission_not_granted_message"/>
+
+                <Button
+                    android:id="@+id/turn_on_usage_stats_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/turn_on_permission_button"/>
+            </LinearLayout>
         </LinearLayout>
     </RelativeLayout>
 
@@ -57,8 +85,7 @@
         tools:context=".MainActivity"
         android:id="@+id/main_layout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone">
+        android:layout_height="match_parent">
 
         <ListView android:id="@+id/leaksList"
             android:layout_width="match_parent"

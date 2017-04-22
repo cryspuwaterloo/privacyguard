@@ -35,7 +35,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private Context applicationContext = null;
 
     //The singleton pattern is used here because multiple threads could potentially be writing to the database.
-    //Because of this patten, only one DataBaseHandler is created for the application lifecycle.
+    //Because of this pattern, only one DataBaseHandler is created for the application lifecycle.
     //As a result, do not call .close() on a DatabaseHandler instance.
     public static synchronized DatabaseHandler getInstance(Context context) {
         // Use the application context, which will ensure that you
