@@ -21,8 +21,6 @@ import java.util.List;
 
 public class AppSummaryActivity extends AppCompatActivity {
 
-    private static String TAG = "UI";
-    //GoogleMap googleMap;
     private String packageName;
     private String appName;
     private int ignore;
@@ -45,7 +43,7 @@ public class AppSummaryActivity extends AppCompatActivity {
         TextView title = (TextView) findViewById(R.id.summary_title);
         title.setText(appName);
         TextView subtitle = (TextView) findViewById(R.id.summary_subtitle);
-        subtitle.setText("[" + packageName+"]");
+        subtitle.setText("[" + packageName + "]");
 
         notificationSwitch = (Switch) findViewById(R.id.summary_switch);
         notificationSwitch.setChecked(ignore == 1);
