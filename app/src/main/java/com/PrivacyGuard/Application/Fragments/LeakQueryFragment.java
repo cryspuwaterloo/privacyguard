@@ -54,7 +54,7 @@ public class LeakQueryFragment extends Fragment {
     private static final String DATE_FORMAT_DISPLAY_SPECIFIC = "h:mm:ss a, E, MMM d, yyyy";
     private static final DateFormat dateFormatDisplaySpecific = new SimpleDateFormat(DATE_FORMAT_DISPLAY_SPECIFIC, Locale.CANADA);
 
-    private ListView leaksList;
+    private ListAdapter listAdapter;
     private TextView totalNumber;
     private View progressBar;
     private ImageButton query;
@@ -79,9 +79,10 @@ public class LeakQueryFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.leak_query_fragment, null);
 
-        leaksList = (ListView)view.findViewById(R.id.list_view);
+        ListView leaksList = (ListView)view.findViewById(R.id.list_view);
         leaksList.addHeaderView(LayoutInflater.from(getContext()).inflate(R.layout.query_list_header, null, false));
-        leaksList.setAdapter(new ListAdapter(getContext(), new ArrayList<DataLeak>()));
+        listAdapter = new ListAdapter(getContext(), new ArrayList<DataLeak>());
+        leaksList.setAdapter(listAdapter);
 
         totalNumber = (TextView)view.findViewById(R.id.total_number);
         progressBar = view.findViewById(R.id.progress_bar);
@@ -155,7 +156,9 @@ public class LeakQueryFragment extends Fragment {
         query.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                leaksList.setAdapter(new ListAdapter(getContext(), new ArrayList<DataLeak>()));
+                listAdapter.clear();
+                listAdapter.notifyDataSetChanged();
+
                 totalNumber.setVisibility(View.GONE);
                 progressBar.setVisibility(View.VISIBLE);
                 query.setEnabled(false);
@@ -177,6 +180,7 @@ public class LeakQueryFragment extends Fragment {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             DataLeak dataLeak = getItem(position);
+
             // Check if an existing view is being reused, otherwise inflate the view
             if (convertView == null) {
                 convertView = LayoutInflater.from(getContext()).inflate(R.layout.data_leak, parent, false);
@@ -190,7 +194,7 @@ public class LeakQueryFragment extends Fragment {
             TextView statusText = (TextView)convertView.findViewById(R.id.status);
 
             String categoryCamelCase = dataLeak.getCategory().toLowerCase();
-            categoryCamelCase = categoryCamelCase.substring(0,1).toUpperCase() + categoryCamelCase.substring(1);
+            categoryCamelCase = categoryCamelCase.substring(0, 1).toUpperCase() + categoryCamelCase.substring(1);
 
             appNameText.setText(dataLeak.getAppName());
             categoryText.setText(categoryCamelCase);
@@ -258,7 +262,11 @@ public class LeakQueryFragment extends Fragment {
         @Override
         protected void onPostExecute(ArrayList<DataLeak> result) {
             totalNumber.setText(String.format("%s Results", result.size()));
-            leaksList.setAdapter(new ListAdapter(getContext(), result));
+
+            listAdapter.clear();
+            listAdapter.addAll(result);
+            listAdapter.notifyDataSetChanged();
+
             totalNumber.setVisibility(View.VISIBLE);
             progressBar.setVisibility(View.GONE);
             query.setEnabled(true);
