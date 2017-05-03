@@ -334,9 +334,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Comparator<AppSummary> comparator = PreferenceHelper.getAppLeakOrder(getApplicationContext());
-        if (comparator != null) {
-            Collections.sort(apps, comparator);
-        }
+        Collections.sort(apps, comparator);
 
         if (adapter == null) {
             adapter = new MainListViewAdapter(this, apps);

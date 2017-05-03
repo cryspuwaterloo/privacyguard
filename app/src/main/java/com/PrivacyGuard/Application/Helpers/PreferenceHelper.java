@@ -40,12 +40,10 @@ public class PreferenceHelper {
 
         switch (appLeakOrder) {
             case 1:
-                return null;
+                return DECREASING_ORDER_BY_NUMBER_OF_LEAKS;
             case 2:
                 return INCREASING_ORDER_BY_NUMBER_OF_LEAKS;
             case 3:
-                return DECREASING_ORDER_BY_NUMBER_OF_LEAKS;
-            case 4:
                 return ALPHABETICAL_ORDER;
             default:
                 return null;
