@@ -5,24 +5,20 @@ package com.PrivacyGuard.Application.Activities;
  */
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 
 import com.PrivacyGuard.Application.Database.DataLeak;
 import com.PrivacyGuard.Application.Fragments.LeakQueryFragment;
 import com.PrivacyGuard.Application.Fragments.LeakReportFragment;
 import com.PrivacyGuard.Application.Fragments.LeakSummaryFragment;
-import com.PrivacyGuard.Application.Helpers.ActivityRequestCodes;
 import com.PrivacyGuard.Application.Interfaces.AppDataInterface;
 import com.PrivacyGuard.Plugin.LeakReport;
 
@@ -41,6 +37,8 @@ public abstract class DataActivity extends AppCompatActivity implements AppDataI
     protected List<DataLeak> deviceLeaks;
     protected List<DataLeak> keywordLeaks;
 
+    protected TabLayout tabLayout;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,7 +53,7 @@ public abstract class DataActivity extends AppCompatActivity implements AppDataI
         viewPager.setAdapter(new CustomFragmentPagerAdapter(getSupportFragmentManager(), this));
         viewPager.setOffscreenPageLimit(TAB_COUNT - 1);
 
-        TabLayout tabLayout = (TabLayout) findViewById(R.id.sliding_tabs);
+        tabLayout = (TabLayout) findViewById(R.id.sliding_tabs);
         tabLayout.setupWithViewPager(viewPager);
     }
 
@@ -64,22 +62,6 @@ public abstract class DataActivity extends AppCompatActivity implements AppDataI
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.app_data_menu, menu);
         return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
-            case R.id.info:
-                AlertDialog alertDialog = new AlertDialog.Builder(this)
-                        .setTitle(R.string.leak_report_title)
-                        .setIcon(R.drawable.info_outline)
-                        .setMessage(R.string.graph_message)
-                        .setPositiveButton(R.string.dialog_accept, null)
-                        .create();
-                alertDialog.show();
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     public class CustomFragmentPagerAdapter extends FragmentPagerAdapter {
