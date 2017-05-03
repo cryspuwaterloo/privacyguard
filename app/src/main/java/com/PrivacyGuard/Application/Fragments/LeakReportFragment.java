@@ -107,7 +107,7 @@ public class LeakReportFragment extends Fragment {
                 }
 
                 setGraphBounds();
-                setUpDisplay();
+                setUpNavigationDisplay();
             }
         });
 
@@ -128,7 +128,7 @@ public class LeakReportFragment extends Fragment {
                 }
 
                 setGraphBounds();
-                setUpDisplay();
+                setUpNavigationDisplay();
             }
         });
 
@@ -154,14 +154,20 @@ public class LeakReportFragment extends Fragment {
 
         setUpGraph();
         setGraphBounds();
-        setUpDisplay();
+        setUpNavigationDisplay();
 
         return view;
     }
 
-    private void setUpDisplay() {
-        boolean navigateRightEnabled = currentKeyIndex < leakMapKeys.size() - 1;
-        boolean navigateLeftEnabled = currentKeyIndex > 0;
+    private void setUpNavigationDisplay() {
+        int halfRange = PreferenceHelper.getLeakReportGraphDomainSize(getContext())/2;
+        int domainStep = (halfRange/ DOMAIN_STEPS_PER_HALF_DOMAIN) * 1000;
+
+        // Only allow the user to navigate in a direction if there are leaks one domain step
+        // away (or more) in that direction.
+        boolean navigateRightEnabled = leakMapKeys.get(leakMapKeys.size() - 1).getTime() - leakMapKeys.get(currentKeyIndex).getTime() >= domainStep;
+        boolean navigateLeftEnabled = leakMapKeys.get(currentKeyIndex).getTime() - leakMapKeys.get(0).getTime() >= domainStep;
+
         navigateRight.setEnabled(navigateRightEnabled);
         navigateRight.setAlpha(navigateRightEnabled ? 1.0f : 0.3f);
         navigateLeft.setEnabled(navigateLeftEnabled);
@@ -212,14 +218,15 @@ public class LeakReportFragment extends Fragment {
             searchIndex++;
         }
 
+        // Add some space between the highest data point and the top of the graph.
         rangeUpperBound++;
         rangeUpperBound = rangeUpperBound + rangeUpperBound % 2;
-        plot.setRangeBoundaries(0, rangeUpperBound, BoundaryMode.FIXED);
 
+        plot.setRangeBoundaries(0, rangeUpperBound, BoundaryMode.FIXED);
         plot.redraw();
     }
 
-    //Plot all the data on the graph. Should only be called once.
+    // Plot all the data on the graph. Should only be called once.
     private void setUpGraph() {
         if (setUpGraph) {
             throw new RuntimeException("This method should only be called once!");
@@ -229,7 +236,7 @@ public class LeakReportFragment extends Fragment {
         List<AppStatusEvent> appStatusEventList = new ArrayList<>();
         long currentTime = System.currentTimeMillis();
 
-        //It only makes sense to look up background/foreground events if we are considering a single app.
+        // It only makes sense to look up background/foreground events if we are considering a single app.
         if (activity.getAppPackageName() != null) {
             UsageEvents usageEvents = usageStatsManager.queryEvents(currentTime - TimeUnit.DAYS.toMillis(30), currentTime);
 
