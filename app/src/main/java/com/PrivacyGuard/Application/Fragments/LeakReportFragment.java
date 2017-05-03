@@ -233,40 +233,10 @@ public class LeakReportFragment extends Fragment {
         }
         setUpGraph = true;
 
-        List<AppStatusEvent> appStatusEventList = new ArrayList<>();
         long currentTime = System.currentTimeMillis();
-
-        // It only makes sense to look up background/foreground events if we are considering a single app.
-        if (activity.getAppPackageName() != null) {
-            UsageEvents usageEvents = usageStatsManager.queryEvents(currentTime - TimeUnit.DAYS.toMillis(30), currentTime);
-
-            HashSet<AppStatusEvent> appStatusEvents = new HashSet<>();
-            while (usageEvents.hasNextEvent()) {
-                UsageEvents.Event event = new UsageEvents.Event();
-                usageEvents.getNextEvent(event);
-                if (event.getPackageName().equals(activity.getAppPackageName()) &&
-                        (event.getEventType() == UsageEvents.Event.MOVE_TO_BACKGROUND ||
-                                event.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND)) {
-
-                    int foreground = event.getEventType() ==
-                            UsageEvents.Event.MOVE_TO_FOREGROUND ? DatabaseHandler.FOREGROUND_STATUS : DatabaseHandler.BACKGROUND_STATUS;
-                    AppStatusEvent temp = new AppStatusEvent(event.getPackageName(), event.getTimeStamp(), foreground);
-                    appStatusEvents.add(temp);
-                }
-            }
-
-            DatabaseHandler databaseHandler = DatabaseHandler.getInstance(getContext());
-            List<AppStatusEvent> storedEvents = databaseHandler.getAppStatusEvents(activity.getAppPackageName());
-            appStatusEvents.addAll(storedEvents);
-
-            appStatusEventList.addAll(appStatusEvents);
-
-            Collections.sort(appStatusEventList);
-        }
-
         int maxNumberOfLeaks = 0;
 
-        //Next, aggregate the leaks for the app by date and category.
+        // Next, aggregate the leaks for the app by date and category.
         for (LeakReport.LeakCategory category : LeakReport.LeakCategory.values()) {
             List<DataLeak> leaks = activity.getLeaks(category);
             for (DataLeak leak : leaks) {
@@ -303,79 +273,6 @@ public class LeakReportFragment extends Fragment {
         plot.getLayoutManager().remove(plot.getDomainTitle());
         plot.getLayoutManager().remove(plot.getTitle());
 
-        Paint lineFillForeground = new Paint();
-        lineFillForeground.setColor(getResources().getColor(R.color.app_status_green));
-        lineFillForeground.setAlpha(70);
-
-        Paint lineFillBackground = new Paint();
-        lineFillBackground.setColor(getResources().getColor(R.color.app_status_red));
-        lineFillBackground.setAlpha(70);
-
-        Paint lineFillNoData = new Paint();
-        lineFillNoData.setColor(getResources().getColor(R.color.blue));
-        lineFillNoData.setAlpha(70);
-
-        StepFormatter stepFormatterForeground  = new StepFormatter(Color.WHITE, Color.WHITE);
-        stepFormatterForeground.setVertexPaint(null);
-        stepFormatterForeground.getLinePaint().setStrokeWidth(0);
-        stepFormatterForeground.setFillPaint(lineFillForeground);
-
-        StepFormatter stepFormatterBackground  = new StepFormatter(Color.WHITE, Color.WHITE);
-        stepFormatterBackground.setVertexPaint(null);
-        stepFormatterBackground.getLinePaint().setStrokeWidth(0);
-        stepFormatterBackground.setFillPaint(lineFillBackground);
-
-        StepFormatter stepFormatterNoData  = new StepFormatter(Color.WHITE, Color.WHITE);
-        stepFormatterNoData.setVertexPaint(null);
-        stepFormatterNoData.getLinePaint().setStrokeWidth(0);
-        stepFormatterNoData.setFillPaint(lineFillNoData);
-
-        SimpleXYSeries seriesForeground = new SimpleXYSeries(null);
-        SimpleXYSeries seriesBackground = new SimpleXYSeries(null);
-        SimpleXYSeries seriesNoData = new SimpleXYSeries(null);
-        AppStatusEvent lastEvent = null;
-        AppStatusEvent firstEvent = null;
-        for (AppStatusEvent event : appStatusEventList) {
-            if (event.getForeground()) {
-                seriesForeground.addLast(event.getTimeStamp(), 0);
-                seriesForeground.addLast(event.getTimeStamp(), maxNumberOfLeaks);
-
-                seriesBackground.addLast(event.getTimeStamp(), maxNumberOfLeaks);
-                seriesBackground.addLast(event.getTimeStamp(), 0);
-            } else {
-                seriesForeground.addLast(event.getTimeStamp(), maxNumberOfLeaks);
-                seriesForeground.addLast(event.getTimeStamp(), 0);
-
-                seriesBackground.addLast(event.getTimeStamp(), 0);
-                seriesBackground.addLast(event.getTimeStamp(), maxNumberOfLeaks);
-            }
-
-            lastEvent = event;
-            if (firstEvent == null) firstEvent = event;
-        }
-
-        if (firstEvent == null) {
-            seriesNoData.addFirst(currentTime, maxNumberOfLeaks);
-            seriesNoData.addFirst(0, maxNumberOfLeaks);
-        }
-        else {
-            seriesNoData.addFirst(firstEvent.getTimeStamp(), maxNumberOfLeaks);
-            seriesNoData.addFirst(0, maxNumberOfLeaks);
-        }
-
-        if (lastEvent != null) {
-            if (lastEvent.getForeground()) {
-                throw new RuntimeException("This should not happen.");
-            }
-            else {
-                seriesBackground.addLast(currentTime, maxNumberOfLeaks);
-            }
-        }
-
-        plot.addSeries(seriesForeground, stepFormatterForeground);
-        plot.addSeries(seriesBackground, stepFormatterBackground);
-        plot.addSeries(seriesNoData, stepFormatterNoData);
-
         List<SimpleXYSeries> leakSeries = new ArrayList<>();
         for (int i = 0; i < LeakReport.LeakCategory.values().length; i++) {
             leakSeries.add(new SimpleXYSeries(null));
@@ -393,6 +290,102 @@ public class LeakReportFragment extends Fragment {
 
         for (int i = 0; i < leakSeries.size(); i++) {
             plot.addSeries(leakSeries.get(i), new LineAndPointFormatter(getContext(), lineFormats[i]));
+        }
+
+        // It only makes sense to look up and plot background/foreground events if we are considering a single app.
+        if (activity.getAppPackageName() != null) {
+            List<AppStatusEvent> appStatusEventList = new ArrayList<>();
+
+            UsageEvents usageEvents = usageStatsManager.queryEvents(currentTime - TimeUnit.DAYS.toMillis(30), currentTime);
+
+            HashSet<AppStatusEvent> appStatusEvents = new HashSet<>();
+            while (usageEvents.hasNextEvent()) {
+                UsageEvents.Event event = new UsageEvents.Event();
+                usageEvents.getNextEvent(event);
+                if (event.getPackageName().equals(activity.getAppPackageName()) &&
+                        (event.getEventType() == UsageEvents.Event.MOVE_TO_BACKGROUND ||
+                                event.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND)) {
+
+                    int foreground = event.getEventType() ==
+                            UsageEvents.Event.MOVE_TO_FOREGROUND ? DatabaseHandler.FOREGROUND_STATUS : DatabaseHandler.BACKGROUND_STATUS;
+                    AppStatusEvent temp = new AppStatusEvent(event.getPackageName(), event.getTimeStamp(), foreground);
+                    appStatusEvents.add(temp);
+                }
+            }
+
+            DatabaseHandler databaseHandler = DatabaseHandler.getInstance(getContext());
+            List<AppStatusEvent> storedEvents = databaseHandler.getAppStatusEvents(activity.getAppPackageName());
+            appStatusEvents.addAll(storedEvents);
+
+            appStatusEventList.addAll(appStatusEvents);
+
+            Collections.sort(appStatusEventList);
+
+            Paint lineFillForeground = new Paint();
+            lineFillForeground.setColor(getResources().getColor(R.color.app_status_green));
+            lineFillForeground.setAlpha(70);
+
+            Paint lineFillBackground = new Paint();
+            lineFillBackground.setColor(getResources().getColor(R.color.app_status_red));
+            lineFillBackground.setAlpha(70);
+
+            StepFormatter stepFormatterForeground  = new StepFormatter(Color.WHITE, Color.WHITE);
+            stepFormatterForeground.setVertexPaint(null);
+            stepFormatterForeground.getLinePaint().setStrokeWidth(0);
+            stepFormatterForeground.setFillPaint(lineFillForeground);
+
+            StepFormatter stepFormatterBackground  = new StepFormatter(Color.WHITE, Color.WHITE);
+            stepFormatterBackground.setVertexPaint(null);
+            stepFormatterBackground.getLinePaint().setStrokeWidth(0);
+            stepFormatterBackground.setFillPaint(lineFillBackground);
+
+            SimpleXYSeries seriesForeground = new SimpleXYSeries(null);
+            SimpleXYSeries seriesBackground = new SimpleXYSeries(null);
+
+            AppStatusEvent lastEvent = null;
+            AppStatusEvent firstEvent = null;
+            for (AppStatusEvent event : appStatusEventList) {
+                if (event.getForeground()) {
+                    seriesForeground.addLast(event.getTimeStamp(), 0);
+                    seriesForeground.addLast(event.getTimeStamp(), maxNumberOfLeaks);
+
+                    seriesBackground.addLast(event.getTimeStamp(), maxNumberOfLeaks);
+                    seriesBackground.addLast(event.getTimeStamp(), 0);
+                } else {
+                    seriesForeground.addLast(event.getTimeStamp(), maxNumberOfLeaks);
+                    seriesForeground.addLast(event.getTimeStamp(), 0);
+
+                    seriesBackground.addLast(event.getTimeStamp(), 0);
+                    seriesBackground.addLast(event.getTimeStamp(), maxNumberOfLeaks);
+                }
+
+                lastEvent = event;
+                if (firstEvent == null) firstEvent = event;
+            }
+
+            if (firstEvent == null) {
+                // In the case that there are no status events, the app leaked without ever being opened.
+                // Hence, the app has been in the background the entire time.
+                seriesBackground.addFirst(currentTime, maxNumberOfLeaks);
+                seriesBackground.addFirst(0, maxNumberOfLeaks);
+            }
+            else {
+                // Up until the first event, the app was in the background.
+                seriesBackground.addFirst(firstEvent.getTimeStamp(), maxNumberOfLeaks);
+                seriesBackground.addFirst(0, maxNumberOfLeaks);
+            }
+
+            if (lastEvent != null) {
+                if (lastEvent.getForeground()) {
+                    throw new RuntimeException("This should not happen.");
+                }
+                else {
+                    seriesBackground.addLast(currentTime, maxNumberOfLeaks);
+                }
+            }
+
+            plot.addSeries(seriesForeground, stepFormatterForeground);
+            plot.addSeries(seriesBackground, stepFormatterBackground);
         }
 
         plot.redraw();
