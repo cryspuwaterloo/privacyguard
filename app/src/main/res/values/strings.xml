@@ -74,10 +74,10 @@
     <string name="leak_query_title">Leak Query</string>
     <string name="report_message_single_app">This graph shows when your app is leaking compared to when it is in the foreground or background. Use the navigation arrows to move forward and backward in time.</string>
     <string name="summary_message_single_app">A summary of the leaks of your app, by category and foreground status.</string>
-    <string name="query_message_single_app">Set the parameters as you wish in order to investigate what your app has been leaking.</string>
+    <string name="query_message_single_app">Set the parameters as you wish in order to investigate when and what your app has been leaking.</string>
     <string name="report_message_all_apps">This graph shows when your apps are leaking. Use the navigation arrows to move forward and backward in time.</string>
     <string name="summary_message_all_apps">A summary of the leaks of all your apps, by category and foreground status.</string>
-    <string name="query_message_all_apps">Set the parameters as you wish in order to investigate what your apps have been leaking.</string>
+    <string name="query_message_all_apps">Set the parameters as you wish in order to investigate when and what your apps have been leaking.</string>
 
 
     <!-- Spinners -->
