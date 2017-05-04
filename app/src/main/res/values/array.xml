@@ -3,9 +3,8 @@
 
     <!-- Preferences -->
     <string-array name="pref_leak_display_entries">
-        <item>In order of occurrence</item>
-        <item>Increasing by # of leaks</item>
         <item>Decreasing by # of leaks</item>
+        <item>Increasing by # of leaks</item>
         <item>Alphabetical order by app name</item>
     </string-array>
 
@@ -13,7 +12,6 @@
         <item>1</item>
         <item>2</item>
         <item>3</item>
-        <item>4</item>
     </string-array>
 
     <string-array name="pref_graph_domain_size_entries">

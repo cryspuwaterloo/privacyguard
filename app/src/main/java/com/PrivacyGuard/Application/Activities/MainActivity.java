@@ -52,7 +52,6 @@ import android.widget.ListView;
 
 import com.PrivacyGuard.Application.Database.AppSummary;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
-import com.PrivacyGuard.Application.Database.RecordAppStatusService;
 import com.PrivacyGuard.Application.Helpers.ActivityRequestCodes;
 import com.PrivacyGuard.Application.Helpers.PermissionsHelper;
 import com.PrivacyGuard.Application.Helpers.PreferenceHelper;
@@ -204,10 +203,6 @@ public class MainActivity extends AppCompatActivity {
         // Only enable the app if all required permissions are granted.
         // Otherwise, prompt the user to grant the permissions.
         checkPermissionsAndRequestAndEnableViews();
-
-        final IntentFilter filter = new IntentFilter();
-        filter.addAction(Intent.ACTION_USER_PRESENT);
-        getApplicationContext().registerReceiver(new RecordAppStatusService(), filter);
     }
 
     /**
@@ -334,9 +329,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Comparator<AppSummary> comparator = PreferenceHelper.getAppLeakOrder(getApplicationContext());
-        if (comparator != null) {
-            Collections.sort(apps, comparator);
-        }
+        Collections.sort(apps, comparator);
 
         if (adapter == null) {
             adapter = new MainListViewAdapter(this, apps);

@@ -1,6 +1,5 @@
 package com.PrivacyGuard.Application.Activities;
 
-import android.app.Activity;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -76,6 +75,4 @@ public class DetailListViewAdapter extends BaseAdapter {
         public TextView content;
         public TextView time;
     }
-
-
 }
