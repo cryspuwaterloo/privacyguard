@@ -82,8 +82,6 @@ public class AppDataActivity extends DataActivity {
                         alertDialog.show();
                         return true;
                 }
-
-                return false;
         }
 
         return super.onOptionsItemSelected(item);
