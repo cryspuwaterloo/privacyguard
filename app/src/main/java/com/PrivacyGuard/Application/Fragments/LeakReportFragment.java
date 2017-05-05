@@ -342,47 +342,23 @@ public class LeakReportFragment extends Fragment {
             SimpleXYSeries seriesForeground = new SimpleXYSeries(null);
             SimpleXYSeries seriesBackground = new SimpleXYSeries(null);
 
-            AppStatusEvent lastEvent = null;
-            AppStatusEvent firstEvent = null;
+            // At the beginning of time, the app was in the background.
+            seriesBackground.addLast(0, maxNumberOfLeaks);
+
             for (AppStatusEvent event : appStatusEventList) {
                 if (event.getForeground()) {
-                    seriesForeground.addLast(event.getTimeStamp(), 0);
                     seriesForeground.addLast(event.getTimeStamp(), maxNumberOfLeaks);
-
-                    seriesBackground.addLast(event.getTimeStamp(), maxNumberOfLeaks);
                     seriesBackground.addLast(event.getTimeStamp(), 0);
                 } else {
-                    seriesForeground.addLast(event.getTimeStamp(), maxNumberOfLeaks);
                     seriesForeground.addLast(event.getTimeStamp(), 0);
-
-                    seriesBackground.addLast(event.getTimeStamp(), 0);
                     seriesBackground.addLast(event.getTimeStamp(), maxNumberOfLeaks);
                 }
-
-                lastEvent = event;
-                if (firstEvent == null) firstEvent = event;
             }
 
-            if (firstEvent == null) {
-                // In the case that there are no status events, the app leaked without ever being opened.
-                // Hence, the app has been in the background the entire time.
-                seriesBackground.addFirst(currentTime, maxNumberOfLeaks);
-                seriesBackground.addFirst(0, maxNumberOfLeaks);
-            }
-            else {
-                // Up until the first event, the app was in the background.
-                seriesBackground.addFirst(firstEvent.getTimeStamp(), maxNumberOfLeaks);
-                seriesBackground.addFirst(0, maxNumberOfLeaks);
-            }
-
-            if (lastEvent != null) {
-                if (lastEvent.getForeground()) {
-                    throw new RuntimeException("This should not happen.");
-                }
-                else {
-                    seriesBackground.addLast(currentTime, maxNumberOfLeaks);
-                }
-            }
+            // This ensures that the last event on the graph persists to the current time.
+            // All future time on the graph does not have a background color.
+            seriesForeground.addLast(currentTime, 0);
+            seriesBackground.addLast(currentTime, 0);
 
             plot.addSeries(seriesForeground, stepFormatterForeground);
             plot.addSeries(seriesBackground, stepFormatterBackground);

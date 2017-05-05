@@ -18,6 +18,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
+
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 
 /**
@@ -198,10 +202,18 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(KEY_FOREGROUND_STATUS, UNSPECIFIED_STATUS); // Leak foreground status
 
         // Inserting Row
-        long id = mDB.insert(TABLE_DATA_LEAKS, null, values);
+        final long id = mDB.insert(TABLE_DATA_LEAKS, null, values);
 
-        // Update the status on a background thread to prevent delays.
-        new UpdateLeakForegroundStatus(applicationContext).execute(id);
+        // A bug occurred when the update task ran so quickly after the app left the foreground
+        // that the most recent status event was not yet available in the api. Hence, the leak was
+        // incorrectly classified as foreground. To fix this, run the update task after 10 seconds
+        // to ensure that the most recent status event is available.
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                new UpdateLeakForegroundStatus(applicationContext).execute(id);
+            }
+        }, TimeUnit.SECONDS.toMillis(10));
     }
 
     public void addAppStatusEvent(String packageName, long timeStamp, int foreground) {
@@ -429,7 +441,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             for (LeakInstance li : rpt.leaks) {
                 addDataLeak(rpt.packageName, rpt.appName, rpt.category.name(), li.type, li.content);
             }
-            //need to update frequency in summary table accordingly
+            // Need to update frequency in summary table accordingly
             // Which row to update, based on the package and category
             ContentValues values = new ContentValues();
             values.put(KEY_FREQUENCY, frequency + rpt.leaks.size());
