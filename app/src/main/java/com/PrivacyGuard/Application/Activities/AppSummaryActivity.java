@@ -142,5 +142,4 @@ public class AppSummaryActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-
 }
