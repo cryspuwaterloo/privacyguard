@@ -59,7 +59,7 @@ public class TunReadThread extends Thread {
                 if (localInChannel.read(packet) > 0) {
                     packet.flip();
                     if ((ip = IPDatagram.create(packet)) != null) {
-                        Logger.d(TAG, "receiving: " + ip.debugString());
+                        Logger.d(TAG, "receiving: " + ip.headerToString());
                         readQueue.offer(ip);
                     }
                 } else {

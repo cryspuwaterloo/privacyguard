@@ -81,30 +81,35 @@ public class LocalServer extends Thread {
                 SocketChannel targetChannel = SocketChannel.open();
                 Socket target = targetChannel.socket();
                 vpnService.protect(target);
-                targetChannel.connect(new InetSocketAddress(descriptor.getRemoteAddress(), descriptor.getRemotePort()));
-                if(descriptor != null && descriptor.getRemotePort() == SSLPort && !sslPinning.contains(descriptor.getRemoteAddress())) {
-                    SiteData remoteData = vpnService.getHostNameResolver().getSecureHost(client, descriptor, true);
-                    Logger.d(TAG, "Begin Local Handshake : " + remoteData.tcpAddress + " " + remoteData.name);
-                    SSLSocket ssl_client = SSLSocketBuilder.negotiateSSL(client, remoteData, false, vpnService.getSSlSocketFactoryFactory());
-                    SSLSession session = ssl_client.getSession();
-                    Logger.d(TAG, "After Local Handshake : " + remoteData.tcpAddress + " " + remoteData.name + " " + session + " is valid : " + session.isValid());
-                    if(session.isValid()) {
-                        Socket ssl_target = ((SSLSocketFactory) SSLSocketFactory.getDefault()).createSocket(target, descriptor.getRemoteAddress(), descriptor.getRemotePort(), true);
-                        SSLSession tmp_session = ((SSLSocket) ssl_target).getSession();
-                        Logger.d(TAG, "Remote Handshake : " + tmp_session + " is valid : " + tmp_session.isValid());
-                        if(tmp_session.isValid()){
-                            client = ssl_client;
-                            target = ssl_target;
-                        }
-                        else {
+                boolean result = targetChannel.connect(new InetSocketAddress(descriptor.getRemoteAddress(), descriptor.getRemotePort()));
+                if(descriptor != null && descriptor.getRemotePort() == SSLPort) {
+
+                    if (!sslPinning.contains(descriptor.getRemoteAddress())) {
+                        SiteData remoteData = vpnService.getHostNameResolver().getSecureHost(client, descriptor, true);
+                        Logger.d(TAG, "Begin Local Handshake : " + remoteData.tcpAddress + " " + remoteData.name);
+                        SSLSocket ssl_client = SSLSocketBuilder.negotiateSSL(client, remoteData, false, vpnService.getSSlSocketFactoryFactory());
+                        SSLSession session = ssl_client.getSession();
+                        Logger.d(TAG, "After Local Handshake : " + remoteData.tcpAddress + " " + remoteData.name + " " + session + " is valid : " + session.isValid());
+                        if (session.isValid()) {
+                            Socket ssl_target = ((SSLSocketFactory) SSLSocketFactory.getDefault()).createSocket(target, descriptor.getRemoteAddress(), descriptor.getRemotePort(), true);
+                            SSLSession tmp_session = ((SSLSocket) ssl_target).getSession();
+                            Logger.d(TAG, "Remote Handshake : " + tmp_session + " is valid : " + tmp_session.isValid());
+                            if (tmp_session.isValid()) {
+                                client = ssl_client;
+                                target = ssl_target;
+                            } else {
+                                sslPinning.add(descriptor.getRemoteAddress());
+                                ssl_client.close();
+                                ssl_target.close();
+                            }
+                        } else {
                             sslPinning.add(descriptor.getRemoteAddress());
                             ssl_client.close();
-                            ssl_target.close();
                         }
-                    } else {
-                        sslPinning.add(descriptor.getRemoteAddress());
-                        ssl_client.close();
                     }
+                    else {
+                            Logger.d(TAG, "Skipping TLS interception for " + descriptor.getRemoteAddress() + ":" + descriptor.getRemotePort() + " due to suspected pinning");
+                        }
                 }
                 LocalServerForwarder.connect(client, target, vpnService);
             } catch (Exception e) {

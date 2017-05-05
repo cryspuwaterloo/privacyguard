@@ -16,6 +16,7 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.net.InetAddress;
 
 /**
  * Created by y59song on 04/06/14.
@@ -38,7 +39,13 @@ public class MyClientResolver implements IClientResolver {
   public ConnectionDescriptor getClientDescriptorBySocket(Socket socket) {
 
     int port = socket.getPort();
-    String address = socket.getInetAddress().getHostAddress();
+    InetAddress inetAddress = socket.getInetAddress();
+    if (inetAddress == null) {
+      // nothing found we create descriptor with what we got as input
+      if (DEBUG) Log.d(TAG, "No InetAddress for port " + port);
+      return null;
+    }
+    String address = inetAddress.getHostAddress();
     BufferedReader reader = null;
     try {
       File tcp = new File(NetworkInfo.TCP_6_FILE_PATH);

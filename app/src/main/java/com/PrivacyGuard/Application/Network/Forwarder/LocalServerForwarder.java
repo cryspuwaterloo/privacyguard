@@ -57,10 +57,11 @@ public class LocalServerForwarder extends Thread {
     private Socket inSocket;
     private InputStream in;
     private OutputStream out;
-    private String destIP;
+    private String destIP, srcIP;
+    private int destPort, srcPort;
     private SimpleDateFormat df = new SimpleDateFormat(TIME_STAMP_FORMAT, Locale.CANADA);
     private LinkedBlockingQueue<ByteArray> toFilter = new LinkedBlockingQueue<>();
-    private SocketChannel inChannel, outChannel;
+    //private SocketChannel inChannel, outChannel;
 
     public LocalServerForwarder(Socket inSocket, Socket outSocket, boolean isOutgoing, MyVpnService vpnService) {
         this.inSocket = inSocket;
@@ -72,22 +73,26 @@ public class LocalServerForwarder extends Thread {
         }
         this.outgoing = isOutgoing;
         this.destIP = outSocket.getInetAddress().getHostAddress();
-        if (outSocket.getPort() == 443) destIP += " (SSL)";
+        this.destPort = outSocket.getPort();
+        if (this.destPort == 443) destIP += " (SSL)";
+        this.srcIP = inSocket.getInetAddress().getHostAddress();
+        this.srcPort = inSocket.getPort();
         this.vpnService = vpnService;
         if (outgoing) this.plugins = vpnService.getNewPlugins();
         setDaemon(true);
     }
 
-    public LocalServerForwarder(SocketChannel in, SocketChannel out, boolean isOutgoing, MyVpnService vpnService) {
+    /*public LocalServerForwarder(SocketChannel in, SocketChannel out, boolean isOutgoing, MyVpnService vpnService) {
         this.inChannel = in;
         this.outChannel = out;
         this.outgoing = isOutgoing;
         this.destIP = out.socket().getInetAddress().getHostAddress();
-        if (out.socket().getPort() == 443) destIP += " (SSL)";
+        if (this.destPort == 443) destIP += " (SSL)";
+        this.destPort = out.socket().getPort();
         this.vpnService = vpnService;
         if (outgoing) this.plugins = vpnService.getNewPlugins();
         setDaemon(true);
-    }
+    }*/
 
     public static void connect(Socket clientSocket, Socket serverSocket, MyVpnService vpnService) throws Exception {
         if (clientSocket != null && serverSocket != null && clientSocket.isConnected() && serverSocket.isConnected()) {
@@ -127,6 +132,7 @@ public class LocalServerForwarder extends Thread {
             byte[] buff = new byte[LIMIT];
             int got;
             while ((got = in.read(buff)) > -1) {
+                Logger.d(TAG, got + " bytes to be written to " + srcIP + ":" + srcPort + "->" + destIP + ":" + destPort);
                 if (PrivacyGuard.doFilter && outgoing) {
                     if (PrivacyGuard.asynchronous) {
                         if (!filterThread.isAlive()) filterThread.start();
@@ -136,9 +142,12 @@ public class LocalServerForwarder extends Thread {
                         filterThread.filter(new String(buff, 0, got));
                     }
                 }
+                Logger.d(TAG, got + " bytes handed over to filtering " + srcIP + ":" + srcPort + "->" + destIP + ":" + destPort);
                 out.write(buff, 0, got);
+                Logger.d(TAG, got + " bytes written to " + srcIP + ":" + srcPort + "->" + destIP + ":" + destPort);
                 out.flush();
             }
+            Logger.d(TAG, "terminating " + srcIP + ":" + srcPort + "->" + destIP + ":" + destPort);
         } catch (Exception ignore) {
             ignore.printStackTrace();
             Logger.d(TAG, "outgoing : " + outgoing);

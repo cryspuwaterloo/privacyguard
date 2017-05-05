@@ -54,15 +54,15 @@ public class IPDatagram {
     }
 
     public void debugInfo() {
-        Logger.d(TAG, "DstAddr=" + header.getDstAddress() + " SrcAddr=" + header.getSrcAddress());
+        Logger.d(TAG, "SrcAddr=" + header.getSrcAddress() + " DstAddr=" + header.getDstAddress());
     }
 
-    public String debugString()
+    public String headerToString()
     {
-        StringBuffer sb = new StringBuffer("DstAddr=");
-        sb.append(header.getDstAddress());
-        sb.append(" SrcAddr=");
+        StringBuffer sb = new StringBuffer("SrcAddr=");
         sb.append(header.getSrcAddress());
+        sb.append(" DstAddr=");
+        sb.append(header.getDstAddress());
         sb.append(" ");
         //if (payLoad() instanceof TCPDatagram) {
         //    sb.append(((TCPDatagram)payLoad()).debugString());

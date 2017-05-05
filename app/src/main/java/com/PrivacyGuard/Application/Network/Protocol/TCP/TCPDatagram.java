@@ -50,25 +50,34 @@ public class TCPDatagram extends IPPayLoad {
                 " Data Length=" + dataLength());
     }
 
-    public String debugString()
+    public String headerToString()
     {
-        StringBuffer sb = new StringBuffer("Flags=");
+        StringBuffer sb = new StringBuffer("SrcPort=");
+        sb.append(header.getSrcPort());
+        sb.append(" DstPort=");
+        sb.append(header.getDstPort());
+        sb.append(" Flags=");
         byte flag = ((TCPHeader)header).getFlag();
         if ((flag & TCPHeader.SYN) != 0) sb.append("SYN|");
         if ((flag & TCPHeader.FIN) != 0) sb.append("FIN|");
         if ((flag & TCPHeader.ACK) != 0) sb.append("ACK|");
         if ((flag & TCPHeader.PSH) != 0) sb.append("PSH|");
         if ((flag & TCPHeader.RST) != 0) sb.append("RST|");
-        sb.append("SrcPort=");
-        sb.append(header.getSrcPort());
-        sb.append(" DstPort=");
-        sb.append(header.getDstPort());
         sb.append(" Seq=");
         sb.append(Long.toString(((TCPHeader) header).getSeq_num() & 0xFFFFFFFFL));
         sb.append(" Ack=");
         sb.append(Long.toString(((TCPHeader) header).getAck_num() & 0xFFFFFFFFL));
         sb.append(" Data Length=");
         sb.append(dataLength());
+        return sb.toString();
+    }
+
+    public String portsToString()
+    {
+        StringBuffer sb = new StringBuffer("SrcPort=");
+        sb.append(header.getSrcPort());
+        sb.append(" DstPort=");
+        sb.append(header.getDstPort());
         return sb.toString();
     }
 

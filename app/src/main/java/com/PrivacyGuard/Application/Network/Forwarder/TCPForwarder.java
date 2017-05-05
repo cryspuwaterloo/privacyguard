@@ -62,7 +62,7 @@ public class TCPForwarder extends AbsForwarder { //implements ICommunication {
             return false;
         }
         TCPDatagram response = new TCPDatagram(conn_info.getTransHeader(len, TCPHeader.SYNACK), null, conn_info.getDstAddress());
-        Logger.d(TAG, "LISTEN: Responded with " + response.debugString());
+        Logger.d(TAG, "LISTEN: Responded with " + response.headerToString());
         conn_info.increaseSeq(
                 forwardResponse(conn_info.getIPHeader(), response)
         );
@@ -159,20 +159,18 @@ public class TCPForwarder extends AbsForwarder { //implements ICommunication {
             rlen = ipDatagram.payLoad().dataLength();
             if(conn_info == null) conn_info = new TCPConnectionInfo(ipDatagram);
         } else return;
-        Logger.d(TAG, "HANDLING: " + ipDatagram.debugString());
-        //ipDatagram.debugInfo();
-        //((TCPDatagram)ipDatagram.payLoad()).debugInfo();
+        Logger.d(TAG, "HANDLING: " + ipDatagram.headerToString() + ((TCPDatagram)ipDatagram.payLoad()).headerToString());
         switch(status) {
             case LISTEN:
-                //Logger.d(TAG, "LISTEN");
+                Logger.d(TAG, "LISTEN");
                 if(!handle_LISTEN(ipDatagram, flag, len)) return;
                 else break;
             case SYN_ACK_SENT:
-                //Logger.d(TAG, "SYN_ACK_SENT");
+                Logger.d(TAG, "SYN_ACK_SENT");
                 if(!handle_SYN_ACK_SENT(flag)) return;
                 else break;
             case DATA:
-                //Logger.d(TAG, "DATA");
+                Logger.d(TAG, "DATA");
                 if(!handle_DATA(ipDatagram, flag, len, rlen)) return;
                 else break;
             case HALF_CLOSE_BY_CLIENT:

@@ -3,6 +3,7 @@ package com.PrivacyGuard.Application.Network.Forwarder;
 import com.PrivacyGuard.Application.Network.Forwarder.TCPForwarder;
 import com.PrivacyGuard.Application.Network.LocalServer;
 import com.PrivacyGuard.Application.PrivacyGuard;
+import com.PrivacyGuard.Application.Logger;
 
 import java.io.IOException;
 import java.net.ConnectException;
@@ -128,7 +129,9 @@ public class TCPForwarderWorker extends Thread {
                     temp = requests.take();
                     ByteBuffer tempBuf = ByteBuffer.wrap(temp);
                     while (true) {
-                        PrivacyGuard.tcpForwarderWorkerWrite += socketChannel.write(tempBuf);
+                        int written = socketChannel.write(tempBuf);
+                        Logger.d(TAG, written + " bytes forwarded to LocalServer");
+                        PrivacyGuard.tcpForwarderWorkerWrite += written;
                         if (tempBuf.hasRemaining()) {
                             Thread.sleep(10);
                         } else break;

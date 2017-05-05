@@ -66,7 +66,7 @@ public abstract class AbsForwarder {
         if(ipHeader == null || datagram == null) return 0;
         datagram.update(ipHeader); // set the checksum
         IPDatagram newIpDatagram = new IPDatagram(ipHeader, datagram); // set the ip datagram, will update the length and the checksum
-        Logger.d("AbsForwarder",newIpDatagram.debugString());
+        Logger.d("AbsForwarder",newIpDatagram.headerToString());
         vpnService.fetchResponse(newIpDatagram.toByteArray());
         return datagram.virtualLength();
     }
