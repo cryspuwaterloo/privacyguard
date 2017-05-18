@@ -21,13 +21,20 @@ package com.PrivacyGuard.Application.Network.Forwarder;
 
 import com.PrivacyGuard.Application.Logger;
 import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService;
+import com.PrivacyGuard.Application.Network.LocalServer;
 import com.PrivacyGuard.Application.Network.Protocol.IP.IPDatagram;
 import com.PrivacyGuard.Application.Network.Protocol.IP.IPPayLoad;
 import com.PrivacyGuard.Application.Network.Protocol.TCP.TCPDatagram;
 import com.PrivacyGuard.Application.Network.Protocol.TCP.TCPHeader;
 import com.PrivacyGuard.Application.Network.Protocol.TCPConnectionInfo;
+import com.PrivacyGuard.Application.PrivacyGuard;
 
+import java.io.IOException;
+import java.net.ConnectException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+
 /**
  * Created by frank on 2014-03-27.
  */
@@ -40,6 +47,8 @@ public class TCPForwarder extends AbsForwarder { //implements ICommunication {
     private TCPConnectionInfo conn_info;
     protected long releaseTime;
     private boolean closed = true;
+    private Socket socketToLocalServer;
+    private int src_port;
 
     public TCPForwarder(MyVpnService vpnService, int port) {
         super(vpnService, port);
@@ -193,10 +202,32 @@ public class TCPForwarder extends AbsForwarder { //implements ICommunication {
     */
     public boolean setup(InetAddress srcAddress, int src_port, InetAddress dstAddress, int dst_port) {
         vpnService.getClientAppResolver().setLocalPortToRemoteMapping(src_port, dstAddress.getHostAddress(), dst_port);
-        worker = new TCPForwarderWorker(srcAddress, src_port, dstAddress, dst_port, this);
-        if (!worker.isValid()) {
+
+        try {
+            //socketChannel = SocketChannel.open();
+            //Socket socket = socketChannel.socket();
+            socketToLocalServer = new Socket();
+            vpnService.protect(socketToLocalServer);
+            socketToLocalServer.setReuseAddress(true);
+            socketToLocalServer.bind(new InetSocketAddress(InetAddress.getLocalHost(), src_port));
+            this.src_port = src_port;
+            try {
+                //socketChannel.connect(new InetSocketAddress(LocalServer.port));
+                socketToLocalServer.connect(new InetSocketAddress(LocalServer.port));
+                //while (!socketChannel.finishConnect()) ;
+            } catch (ConnectException e) {
+                e.printStackTrace();
+            }
+            //socketChannel.configureBlocking(false);
+            //selector = Selector.open();
+            //socketChannel.register(selector, SelectionKey.OP_READ);
+            worker = new TCPForwarderWorker(socketToLocalServer, this, src_port);
+            worker.start();
+
+        } catch (IOException e) {
+            e.printStackTrace();
             return false;
-        } else worker.start();
+        }
         return true;
     }
 
@@ -237,13 +268,18 @@ public class TCPForwarder extends AbsForwarder { //implements ICommunication {
             conn_info.increaseSeq(
                     forwardResponse(conn_info.getIPHeader(), new TCPDatagram(conn_info.getTransHeader(0, TCPHeader.FINACK), null, conn_info.getDstAddress()))
             );
-        } else worker.send(payLoad.data());
+        } else send(payLoad.data());
     }
 
     private void close(boolean sendRST) {
         closed = true;
         if(sendRST) forwardResponse(conn_info.getIPHeader(), new TCPDatagram(conn_info.getTransHeader(0, TCPHeader.RST), null, conn_info.getDstAddress()));
         status = Status.CLOSED;
+        try {
+            socketToLocalServer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         if (worker != null) {
             worker.interrupt();
         }
@@ -264,5 +300,16 @@ public class TCPForwarder extends AbsForwarder { //implements ICommunication {
 
     public enum Status {
         DATA, LISTEN, SYN_ACK_SENT, HALF_CLOSE_BY_CLIENT, HALF_CLOSE_BY_SERVER, CLOSED
+    }
+
+    private void send(byte[] request) {
+
+        try {
+            socketToLocalServer.getOutputStream().write(request);
+            Logger.d(TAG, request.length + " bytes forwarded to LocalServer from port: " + src_port);
+            PrivacyGuard.tcpForwarderWorkerWrite += request.length;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

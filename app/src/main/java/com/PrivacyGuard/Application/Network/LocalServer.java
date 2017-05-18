@@ -33,6 +33,7 @@ public class LocalServer extends Thread {
     private ServerSocketChannel serverSocketChannel;
     private MyVpnService vpnService;
     private Set<String> sslPinning = new HashSet<String>();
+
     public LocalServer(MyVpnService vpnService) {
         if(serverSocketChannel == null || !serverSocketChannel.isOpen())
             try {
@@ -80,8 +81,11 @@ public class LocalServer extends Thread {
                 ConnectionDescriptor descriptor = vpnService.getClientAppResolver().getClientDescriptorByPort(client.getPort());
                 SocketChannel targetChannel = SocketChannel.open();
                 Socket target = targetChannel.socket();
+                //Socket target = new Socket();   // creating Socket directly causes memory problems
                 vpnService.protect(target);
-                boolean result = targetChannel.connect(new InetSocketAddress(descriptor.getRemoteAddress(), descriptor.getRemotePort()));
+                //boolean result = targetChannel.connect(new InetSocketAddress(descriptor.getRemoteAddress(), descriptor.getRemotePort()));
+                target.connect(new InetSocketAddress(descriptor.getRemoteAddress(), descriptor.getRemotePort()));
+
                 if(descriptor != null && descriptor.getRemotePort() == SSLPort) {
 
                     if (!sslPinning.contains(descriptor.getRemoteAddress())) {

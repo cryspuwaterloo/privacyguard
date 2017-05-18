@@ -121,6 +121,8 @@ public class MyNetworkHostNameResolver {
               SSLSocket sslsocket = (SSLSocket)factory.createSocket(socket, socket.getInetAddress().getHostAddress(), socket.getPort(), true);
               sslsocket.setUseClientMode(true);
               sslsocket.getSession();
+              sslsocket.close();
+              socket.close();
             }else{
               SiteData siteDataCached = ipPortSiteData.get(siteDataCurrent.tcpAddress + ":" + siteDataCurrent.destPort);
               if (LOGD) Log.d(TAG, "Already have candidate for " + siteDataCached.name + ". No need to fetch " + siteDataCurrent.tcpAddress + " on port:" + siteDataCurrent.destPort);

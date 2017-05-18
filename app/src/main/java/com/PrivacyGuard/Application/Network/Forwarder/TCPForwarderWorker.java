@@ -17,6 +17,8 @@ import java.nio.channels.SocketChannel;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Created by y59song on 03/04/14.
@@ -26,95 +28,103 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class TCPForwarderWorker extends Thread {
     private final String TAG = "TCPForwarderWorker";
     private final int limit = 1368;
-    private SocketChannel socketChannel;
-    private Selector selector;
+    //private SocketChannel socketChannel;
+    //private Selector selector;
+    private Socket socket;
     private TCPForwarder forwarder;
     private ByteBuffer msg = ByteBuffer.allocate(limit);
     private LinkedBlockingQueue<byte[]> requests = new LinkedBlockingQueue<>();
     private Sender sender;
+    private int src_port;
 
-    public TCPForwarderWorker(InetAddress srcAddress, int src_port, InetAddress dstAddress, int dst_port, TCPForwarder forwarder) {
+    public TCPForwarderWorker(Socket socket, TCPForwarder forwarder, int src_port) {
         this.forwarder = forwarder;
-        try {
-            socketChannel = SocketChannel.open();
-            Socket socket = socketChannel.socket();
-            socket.setReuseAddress(true);
-            socket.bind(new InetSocketAddress(InetAddress.getLocalHost(), src_port));
-            try {
-                socketChannel.connect(new InetSocketAddress(LocalServer.port));
-                while (!socketChannel.finishConnect()) ;
-            } catch (ConnectException e) {
-                e.printStackTrace();
-                return;
-            }
-            socketChannel.configureBlocking(false);
-            selector = Selector.open();
-            socketChannel.register(selector, SelectionKey.OP_READ);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        this.socket = socket;
+        this.src_port = src_port;
     }
 
     public boolean isValid() {
-        return selector != null;
+    //    return selector != null;
+        return true;
     }
 
-    public void send(byte[] request) {
-        requests.offer(request);
-    }
+    //public void send(byte[] request) {
+    //    requests.offer(request);
+    //}
 
     @Override
     // reads responses from socket connected to LocalServer and passes them on to TCPForwarder
     public void run() {
-        sender = new Sender();
-        sender.start();
-        while (!isInterrupted() && selector.isOpen()) {
-            try {
-                selector.select(0);
-            } catch (IOException e) {
-                e.printStackTrace();
+        //sender = new Sender();
+        //sender.start();
+
+        try {
+            byte[] buff = new byte[limit];
+            int got;
+            InputStream in = socket.getInputStream();
+            while ((got = in.read(buff)) > -1) {
+                Logger.d(TAG, got + " bytes to be written to " + src_port);
+                PrivacyGuard.tcpForwarderWorkerRead += got;
+                byte[] temp = new byte[got];
+                System.arraycopy(buff, 0, temp, 0, got);
+                forwarder.forwardResponse(temp);
             }
-            Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
-            while (!isInterrupted() && iterator.hasNext()) {
-                SelectionKey key = iterator.next();
-                iterator.remove();
-                if (!key.isValid()) continue;
-                else if (key.isReadable()) {
-                    try {
-                        msg.clear();
-                        int length = socketChannel.read(msg);
-                        if (length <= 0 || isInterrupted()) {
-                            close();
-                            return;
-                        }
-                        msg.flip();
-                        byte[] temp = new byte[length];
-                        msg.get(temp);
-                        PrivacyGuard.tcpForwarderWorkerRead += length;
-                        forwarder.forwardResponse(temp);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
+        } catch (IOException e) {
+            // socket got closed by TCPForwarder
+            //e.printStackTrace();
         }
-        close();
+                //            }
+        //while (!isInterrupted() && selector.isOpen()) {
+        //   try {
+        //      selector.select(0);   // blocks till there is some data to read
+        // } catch (IOException e) {
+        //       e.printStackTrace();
+        //   }
+        //   Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();
+        //    while (!isInterrupted() && iterator.hasNext()) {
+        //        SelectionKey key = iterator.next();
+        //        iterator.remove();
+        //while (key.isValid() && key.isReadable()) {
+        //            try {
+        //                msg.clear();
+        //                Logger.d(TAG, "reading on port: " + src_port);
+        //                int length = socketChannel.read(msg);
+        //                if (length <= 0 || isInterrupted()) {
+        //                    if (length == 0) Logger.d(TAG, "read length is zero for port: " + src_port);
+        //                    close();
+        //                    return;
+        //                }
+        //                Logger.d(TAG, "read " + length + " bytes on port: " + src_port);
+        //                msg.flip();
+        //                byte[] temp = new byte[length];
+        //                msg.get(temp);
+        //                PrivacyGuard.tcpForwarderWorkerRead += length;
+        //                forwarder.forwardResponse(temp);
+        //            } catch (IOException e) {
+        //                e.printStackTrace();
+        //            }
+        //        }
+        //    }
+        //}
+        //close();
     }
 
     public void close() {
-        try {
-            if (selector != null) selector.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+       // try {
+            //if (selector != null) selector.close();
+        //} catch (IOException e) {
+          //  e.printStackTrace();
+        //}
         if (sender != null && sender.isAlive()) {
             sender.interrupt();
         }
         try {
-            if (socketChannel.isConnected()) {
-                socketChannel.socket().close();
-                socketChannel.close();
-            }
+           // if (socketChannel.isConnected()) {
+           //     socketChannel.socket().close();
+           //     socketChannel.close();
+            socket.close();
+                Logger.d(TAG, "closed socket for port " + src_port);
+           // }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -125,18 +135,22 @@ public class TCPForwarderWorker extends Thread {
         public void run() {
             try {
                 byte[] temp;
-                while (!isInterrupted() && !socketChannel.socket().isClosed()) {
-                    temp = requests.take();
-                    ByteBuffer tempBuf = ByteBuffer.wrap(temp);
-                    while (true) {
-                        int written = socketChannel.write(tempBuf);
-                        Logger.d(TAG, written + " bytes forwarded to LocalServer");
-                        PrivacyGuard.tcpForwarderWorkerWrite += written;
-                        if (tempBuf.hasRemaining()) {
-                            Thread.sleep(10);
-                        } else break;
+                OutputStream stream = socket.getOutputStream();
+                //while (!isInterrupted() && !socketChannel.socket().isClosed()) {
+                while (!isInterrupted() && !socket.isClosed()) {
+                        temp = requests.take();
+                        //ByteBuffer tempBuf = ByteBuffer.wrap(temp);
+                        //while (true) {
+                            //int written = socketChannel.write(tempBuf);
+                            stream.write(temp);
+                            stream.flush();
+                            Logger.d(TAG, temp.length + " bytes forwarded to LocalServer from port: " + src_port);
+                            PrivacyGuard.tcpForwarderWorkerWrite += temp.length;
+                            //if (tempBuf.hasRemaining()) {
+                            //    Thread.sleep(10);
+                            //} else break;
+                        //}
                     }
-                }
             } catch (InterruptedException e) {
                 // happens when connection gets terminated by TCPForwarder
                 //e.printStackTrace();

@@ -54,7 +54,7 @@ public class LocalServerForwarder extends Thread {
     private boolean outgoing = false;
     private ArrayList<IPlugin> plugins;
     private MyVpnService vpnService;
-    private Socket inSocket;
+    private Socket inSocket, outSocket;
     private InputStream in;
     private OutputStream out;
     private String destIP, srcIP;
@@ -65,6 +65,7 @@ public class LocalServerForwarder extends Thread {
 
     public LocalServerForwarder(Socket inSocket, Socket outSocket, boolean isOutgoing, MyVpnService vpnService) {
         this.inSocket = inSocket;
+        this.outSocket = outSocket;
         try {
             this.in = inSocket.getInputStream();
             this.out = outSocket.getOutputStream();
@@ -103,12 +104,12 @@ public class LocalServerForwarder extends Thread {
             clientServer.start();
             serverClient.start();
 
-            if (DEBUG) Logger.d(TAG, "Start forwarding for " + clientSocket.getInetAddress().getHostAddress()+ ":" + clientSocket.getPort() + "->" + serverSocket.getInetAddress().getHostAddress() + ":" + serverSocket.getPort());
+            if (DEBUG) Logger.d(TAG, "Start forwarding for " + clientSocket.getInetAddress().getHostAddress()+ ":" + clientSocket.getPort() + "<->" + serverSocket.getInetAddress().getHostAddress() + ":" + serverSocket.getPort());
             while (clientServer.isAlive())
                 clientServer.join();
             while (serverClient.isAlive())
                 serverClient.join();
-            if (DEBUG) Logger.d(TAG, "Stop forwarding " + clientSocket.getInetAddress().getHostAddress()+ ":" + clientSocket.getPort() + "->" + serverSocket.getInetAddress().getHostAddress() + ":" + serverSocket.getPort());
+            if (DEBUG) Logger.d(TAG, "Stop forwarding " + clientSocket.getInetAddress().getHostAddress()+ ":" + clientSocket.getPort() + "<->" + serverSocket.getInetAddress().getHostAddress() + ":" + serverSocket.getPort());
             clientSocket.close();
             serverSocket.close();
         } else {
@@ -132,7 +133,6 @@ public class LocalServerForwarder extends Thread {
             byte[] buff = new byte[LIMIT];
             int got;
             while ((got = in.read(buff)) > -1) {
-                Logger.d(TAG, got + " bytes to be written to " + srcIP + ":" + srcPort + "->" + destIP + ":" + destPort);
                 if (PrivacyGuard.doFilter && outgoing) {
                     if (PrivacyGuard.asynchronous) {
                         if (!filterThread.isAlive()) filterThread.start();
@@ -142,7 +142,7 @@ public class LocalServerForwarder extends Thread {
                         filterThread.filter(new String(buff, 0, got));
                     }
                 }
-                Logger.d(TAG, got + " bytes handed over to filtering " + srcIP + ":" + srcPort + "->" + destIP + ":" + destPort);
+                Logger.d(TAG, got + " bytes to be written to " + srcIP + ":" + srcPort + "->" + destIP + ":" + destPort);
                 out.write(buff, 0, got);
                 Logger.d(TAG, got + " bytes written to " + srcIP + ":" + srcPort + "->" + destIP + ":" + destPort);
                 out.flush();

@@ -153,6 +153,7 @@ public class Logger {
             try {
                 PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(trafficFile, true)));
                 out.println("Leaking: " + category);
+                out.println("");
                 out.close();
             } catch (IOException e) {
                 e.printStackTrace();
