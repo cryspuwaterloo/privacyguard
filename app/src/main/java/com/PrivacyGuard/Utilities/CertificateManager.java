@@ -1,6 +1,11 @@
 package com.PrivacyGuard.Utilities;
 
+import android.content.Intent;
+import android.security.KeyChain;
+
+import com.PrivacyGuard.Application.Helpers.ActivityRequestCodes;
 import com.PrivacyGuard.Application.Logger;
+import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService;
 
 import org.sandrop.webscarab.plugin.proxy.SSLSocketFactoryFactory;
 
@@ -17,6 +22,8 @@ import java.security.UnrecoverableKeyException;
 import java.util.Date;
 import java.util.Enumeration;
 
+import javax.security.cert.Certificate;
+import javax.security.cert.CertificateEncodingException;
 import javax.security.cert.CertificateException;
 import javax.security.cert.X509Certificate;
 
@@ -39,7 +46,68 @@ public class CertificateManager {
         return mFactoryFactory;
     }
 
-    public static boolean isCACertificateInstalled(String dir, String caName, String type, char[] password) {
+    // do we already have a trusted credential for our fake root CA?
+    public static boolean fakeRootCAIsTrusted() {
+        try
+        {
+            KeyStore ks = KeyStore.getInstance("AndroidCAStore");
+            if (ks != null)
+            {
+                ks.load(null, null);
+                Enumeration aliases = ks.aliases();
+                while (aliases.hasMoreElements())
+                {
+                    String alias = (String) aliases.nextElement();
+                    java.security.cert.X509Certificate cert = (java.security.cert.X509Certificate) ks.getCertificate(alias);
+
+                    if (cert.getIssuerDN().getName().contains(MyVpnService.CAName))
+                    {
+                        Logger.d(TAG, "Fake root CA is already trusted");
+                        return true;
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (java.security.cert.CertificateException e) {
+            e.printStackTrace();
+        }
+        Logger.d(TAG, "Fake root CA is not yet trusted");
+        return false;
+    }
+
+    // have certificate for fake root CA become a trusted credential
+    public static Intent trustfakeRootCA() {
+        //boolean certInstalled = CertificateManager.isCACertificateInstalled(MyVpnService.CADir, MyVpnService.CAName, MyVpnService.KeyType, MyVpnService.Password.toCharArray());
+
+        // XXX: check whether we have certificate in KeyChain, is it the same as trust manager
+
+        //if (keyChainInstalled && certInstalled) {
+        //    return;
+        //}
+        //if (!certInstalled) {
+        //    CertificateManager.initiateFactory(MyVpnService.CADir, MyVpnService.CAName, MyVpnService.CertName, MyVpnService.KeyType, MyVpnService.Password.toCharArray());
+        //}
+        Logger.d(TAG, "Trusting fake root CA");
+        Intent intent = KeyChain.createInstallIntent();
+        try {
+            Certificate cert = getCACertificate(MyVpnService.CADir, MyVpnService.CAName);
+            if (cert != null) {
+                intent.putExtra(KeyChain.EXTRA_CERTIFICATE, cert.getEncoded());
+                intent.putExtra(KeyChain.EXTRA_NAME, MyVpnService.CAName);
+                return intent;
+            }
+        } catch (CertificateEncodingException e) {
+            Logger.e(TAG, "Certificate Encoding Error", e);
+        }
+        return null;
+    }
+
+    /*public static boolean isCACertificateInstalled(String dir, String caName, String type, char[] password) {
         File fileCA = new File(dir + "/" + caName);
         if (!fileCA.exists() || !fileCA.canRead()) {
             Logger.d(TAG, "CA file invalid");
@@ -99,10 +167,10 @@ public class CertificateManager {
 
 
         return false;
-    }
+    }*/
 
     // get the CA certificate by the path
-    public static X509Certificate getCACertificate(String dir, String caName) {
+    private static X509Certificate getCACertificate(String dir, String caName) {
         String CERT_FILE = dir + "/" + caName + "_export.crt";
         File certFile = new File(CERT_FILE);
         FileInputStream certIs = null;

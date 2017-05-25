@@ -63,7 +63,8 @@ import java.util.HashMap;
  */
 public class MyVpnService extends VpnService implements Runnable {
     public static final String CADir = Logger.getDiskCacheDir().getAbsolutePath();
-    public static final String CAName = "PrivacyGuard_CA";
+    // also update SSLSocketFactoryFactory.java if CAName is modified
+    public static final String CAName = "PrivacyGuard Custom CA";
     public static final String CertName = "PrivacyGuard_Cert";
     public static final String KeyType = "PKCS12";
     public static final String Password = "";

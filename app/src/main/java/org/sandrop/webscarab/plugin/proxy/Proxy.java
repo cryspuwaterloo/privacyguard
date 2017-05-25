@@ -499,6 +499,7 @@ public class Proxy implements Plugin {
         _framework.cleanConversation(request, response);
     }
 
+    // UH: I don't think that PrivacyGuard uses this method
     protected SSLSocketFactory getSocketFactory(SiteData hostData) {
         synchronized (_factoryMap) {
             // If it has been loaded already, use it

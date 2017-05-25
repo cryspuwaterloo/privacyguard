@@ -14,8 +14,8 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.ServerSocket;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+//import java.nio.channels.ServerSocketChannel;
+//import java.nio.channels.SocketChannel;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -102,8 +102,8 @@ public class LocalServer extends Thread {
                         SSLSession session = ssl_client.getSession();
                         Logger.d(TAG, "After Local Handshake : " + remoteData.tcpAddress + " " + remoteData.name + " " + session + " is valid : " + session.isValid());
                         if (session.isValid()) {
+                            // UH: this uses default SSLSocketFactory, which verifies hostname, does it also check for certificate expiration?
                             Socket ssl_target = ((SSLSocketFactory) SSLSocketFactory.getDefault()).createSocket(target, descriptor.getRemoteAddress(), descriptor.getRemotePort(), true);
-                            // XXX: this version of createSocket() seems to verify the hostname but take a closer look; what about expiration?
                             SSLSession tmp_session = ((SSLSocket) ssl_target).getSession();
                             Logger.d(TAG, "Remote Handshake : " + tmp_session + " is valid : " + tmp_session.isValid());
                             if (tmp_session.isValid()) {

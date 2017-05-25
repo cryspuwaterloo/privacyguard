@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
     private FloatingActionButton statsButton;
 
     private boolean bounded = false;
-    private boolean keyChainInstalled = false;
+    //private boolean keyChainInstalled = false;
     ServiceConnection mSc;
     MyVpnService mVPN;
 
@@ -139,13 +139,16 @@ public class MainActivity extends AppCompatActivity {
         listLeak = (ListView)findViewById(R.id.leaksList);
         vpnToggle = (FloatingActionButton)findViewById(R.id.on_off_button);
 
+        CertificateManager.initiateFactory(MyVpnService.CADir, MyVpnService.CAName, MyVpnService.CertName, MyVpnService.KeyType, MyVpnService.Password.toCharArray());
+
         vpnToggle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (!MyVpnService.isRunning()) {
                     Logger.d(TAG, "Connect toggled ON");
-                    if (!keyChainInstalled) {
-                        installCertificate();
+                    if (!CertificateManager.fakeRootCAIsTrusted()) {
+                        Intent intent = CertificateManager.trustfakeRootCA();
+                        if (intent != null) startActivityForResult(intent, ActivityRequestCodes.REQUEST_CERT);
                     } else {
                         startVPN();
                     }
@@ -388,39 +391,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     *
-     */
-    public void installCertificate() {
-        boolean certInstalled = CertificateManager.isCACertificateInstalled(MyVpnService.CADir, MyVpnService.CAName, MyVpnService.KeyType, MyVpnService.Password.toCharArray());
-
-        // XXX: check whether we have certificate in KeyChain, is it the same as trust manager
-
-        if (keyChainInstalled && certInstalled) {
-            return;
-        }
-        if (!certInstalled) {
-            CertificateManager.initiateFactory(MyVpnService.CADir, MyVpnService.CAName, MyVpnService.CertName, MyVpnService.KeyType, MyVpnService.Password.toCharArray());
-        }
-        Intent intent = KeyChain.createInstallIntent();
-        try {
-            Certificate cert = CertificateManager.getCACertificate(MyVpnService.CADir, MyVpnService.CAName);
-            if (cert != null) {
-                intent.putExtra(KeyChain.EXTRA_CERTIFICATE, cert.getEncoded());
-                intent.putExtra(KeyChain.EXTRA_NAME, MyVpnService.CAName);
-                startActivityForResult(intent, ActivityRequestCodes.REQUEST_CERT);
-            }
-        } catch (CertificateEncodingException e) {
-            Logger.e(TAG, "Certificate Encoding Error", e);
-        }
-    }
-
-    /**
      * Gets called immediately before onResume() when activity is re-starting
      */
     @Override
     protected void onActivityResult(int request, int result, Intent data) {
         if (request == ActivityRequestCodes.REQUEST_CERT) {
-            keyChainInstalled = result == RESULT_OK;
+            boolean keyChainInstalled = result == RESULT_OK;
             if (keyChainInstalled) {
                 startVPN();
             }

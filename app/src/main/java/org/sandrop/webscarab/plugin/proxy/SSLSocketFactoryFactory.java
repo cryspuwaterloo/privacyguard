@@ -263,6 +263,7 @@ public class SSLSocketFactoryFactory {
             }
             
             // here, trust managers is a single trust-all manager
+            // UH: I think that this fine since it's used for the server side of the TLS connection between PrivacyGuard and the remote server
             TrustManager[] trustManagers = new TrustManager[] {
                 new X509TrustManager() {
                     public X509Certificate[] getAcceptedIssuers() {
@@ -382,7 +383,7 @@ public class SSLSocketFactoryFactory {
     }
 
     protected X500Principal getSubjectPrincipal(String host) {
-        return new X500Principal("cn=" + host + ",ou=UNTRUSTED SandroProxy,o=UNTRUSTED SandroProxy");
+        return new X500Principal("cn=" + host + ",ou=UNTRUSTED PrivacyGuard,o=UNTRUSTED PrivacyGuard");
     }
 
     protected BigInteger getNextSerialNo() {
@@ -447,6 +448,8 @@ public class SSLSocketFactoryFactory {
         certGen.addExtension(X509Extensions.SubjectKeyIdentifier, false,
                              new SubjectKeyIdentifierStructure(keyPair.getPublic()));
         X509Certificate cert = certGen.generate(caKey, "BC");
+
+        _logger.fine(cert.toString());
 
         X509Certificate[] chain = new X509Certificate[caCerts.length + 1];
         System.arraycopy(caCerts, 0, chain, 1, caCerts.length);
