@@ -276,7 +276,7 @@ public class TCPForwarder extends AbsForwarder { //implements ICommunication {
         if(sendRST) forwardResponse(conn_info.getIPHeader(), new TCPDatagram(conn_info.getTransHeader(0, TCPHeader.RST), null, conn_info.getDstAddress()));
         status = Status.CLOSED;
         try {
-            socketToLocalServer.close();
+            if (socketToLocalServer != null) socketToLocalServer.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -96,6 +96,7 @@ public class LocalServer extends Thread {
                         Logger.d(TAG, "After Local Handshake : " + remoteData.tcpAddress + " " + remoteData.name + " " + session + " is valid : " + session.isValid());
                         if (session.isValid()) {
                             Socket ssl_target = ((SSLSocketFactory) SSLSocketFactory.getDefault()).createSocket(target, descriptor.getRemoteAddress(), descriptor.getRemotePort(), true);
+                            // XXX: this version of createSocket() seems to verify the hostname but take a closer look; what about expiration?
                             SSLSession tmp_session = ((SSLSocket) ssl_target).getSession();
                             Logger.d(TAG, "Remote Handshake : " + tmp_session + " is valid : " + tmp_session.isValid());
                             if (tmp_session.isValid()) {

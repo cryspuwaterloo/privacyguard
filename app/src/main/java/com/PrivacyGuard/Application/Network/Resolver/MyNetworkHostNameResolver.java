@@ -34,7 +34,7 @@ public class MyNetworkHostNameResolver {
   private List<SiteData> unresolvedSiteData;
   private HostNameResolver hostNameResolver;
 
-  public static String DEFAULT_SITE_NAME = "sandroproxy.untrusted";
+  public static String DEFAULT_SITE_NAME = "privacyguard.untrusted";
   private static String TAG = MyNetworkHostNameResolver.class.getSimpleName();
   private static boolean LOGD = false;
 

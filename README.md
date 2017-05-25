@@ -21,6 +21,10 @@ Y. Song and U. Hengartner. [PrivacyGuard: A VPN-based Platform to Detect Informa
 4. Change the memory limit of AVD emulator to that of HAXM (1 GB) for emulator to work:	[Stackoverflow](http://stackoverflow.com/questions/21031903/how-to-fix-hax-is-not-working-and	-emulator-runs-in-emulation-mode)
 5. Imported project from local repo
 
+## Limitations
+
+1. TLS interception: no support for certificate pinning and SNI.
+
 ## Misc
 The Google Maps API key is stored in privacyguard/app/src/debug/res/values/google_maps_api.xml
 

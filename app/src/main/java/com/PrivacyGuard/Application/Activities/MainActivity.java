@@ -392,6 +392,9 @@ public class MainActivity extends AppCompatActivity {
      */
     public void installCertificate() {
         boolean certInstalled = CertificateManager.isCACertificateInstalled(MyVpnService.CADir, MyVpnService.CAName, MyVpnService.KeyType, MyVpnService.Password.toCharArray());
+
+        // XXX: check whether we have certificate in KeyChain, is it the same as trust manager
+
         if (keyChainInstalled && certInstalled) {
             return;
         }
