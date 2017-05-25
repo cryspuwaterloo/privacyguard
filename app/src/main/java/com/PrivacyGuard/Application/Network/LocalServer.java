@@ -13,6 +13,7 @@ import org.sandrop.webscarab.plugin.proxy.SiteData;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.ServerSocket;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.HashSet;
@@ -30,12 +31,13 @@ public class LocalServer extends Thread {
     private static final boolean DEBUG = true;
     private static final String TAG = LocalServer.class.getSimpleName();
     public static int port = 12345;
-    private ServerSocketChannel serverSocketChannel;
+    //private ServerSocketChannel serverSocketChannel;
+    private ServerSocket serverSocket;
     private MyVpnService vpnService;
     private Set<String> sslPinning = new HashSet<String>();
 
     public LocalServer(MyVpnService vpnService) {
-        if(serverSocketChannel == null || !serverSocketChannel.isOpen())
+        //if(serverSocketChannel == null || !serverSocketChannel.isOpen())
             try {
                 listen();
             } catch (IOException e) {
@@ -46,10 +48,13 @@ public class LocalServer extends Thread {
     }
 
     private void listen() throws IOException {
-        serverSocketChannel = ServerSocketChannel.open();
-        serverSocketChannel.socket().setReuseAddress(true);
-        serverSocketChannel.socket().bind(null);
-        port = serverSocketChannel.socket().getLocalPort();
+        //serverSocketChannel = ServerSocketChannel.open();
+        //serverSocketChannel.socket().setReuseAddress(true);
+        //serverSocketChannel.socket().bind(null);
+        //port = serverSocketChannel.socket().getLocalPort();
+        serverSocket = new ServerSocket();
+        serverSocket.bind(null);
+        port = serverSocket.getLocalPort();
     }
 
     @Override
@@ -57,11 +62,12 @@ public class LocalServer extends Thread {
         while (!isInterrupted()) {
             try {
                 Logger.d(TAG, "Accepting");
-                SocketChannel socketChannel = serverSocketChannel.accept();
-                Socket socket = socketChannel.socket();
+                //SocketChannel socketChannel = serverSocketChannel.accept();
+                //Socket socket = socketChannel.socket();
+                Socket socket = serverSocket.accept();
+                vpnService.protect(socket);
                 Logger.d(TAG, "Receiving : " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
                 new Thread(new LocalServerHandler(socket)).start();
-                Logger.d(TAG, "Not blocked");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -79,9 +85,10 @@ public class LocalServer extends Thread {
         public void run() {
             try {
                 ConnectionDescriptor descriptor = vpnService.getClientAppResolver().getClientDescriptorByPort(client.getPort());
-                SocketChannel targetChannel = SocketChannel.open();
-                Socket target = targetChannel.socket();
-                //Socket target = new Socket();   // creating Socket directly causes memory problems
+                //SocketChannel targetChannel = SocketChannel.open();
+                //Socket target = targetChannel.socket();
+                Socket target = new Socket();
+                target.bind(null);
                 vpnService.protect(target);
                 //boolean result = targetChannel.connect(new InetSocketAddress(descriptor.getRemoteAddress(), descriptor.getRemotePort()));
                 target.connect(new InetSocketAddress(descriptor.getRemoteAddress(), descriptor.getRemotePort()));
@@ -106,10 +113,16 @@ public class LocalServer extends Thread {
                                 sslPinning.add(descriptor.getRemoteAddress());
                                 ssl_client.close();
                                 ssl_target.close();
+                                client.close();
+                                target.close();
+                                return;
                             }
                         } else {
                             sslPinning.add(descriptor.getRemoteAddress());
                             ssl_client.close();
+                            client.close();
+                            target.close();
+                            return;
                         }
                     }
                     else {

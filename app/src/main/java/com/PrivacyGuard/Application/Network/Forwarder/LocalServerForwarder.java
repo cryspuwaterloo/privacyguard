@@ -197,7 +197,7 @@ public class LocalServerForwarder extends Thread {
                     filter(msg);
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
         }
     }
