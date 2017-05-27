@@ -112,7 +112,6 @@ public class SSLSocketFactoryFactory {
             
             CA_NAME = new X500Principal("cn=PrivacyGuard Custom CA"
                     + ",ou=PrivacyGuard Custom CA,o=PrivacyGuard,l=PrivacyGuard,st=PrivacyGuard,c=PrivacyGuard");
-            _logger.setLevel(Level.FINEST);
         } catch (Exception ex) {
             ex.printStackTrace();
             CA_NAME = null;
@@ -156,7 +155,7 @@ public class SSLSocketFactoryFactory {
         String caAliasValue = "";
         // ca stuff
         if (fileCA.exists() && fileCA.canRead()) {
-            _logger.fine("Loading keys from " + filenameCA);
+            _logger.finest("Loading keys from " + filenameCA);
             InputStream is = new FileInputStream(fileCA);
             keystoreCA.load(is, passwordCA);
             is.close();
@@ -256,6 +255,7 @@ public class SSLSocketFactoryFactory {
         SSLContext sslContext = (SSLContext) contextCache.get(certEntry);
         if (sslContext == null) {
             X509KeyManager km;
+            _logger.finest("don't have an SSL context");
             if (!keystoreCert.containsAlias(certEntry)) {
                 km = createKeyMaterial(hostData);
             } else {
@@ -449,7 +449,7 @@ public class SSLSocketFactoryFactory {
                              new SubjectKeyIdentifierStructure(keyPair.getPublic()));
         X509Certificate cert = certGen.generate(caKey, "BC");
 
-        _logger.fine(cert.toString());
+        //_logger.fine(cert.toString());
 
         X509Certificate[] chain = new X509Certificate[caCerts.length + 1];
         System.arraycopy(caCerts, 0, chain, 1, caCerts.length);

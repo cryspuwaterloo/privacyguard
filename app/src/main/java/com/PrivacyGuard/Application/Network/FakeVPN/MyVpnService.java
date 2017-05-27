@@ -82,8 +82,7 @@ public class MyVpnService extends VpnService implements Runnable {
     private Thread uiThread;
     //Pools
     private ForwarderPools forwarderPools;
-    //SSL stuff
-    private SSLSocketFactoryFactory sslSocketFactoryFactory;
+
     //Network
     private MyNetworkHostNameResolver hostNameResolver;
     private MyClientResolver clientAppResolver;
@@ -169,8 +168,7 @@ public class MyVpnService extends VpnService implements Runnable {
             return false;
         }
         forwarderPools = new ForwarderPools(this);
-        sslSocketFactoryFactory = CertificateManager.initiateFactory(CADir, CAName,
-                CertName, KeyType, Password.toCharArray());
+
         return true;
     }
 
@@ -204,10 +202,6 @@ public class MyVpnService extends VpnService implements Runnable {
 
     public void fetchResponse(byte[] response) {
         writeThread.write(response);
-    }
-
-    public SSLSocketFactoryFactory getSSlSocketFactoryFactory() {
-        return sslSocketFactoryFactory;
     }
 
     public MyNetworkHostNameResolver getHostNameResolver() {

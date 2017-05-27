@@ -146,9 +146,9 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if (!MyVpnService.isRunning()) {
                     Logger.d(TAG, "Connect toggled ON");
-                    if (!CertificateManager.fakeRootCAIsTrusted()) {
-                        Intent intent = CertificateManager.trustfakeRootCA();
-                        if (intent != null) startActivityForResult(intent, ActivityRequestCodes.REQUEST_CERT);
+                    Intent intent = CertificateManager.trustfakeRootCA(MyVpnService.CADir, MyVpnService.CAName);
+                    if (intent != null) {
+                        startActivityForResult(intent, ActivityRequestCodes.REQUEST_CERT);
                     } else {
                         startVPN();
                     }

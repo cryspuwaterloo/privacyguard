@@ -6,6 +6,7 @@ import com.PrivacyGuard.Application.Logger;
 import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService;
 import com.PrivacyGuard.Application.Network.Forwarder.LocalServerForwarder;
 import com.PrivacyGuard.Application.Network.SSL.SSLSocketBuilder;
+import com.PrivacyGuard.Utilities.CertificateManager;
 
 import org.sandrop.webscarab.model.ConnectionDescriptor;
 import org.sandrop.webscarab.plugin.proxy.SiteData;
@@ -98,7 +99,7 @@ public class LocalServer extends Thread {
                     if (!sslPinning.contains(descriptor.getRemoteAddress())) {
                         SiteData remoteData = vpnService.getHostNameResolver().getSecureHost(client, descriptor, true);
                         Logger.d(TAG, "Begin Local Handshake : " + remoteData.tcpAddress + " " + remoteData.name);
-                        SSLSocket ssl_client = SSLSocketBuilder.negotiateSSL(client, remoteData, false, vpnService.getSSlSocketFactoryFactory());
+                        SSLSocket ssl_client = SSLSocketBuilder.negotiateSSL(client, remoteData, false, CertificateManager.getSSLSocketFactoryFactory());
                         SSLSession session = ssl_client.getSession();
                         Logger.d(TAG, "After Local Handshake : " + remoteData.tcpAddress + " " + remoteData.name + " " + session + " is valid : " + session.isValid());
                         if (session.isValid()) {
@@ -109,8 +110,12 @@ public class LocalServer extends Thread {
                             if (tmp_session.isValid()) {
                                 client = ssl_client;
                                 target = ssl_target;
+                                // XXX: for connect.uwaterloo.ca, there are always two concurrent TLS connections; setting up the first one will fail and turn off
+                                // TLS interception; the second one won't fail so here we will turn on TLS interception again; need a better way, maybe turn off TLS interception
+                                // only after n (n > 1) attempts have failed? don't set n too high otherwise user may get annoyed
+                                sslPinning.remove(descriptor.getRemoteAddress());
+
                             } else {
-                                sslPinning.add(descriptor.getRemoteAddress());
                                 ssl_client.close();
                                 ssl_target.close();
                                 client.close();

@@ -24,3 +24,8 @@
 - Test on multiple OS versions, and look into new features offered by 5.x and 6.x
 - Plugins should be configurable from UI, not hardcoded
 - Android privodes Keystore API after 4.0. This might affect how certificate is stored and installed
+- Support TLS SNI and certificate pinning
+- Don't fail if user refuses to trust fake CA certificate; in general, let user disable TLS interception
+- Report IP destination address of leaks
+- Remove certificate for fake root CA upon app uninstallation
+- Improve algorithm for remembering sites that seem to use certificate pinning

@@ -126,7 +126,7 @@ public class Logger {
         }
     }
 
-    public static void logTraffic(String packageName, String appName, String ip, String msg) {
+    public static void logTraffic(String packageName, String appName, int srcPort, String destIP, int destPort, String msg) {
         //log network traffic ONLY in debug build
         if (BuildConfig.DEBUG) {
 
@@ -134,8 +134,8 @@ public class Logger {
                 PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(trafficFile, true)));
                 out.println("=========================");
                 out.println("Time : " + df.format(new Date()));
-                out.println(" [ " + packageName + " ]  " + appName);
-                out.println("IP: " + ip);
+                out.println(" [ " + packageName + " ]  " + appName + "  src port: " + srcPort);
+                out.println("Destination: " + destIP + ":" + destPort);
                 out.println("");
                 out.println("Request " + msg);
                 out.println("");

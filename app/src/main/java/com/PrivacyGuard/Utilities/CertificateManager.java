@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -22,10 +23,11 @@ import java.security.UnrecoverableKeyException;
 import java.util.Date;
 import java.util.Enumeration;
 
-import javax.security.cert.Certificate;
-import javax.security.cert.CertificateEncodingException;
-import javax.security.cert.CertificateException;
-import javax.security.cert.X509Certificate;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.security.cert.CertificateFactory;
 
 /**
  * Created by Near on 15-01-06.
@@ -46,139 +48,74 @@ public class CertificateManager {
         return mFactoryFactory;
     }
 
-    // do we already have a trusted credential for our fake root CA?
-    public static boolean fakeRootCAIsTrusted() {
-        try
-        {
-            KeyStore ks = KeyStore.getInstance("AndroidCAStore");
-            if (ks != null)
-            {
-                ks.load(null, null);
-                Enumeration aliases = ks.aliases();
-                while (aliases.hasMoreElements())
-                {
-                    String alias = (String) aliases.nextElement();
-                    java.security.cert.X509Certificate cert = (java.security.cert.X509Certificate) ks.getCertificate(alias);
-
-                    if (cert.getIssuerDN().getName().contains(MyVpnService.CAName))
-                    {
-                        Logger.d(TAG, "Fake root CA is already trusted");
-                        return true;
-                    }
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (java.security.cert.CertificateException e) {
-            e.printStackTrace();
-        }
-        Logger.d(TAG, "Fake root CA is not yet trusted");
-        return false;
+    public static SSLSocketFactoryFactory getSSLSocketFactoryFactory() {
+        return mFactoryFactory;
     }
 
-    // have certificate for fake root CA become a trusted credential
-    public static Intent trustfakeRootCA() {
-        //boolean certInstalled = CertificateManager.isCACertificateInstalled(MyVpnService.CADir, MyVpnService.CAName, MyVpnService.KeyType, MyVpnService.Password.toCharArray());
-
-        // XXX: check whether we have certificate in KeyChain, is it the same as trust manager
-
-        //if (keyChainInstalled && certInstalled) {
-        //    return;
-        //}
-        //if (!certInstalled) {
-        //    CertificateManager.initiateFactory(MyVpnService.CADir, MyVpnService.CAName, MyVpnService.CertName, MyVpnService.KeyType, MyVpnService.Password.toCharArray());
-        //}
-        Logger.d(TAG, "Trusting fake root CA");
-        Intent intent = KeyChain.createInstallIntent();
+    // check whether we already trust fake root CA; if not generate intent to add its certificate to trust store
+    public static Intent trustfakeRootCA(String dir, String caName) {
         try {
-            Certificate cert = getCACertificate(MyVpnService.CADir, MyVpnService.CAName);
-            if (cert != null) {
-                intent.putExtra(KeyChain.EXTRA_CERTIFICATE, cert.getEncoded());
+            X509Certificate fileCACert = getCACertificate(dir, caName);
+            if (fileCACert == null)
+                return null;
+            //Logger.d(TAG, fileCACert.toString());
+
+            KeyStore ks = KeyStore.getInstance("AndroidCAStore");
+            if (ks == null)
+                return null;
+
+            ks.load(null, null);
+            X509Certificate rootCACert = null;
+            Enumeration aliases = ks.aliases();
+            boolean found = false;
+            while (aliases.hasMoreElements()) {
+                String alias = (String) aliases.nextElement();
+                rootCACert = (X509Certificate) ks.getCertificate(alias);
+
+                // there can be multiple certificates with matching name since
+                // we can't programmatically remove, e.g. when PrivacyGuard is uninstalled
+                if (rootCACert.getIssuerDN().getName().contains(caName) &&
+                        rootCACert.equals(fileCACert)) {
+                    //Logger.d(TAG, rootCACert.toString());
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                Logger.d(TAG, "Fake root CA is not yet trusted");
+
+                Intent intent = KeyChain.createInstallIntent();
+                intent.putExtra(KeyChain.EXTRA_CERTIFICATE, fileCACert.getEncoded());
                 intent.putExtra(KeyChain.EXTRA_NAME, MyVpnService.CAName);
                 return intent;
             }
-        } catch (CertificateEncodingException e) {
-            Logger.e(TAG, "Certificate Encoding Error", e);
+
+            Logger.d(TAG, "Fake root CA is already trusted");
+            return null;
+
+        } catch(IOException e){
+            e.printStackTrace();
+        } catch(KeyStoreException e){
+            e.printStackTrace();
+        } catch(NoSuchAlgorithmException e){
+            e.printStackTrace();
+        } catch(java.security.cert.CertificateException e){
+            e.printStackTrace();
         }
+
         return null;
     }
-
-    /*public static boolean isCACertificateInstalled(String dir, String caName, String type, char[] password) {
-        File fileCA = new File(dir + "/" + caName);
-        if (!fileCA.exists() || !fileCA.canRead()) {
-            Logger.d(TAG, "CA file invalid");
-            return false;
-        }
-
-        KeyStore keyStoreCA = null;
-        try {
-            keyStoreCA = KeyStore.getInstance(type, "BC");
-        } catch (KeyStoreException e) {
-            Logger.e(TAG, "KeyStore Error", e);
-        } catch (NoSuchProviderException e) {
-            Logger.e(TAG, "Provider Error", e);
-        }
-
-        if (keyStoreCA == null) {
-            return false;
-        }
-        FileInputStream fileCert = null;
-        try {
-            fileCert = new FileInputStream(fileCA);
-            keyStoreCA.load(fileCert, password);
-
-            Enumeration ex = keyStoreCA.aliases();
-            Date exportFilename = null;
-            String caAliasValue = "";
-
-            while (ex.hasMoreElements()) {
-                String is = (String) ex.nextElement();
-                Date lastStoredDate = keyStoreCA.getCreationDate(is);
-                if (exportFilename == null || lastStoredDate.after(exportFilename)) {// to get latest cert?
-                    exportFilename = lastStoredDate;
-                    caAliasValue = is;
-                }
-            }
-
-            return keyStoreCA.getKey(caAliasValue, password) != null;
-
-        } catch (NoSuchAlgorithmException e) {
-            Logger.e(TAG, "Algorithm Error", e);
-        } catch (IOException e) {
-            Logger.e(TAG, "IO Error", e);
-        } catch (java.security.cert.CertificateException e) {
-            Logger.e(TAG, "Certificate Error", e);
-        } catch (UnrecoverableKeyException e) {
-            Logger.e(TAG, "Key cannot be recovered", e);
-        } catch (KeyStoreException e) {
-            Logger.e(TAG, "Key Store not initialized", e);
-        } finally {
-            if (fileCert != null) {
-                try {
-                    fileCert.close();
-                } catch (IOException e) {
-                }
-            }
-        }
-
-
-        return false;
-    }*/
 
     // get the CA certificate by the path
     private static X509Certificate getCACertificate(String dir, String caName) {
         String CERT_FILE = dir + "/" + caName + "_export.crt";
-        File certFile = new File(CERT_FILE);
-        FileInputStream certIs = null;
+        InputStream inStream = null;
         try {
-            certIs = new FileInputStream(CERT_FILE);
-            byte[] cert = new byte[(int) certFile.length()];
-            certIs.read(cert);
-            return X509Certificate.getInstance(cert);
+            inStream = new FileInputStream(CERT_FILE);
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            return (X509Certificate)cf.generateCertificate(inStream);
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -186,9 +123,9 @@ public class CertificateManager {
         } catch (CertificateException e) {
             e.printStackTrace();
         } finally {
-            if (certIs != null) {
+            if (inStream != null) {
                 try {
-                    certIs.close();
+                    inStream.close();
                 } catch (IOException e) {
                 }
             }

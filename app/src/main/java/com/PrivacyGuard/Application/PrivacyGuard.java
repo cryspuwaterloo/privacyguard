@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.support.v4.content.ContextCompat;
 
 import com.PrivacyGuard.Utilities.AndroidLoggingHandler;
+import java.util.logging.Level;
 
 /**
  * Created by justinhu on 16-01-15.
@@ -43,6 +44,8 @@ public class PrivacyGuard extends Application {
         sApplication = this;
 
         // make sure that java logging messages end up in logcat
-        AndroidLoggingHandler.reset(new AndroidLoggingHandler());
+        AndroidLoggingHandler loggingHandler = new AndroidLoggingHandler();
+        AndroidLoggingHandler.reset(loggingHandler);
+        loggingHandler.setLevel(Level.FINEST);
     }
 }

@@ -171,7 +171,7 @@ public class LocalServerForwarder extends Thread {
                     packageName = UNKNOWN;
                 }
 
-                Logger.logTraffic(packageName, appName, destIP, msg);
+                Logger.logTraffic(packageName, appName, srcPort, destIP, destPort, msg);
 
                 for (IPlugin plugin : plugins) {
                     LeakReport leak = plugin.handleRequest(msg);
