@@ -98,41 +98,46 @@ public class LocalServer extends Thread {
 
                     if (!sslPinning.contains(descriptor.getRemoteAddress())) {
                         SiteData remoteData = vpnService.getHostNameResolver().getSecureHost(client, descriptor, true);
-                        Logger.d(TAG, "Begin Local Handshake : " + remoteData.tcpAddress + " " + remoteData.name);
-                        SSLSocket ssl_client = SSLSocketBuilder.negotiateSSL(client, remoteData, false, CertificateManager.getSSLSocketFactoryFactory());
-                        SSLSession session = ssl_client.getSession();
-                        Logger.d(TAG, "After Local Handshake : " + remoteData.tcpAddress + " " + remoteData.name + " " + session + " is valid : " + session.isValid());
-                        if (session.isValid()) {
-                            // UH: this uses default SSLSocketFactory, which verifies hostname, does it also check for certificate expiration?
-                            Socket ssl_target = ((SSLSocketFactory) SSLSocketFactory.getDefault()).createSocket(target, descriptor.getRemoteAddress(), descriptor.getRemotePort(), true);
-                            SSLSession tmp_session = ((SSLSocket) ssl_target).getSession();
-                            Logger.d(TAG, "Remote Handshake : " + tmp_session + " is valid : " + tmp_session.isValid());
-                            if (tmp_session.isValid()) {
-                                client = ssl_client;
-                                target = ssl_target;
-                                // XXX: for connect.uwaterloo.ca, there are always two concurrent TLS connections; setting up the first one will fail and turn off
-                                // TLS interception; the second one won't fail so here we will turn on TLS interception again; need a better way, maybe turn off TLS interception
-                                // only after n (n > 1) attempts have failed? don't set n too high otherwise user may get annoyed
-                                sslPinning.remove(descriptor.getRemoteAddress());
+                        // XXX: blacklist apps for which the local TLS handshake succeeds but then the app terminates, likely due to certificate pinning
+                        //      at the app layer (instead of at the TLS layer)
+                        if (remoteData.name.contains("amazon")) {
+                            Logger.d(TAG, "Skipping TLS interception for " + descriptor.getRemoteAddress() + ":" + descriptor.getRemotePort() + " due to suspected pinning");
+                        } else {
+                            Logger.d(TAG, "Begin Local Handshake : " + remoteData.tcpAddress + " " + remoteData.name);
+                            SSLSocket ssl_client = SSLSocketBuilder.negotiateSSL(client, remoteData, false, CertificateManager.getSSLSocketFactoryFactory());
+                            SSLSession session = ssl_client.getSession();
+                            Logger.d(TAG, "After Local Handshake : " + remoteData.tcpAddress + " " + remoteData.name + " " + session + " is valid : " + session.isValid());
+                            if (session.isValid()) {
+                                // UH: this uses default SSLSocketFactory, which verifies hostname, does it also check for certificate expiration?
+                                Socket ssl_target = ((SSLSocketFactory) SSLSocketFactory.getDefault()).createSocket(target, descriptor.getRemoteAddress(), descriptor.getRemotePort(), true);
+                                SSLSession tmp_session = ((SSLSocket) ssl_target).getSession();
+                                Logger.d(TAG, "Remote Handshake : " + tmp_session + " is valid : " + tmp_session.isValid());
+                                if (tmp_session.isValid()) {
+                                    client = ssl_client;
+                                    target = ssl_target;
+                                    // XXX: for connect.uwaterloo.ca, there are always two concurrent TLS connections; setting up the first one will fail and turn off
+                                    // TLS interception; the second one won't fail so here we will turn on TLS interception again; need a better way, maybe turn off TLS interception
+                                    // only after n (n > 1) attempts have failed? don't set n too high otherwise user may get annoyed
+                                    sslPinning.remove(descriptor.getRemoteAddress());
 
+                                } else {
+                                    ssl_client.close();
+                                    ssl_target.close();
+                                    client.close();
+                                    target.close();
+                                    return;
+                                }
                             } else {
+                                sslPinning.add(descriptor.getRemoteAddress());
                                 ssl_client.close();
-                                ssl_target.close();
                                 client.close();
                                 target.close();
                                 return;
                             }
-                        } else {
-                            sslPinning.add(descriptor.getRemoteAddress());
-                            ssl_client.close();
-                            client.close();
-                            target.close();
-                            return;
                         }
+                    } else {
+                        Logger.d(TAG, "Skipping TLS interception for " + descriptor.getRemoteAddress() + ":" + descriptor.getRemotePort() + " due to suspected pinning");
                     }
-                    else {
-                            Logger.d(TAG, "Skipping TLS interception for " + descriptor.getRemoteAddress() + ":" + descriptor.getRemotePort() + " due to suspected pinning");
-                        }
                 }
                 LocalServerForwarder.connect(client, target, vpnService);
             } catch (Exception e) {

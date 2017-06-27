@@ -65,7 +65,7 @@ public class TCPForwarder extends AbsForwarder { //implements ICommunication {
         Logger.d(TAG, "LISTEN: Accepting " + ipDatagram.payLoad().header().getSrcPort() + " : " + ipDatagram.payLoad().header().getDstPort());
         conn_info.reset(ipDatagram);
         conn_info.setup(this);
-        if (!worker.isValid()) {
+        if (worker == null || !worker.isValid()) {
             close(true);
             Logger.d(TAG, "LISTEN: Failed to set up worker for " + ipDatagram.payLoad().header().getDstPort());
             return false;
