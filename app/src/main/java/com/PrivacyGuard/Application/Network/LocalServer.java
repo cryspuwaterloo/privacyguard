@@ -45,11 +45,7 @@ public class LocalServer extends Thread {
     //private ServerSocketChannel serverSocketChannel;
     private ServerSocket serverSocket;
     private MyVpnService vpnService;
-    private static File failedaddress = new File(getDiskFileDir(), "FailAddress");
-    //private Set<String> sslPinning = new HashSet<String>();
-    private Map<String, Integer> sslPinning = new HashMap<String, Integer>();
-    private Integer MAXFAIL = 100;
-    Random rand = new Random();
+    private SSLPinning sslPinning= new SSLPinning();
 
 
     public LocalServer(MyVpnService vpnService) {
@@ -61,7 +57,6 @@ public class LocalServer extends Thread {
                 e.printStackTrace();
             }
         this.vpnService = vpnService;
-        readfromfile();
     }
 
     private void listen() throws IOException {
@@ -93,74 +88,90 @@ public class LocalServer extends Thread {
     }
 
 
-    private void readfromfile(){
-        //Log.d(TAG, "testing start");
-        try{
-            if(failedaddress.exists()) {
-                ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(failedaddress));
-                //Log.d(TAG, "testing reading");
-                sslPinning = (HashMap<String, Integer>) inputStream.readObject();
-                inputStream.close();
-                for (Map.Entry entry : sslPinning.entrySet()) {
-                    //Log.d(TAG, "testing reading "+ entry.getKey() + ", " + entry.getValue());
+    private static class SSLPinning{
+        private static File failedaddress = new File(getDiskFileDir(), "FailAddress");
+        private Map<String, Integer> addresslist = new HashMap<String, Integer>();
+        private Integer MAXFAIL = 100;
+        private int REMOVERATE = 5;
+        Random rand = new Random();
+
+        public SSLPinning(){
+            readfromfile();
+        }
+
+
+        public void readfromfile() {
+            Log.d(TAG, "testing start");
+            try {
+                if (failedaddress.exists()) {
+                    ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(failedaddress));
+                    Log.d(TAG, "testing reading");
+                    addresslist = (HashMap<String, Integer>) inputStream.readObject();
+                    inputStream.close();
+                    for (Map.Entry entry : addresslist.entrySet()) {
+                        Log.d(TAG, "testing reading "+ entry.getKey() + ", " + entry.getValue());
+                    }
                 }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
             }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e){
-            e.printStackTrace();
-        }
-    }
-
-    private void writetofile(){
-        try{
-            //Log.d(TAG, "testing writing");
-            ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(failedaddress));
-            outputStream.writeObject(sslPinning);
-            outputStream.close();
-
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
-    }
+        public void writetofile(){
+            try{
+                Log.d(TAG, "testing writing");
+                ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(failedaddress));
+                outputStream.writeObject(addresslist);
+                outputStream.close();
 
-    private boolean contains(String address){
-        //Logger.d(TAG, "testing" + address);
-        if(sslPinning.containsKey(address) && sslPinning.get(address) >= MAXFAIL) {
-           if(rand.nextInt(100)+1 <= 5){
-               sslPinning.remove(address);
-               writetofile();
-               return false;
-           }
-            //Logger.d(TAG, "Testing Skip because fail tp connect to " + address + " " + sslPinning.get(address) + " times.");
-
-            return true;
-        }else{
-            return false;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-    }
 
-    private void add(String address){
-        if(sslPinning.containsKey(address)){
-            sslPinning.put(address, sslPinning.get(address) + 1);
-        } else{
-            sslPinning.put(address, 1);
+        public boolean contains(String address){
+            Logger.d(TAG, "testing" + address);
+            if(addresslist.containsKey(address) && addresslist.get(address) >= MAXFAIL) {
+                if(rand.nextInt(MAXFAIL)+1 <= REMOVERATE){
+                    addresslist.remove(address);
+                    writetofile();
+                    return false;
+                }
+                Logger.d(TAG, "Testing Skip because fail tp connect to " + address + " " + addresslist.get(address) + " times.");
+
+                return true;
+            }else{
+                return false;
+            }
         }
-        writetofile();
 
-        //Logger.d(TAG, "Testing Fail tp connect to " + address + " " + sslPinning.get(address) + " times.");
-    }
-
-    private void remove(String address){
-        if(sslPinning.containsKey(address)){
-            sslPinning.remove(address);
+        public void add(String address){
+            if(addresslist.containsKey(address)){
+                addresslist.put(address, addresslist.get(address) + 1);
+            } else{
+                addresslist.put(address, 1);
+            }
             writetofile();
-            //Logger.d(TAG, "Testing removed" + address);
+
+            Logger.d(TAG, "Testing Fail tp connect to " + address + " " + addresslist.get(address) + " times.");
         }
-        //Logger.d(TAG, "Testing successed" + address);
+
+
+        private void remove(String address){
+            if(addresslist.containsKey(address)){
+                addresslist.remove(address);
+                writetofile();
+                Logger.d(TAG, "Testing removed" + address);
+            }
+            Logger.d(TAG, "Testing successed" + address);
+        }
+
     }
+
+
 
 
 
@@ -185,7 +196,7 @@ public class LocalServer extends Thread {
 
                 if(descriptor != null && descriptor.getRemotePort() == SSLPort) {
 
-                    if (!contains(descriptor.getRemoteAddress())) {
+                    if (!sslPinning.contains(descriptor.getRemoteAddress())) {
                         SiteData remoteData = vpnService.getHostNameResolver().getSecureHost(client, descriptor, true);
                         Logger.d(TAG, "Begin Local Handshake : " + remoteData.tcpAddress + " " + remoteData.name);
                         SSLSocket ssl_client = SSLSocketBuilder.negotiateSSL(client, remoteData, false, vpnService.getSSlSocketFactoryFactory());
@@ -195,12 +206,12 @@ public class LocalServer extends Thread {
                             Socket ssl_target = ((SSLSocketFactory) SSLSocketFactory.getDefault()).createSocket(target, descriptor.getRemoteAddress(), descriptor.getRemotePort(), true);
                             SSLSession tmp_session = ((SSLSocket) ssl_target).getSession();
                             Logger.d(TAG, "Remote Handshake : " + tmp_session + " is valid : " + tmp_session.isValid());
-                            remove(descriptor.getRemoteAddress());
+                            sslPinning.remove(descriptor.getRemoteAddress());
                             if (tmp_session.isValid()) {
                                 client = ssl_client;
                                 target = ssl_target;
                             } else {
-                                add(descriptor.getRemoteAddress());
+                                sslPinning.add(descriptor.getRemoteAddress());
                                 ssl_client.close();
                                 ssl_target.close();
                                 client.close();
@@ -208,7 +219,7 @@ public class LocalServer extends Thread {
                                 return;
                             }
                         } else {
-                            add(descriptor.getRemoteAddress());
+                            sslPinning.add(descriptor.getRemoteAddress());
                             ssl_client.close();
                             client.close();
                             target.close();
