@@ -105,11 +105,11 @@ public class LocalServer extends Thread {
             try {
                 if (failedaddress.exists()) {
                     ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(failedaddress));
-                    Log.d(TAG, "testing reading");
+                    //Log.d(TAG, "testing reading");
                     addresslist = (HashMap<String, Integer>) inputStream.readObject();
                     inputStream.close();
                     for (Map.Entry entry : addresslist.entrySet()) {
-                        Log.d(TAG, "testing reading "+ entry.getKey() + ", " + entry.getValue());
+                        //Log.d(TAG, "testing reading "+ entry.getKey() + ", " + entry.getValue());
                     }
                 }
 
@@ -122,7 +122,7 @@ public class LocalServer extends Thread {
 
         public void writetofile(){
             try{
-                Log.d(TAG, "testing writing");
+                //Log.d(TAG, "testing writing");
                 ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(failedaddress));
                 outputStream.writeObject(addresslist);
                 outputStream.close();
@@ -133,14 +133,14 @@ public class LocalServer extends Thread {
         }
 
         public boolean contains(String address){
-            Logger.d(TAG, "testing" + address);
+            //Logger.d(TAG, "testing" + address);
             if(addresslist.containsKey(address) && addresslist.get(address) >= MAXFAIL) {
                 if(rand.nextInt(MAXFAIL)+1 <= REMOVERATE){
                     addresslist.remove(address);
                     writetofile();
                     return false;
                 }
-                Logger.d(TAG, "Testing Skip because fail tp connect to " + address + " " + addresslist.get(address) + " times.");
+                //Logger.d(TAG, "Testing Skip because fail tp connect to " + address + " " + addresslist.get(address) + " times.");
 
                 return true;
             }else{
@@ -156,7 +156,7 @@ public class LocalServer extends Thread {
             }
             writetofile();
 
-            Logger.d(TAG, "Testing Fail tp connect to " + address + " " + addresslist.get(address) + " times.");
+           // Logger.d(TAG, "Testing Fail tp connect to " + address + " " + addresslist.get(address) + " times.");
         }
 
 
@@ -164,9 +164,9 @@ public class LocalServer extends Thread {
             if(addresslist.containsKey(address)){
                 addresslist.remove(address);
                 writetofile();
-                Logger.d(TAG, "Testing removed" + address);
+                //Logger.d(TAG, "Testing removed" + address);
             }
-            Logger.d(TAG, "Testing successed" + address);
+            //Logger.d(TAG, "Testing successed" + address);
         }
 
     }
