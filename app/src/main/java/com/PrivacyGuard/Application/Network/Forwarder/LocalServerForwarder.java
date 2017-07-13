@@ -191,7 +191,7 @@ public class LocalServerForwarder extends Thread {
             try {
                 while (!interrupted()) {
                     ByteArray temp = toFilter.take();
-                    //Log.d("toFilter", "" + toFilter.size());
+                    //Logger.d("toFilter", "" + toFilter.size());
                     String msg = new String(temp.data(), 0, temp.length());
                     byteArrayPool.release(temp);
                     filter(msg);

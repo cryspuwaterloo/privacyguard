@@ -5,7 +5,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 import android.util.Patterns;
 
 import com.PrivacyGuard.Application.Logger;
@@ -406,7 +405,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             }
         } catch (Exception e) {
             // just in case
-            Log.e(TAG, "Failed to parse an URL (appName=" + appName + ", packageName=" + packageName + "): " + e.getMessage());
+            Logger.e(TAG, "Failed to parse an URL (appName=" + appName + ", packageName=" + packageName + "): " + e.getMessage());
         }
 
         return false;

@@ -1,8 +1,8 @@
 package com.PrivacyGuard.Application.Network.Protocol.UDP;
 
-import android.util.Log;
 import com.PrivacyGuard.Application.Network.Protocol.IP.IPPayLoad;
 import com.PrivacyGuard.Utilities.ByteOperations;
+import com.PrivacyGuard.Application.Logger;
 
 import java.net.InetAddress;
 import java.util.Arrays;
@@ -26,7 +26,7 @@ public class UDPDatagram extends IPPayLoad {
     }
 
     public void debugInfo(InetAddress dstAddress) {
-        Log.d(TAG, "DstAddr=" + dstAddress.getHostName() +
+        Logger.d(TAG, "DstAddr=" + dstAddress.getHostName() +
                 " SrcPort=" + header.getSrcPort() + " DstPort=" + header.getDstPort() +
                 " Total Length=" + ((UDPHeader)header).getTotal_length() +
                 " Data Length=" + this.dataLength() +

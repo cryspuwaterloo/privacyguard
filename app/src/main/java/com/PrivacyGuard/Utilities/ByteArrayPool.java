@@ -1,7 +1,5 @@
 package com.PrivacyGuard.Utilities;
 
-import android.util.Log;
-
 import java.nio.ByteBuffer;
 import java.util.concurrent.ConcurrentSkipListSet;
 
@@ -25,7 +23,7 @@ public class ByteArrayPool {
 
   public ByteArray getByteArray(byte[] data, int len) {
     ByteArray ret;
-    //Log.d("Pool get", "" + unused.size() + " " + used.size());
+    //Logger.d("Pool get", "" + unused.size() + " " + used.size());
     if(unused.isEmpty()) {
       ret = new ByteArray(byteArraySize, total ++);
     } else {
@@ -37,10 +35,10 @@ public class ByteArrayPool {
   }
 
   public void release(ByteArray b) {
-    //Log.d("Pool release before", "" + unused.size() + " " + used.size());
+    //Logger.d("Pool release before", "" + unused.size() + " " + used.size());
     used.remove(b);
     b.release();
     unused.add(b);
-    //Log.d("Pool release after", "" + unused.size() + " " + used.size());
+    //Logger.d("Pool release after", "" + unused.size() + " " + used.size());
   }
 }

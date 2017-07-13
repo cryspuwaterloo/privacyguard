@@ -59,7 +59,6 @@ import org.sandrop.webscarab.httpclient.FixedLengthInputStream;
 
 import android.util.Log;
 
-
 /** Message is a class that is used to represent the bulk of an HTTP message, namely
  * the headers, and (possibly null) body. Messages should not be instantiated
  * directly, but should rather be created by a derived class, namely Request or

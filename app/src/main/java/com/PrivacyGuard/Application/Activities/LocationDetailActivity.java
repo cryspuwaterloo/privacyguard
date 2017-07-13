@@ -4,7 +4,6 @@ import android.app.TaskStackBuilder;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -16,6 +15,7 @@ import android.widget.TextView;
 import com.PrivacyGuard.Application.Database.DataLeak;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
 import com.PrivacyGuard.Application.PrivacyGuard;
+import com.PrivacyGuard.Application.Logger;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -170,7 +170,7 @@ public class LocationDetailActivity extends AppCompatActivity implements OnMapRe
             //will be thrown. This should NEVER happen because a user should never be able to
             //navigate to this activity if there are no location leaks. However, if it does happen,
             //fail gracefully instead of crashing.
-            Log.e(e.getClass().toString(), e.getMessage());
+            Logger.e(e.getClass().toString(), e.getMessage());
         }
 
         googleMap = map;

@@ -1,6 +1,7 @@
 package com.PrivacyGuard.Application.Network.SSL;
 
-import android.util.Log;
+import com.PrivacyGuard.Application.Logger;
+
 import org.sandrop.webscarab.plugin.proxy.SSLSocketFactoryFactory;
 import org.sandrop.webscarab.plugin.proxy.SiteData;
 
@@ -48,7 +49,7 @@ public class SSLSocketBuilder {
             }
             if (listSelectedCiphers.size() == 0){
                 String msg = "!!!Error Cipher list is empty";
-                Log.e(TAG, msg);
+                Logger.e(TAG, msg);
             }
             Collections.reverse(listSelectedCiphers);
             selectedCiphers = new String[listSelectedCiphers.size()];
@@ -67,7 +68,7 @@ public class SSLSocketBuilder {
             SSLSocketFactoryFactory sslSocketFactoryFactory)
             throws Exception {
         String certEntry = hostData.tcpAddress != null ? hostData.tcpAddress + "_" + hostData.destPort: hostData.name;
-        if(DEBUG) Log.d(TAG, certEntry);
+        if(DEBUG) Logger.d(TAG, certEntry);
         SSLSocketFactory factory = sslSocketFactoryFactory.getSocketFactory(hostData);
         if (factory == null)
             throw new RuntimeException(

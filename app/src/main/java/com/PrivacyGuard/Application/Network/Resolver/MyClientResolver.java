@@ -3,7 +3,6 @@ package com.PrivacyGuard.Application.Network.Resolver;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.util.Log;
 import org.sandrop.webscarab.model.ConnectionDescriptor;
 import org.sandrop.webscarab.plugin.proxy.IClientResolver;
 import org.sandroproxy.utils.network.NetworkInfo;
@@ -17,6 +16,8 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.net.InetAddress;
+
+import com.PrivacyGuard.Application.Logger;
 
 /**
  * Created by y59song on 04/06/14.
@@ -42,7 +43,7 @@ public class MyClientResolver implements IClientResolver {
     InetAddress inetAddress = socket.getInetAddress();
     if (inetAddress == null) {
       // nothing found we create descriptor with what we got as input
-      if (DEBUG) Log.d(TAG, "No InetAddress for port " + port);
+      if (DEBUG) Logger.d(TAG, "No InetAddress for port " + port);
       return null;
     }
     String address = inetAddress.getHostAddress();
@@ -55,7 +56,7 @@ public class MyClientResolver implements IClientResolver {
 
       // find line that has port number inside
       String hexPort = Integer.toHexString(port);
-      if(DEBUG) Log.d(TAG, hexPort);
+      if(DEBUG) Logger.d(TAG, hexPort);
       while ((line = reader.readLine()) != null) {
         if (line.toUpperCase().contains(hexPort.toUpperCase())){
           builder.append(line);
@@ -64,7 +65,7 @@ public class MyClientResolver implements IClientResolver {
       reader.close();
 
       String content = builder.toString();
-      if(DEBUG) Log.d(TAG, content);
+      if(DEBUG) Logger.d(TAG, content);
       if (content != null && content .length() > 0){
         Matcher m6 = Pattern.compile(NetworkInfo.TCP_6_PATTERN, Pattern.CASE_INSENSITIVE | Pattern.UNIX_LINES | Pattern.DOTALL).matcher(content);
 
@@ -78,8 +79,8 @@ public class MyClientResolver implements IClientResolver {
           int srcPort = Integer.valueOf(srcPortEntry, 16);
           int dstPort = Integer.valueOf(dstPortEntry, 16);
           int connStatus = Integer.valueOf(status, 16);
-          if(DEBUG) Log.d(TAG + " 6", "" + uidEntry);
-          if(DEBUG) Log.d(TAG + " 6", packageManager.getNameForUid(uidEntry));
+          if(DEBUG) Logger.d(TAG + " 6", "" + uidEntry);
+          if(DEBUG) Logger.d(TAG + " 6", packageManager.getNameForUid(uidEntry));
 
           srcAddressEntry = getIPAddrByHex(srcAddressEntry);
           dstAddressEntry = getIPAddrByHex(dstAddressEntry);
@@ -114,7 +115,7 @@ public class MyClientResolver implements IClientResolver {
       reader.close();
 
       content = builder.toString();
-      if(DEBUG) Log.d(TAG, content);
+      if(DEBUG) Logger.d(TAG, content);
 
       if (content != null && content.length() > 0){
         Matcher m4 = Pattern.compile(NetworkInfo.TCP_4_PATTERN, Pattern.CASE_INSENSITIVE | Pattern.UNIX_LINES | Pattern.DOTALL).matcher(content);
@@ -129,7 +130,7 @@ public class MyClientResolver implements IClientResolver {
           int srcPort = Integer.valueOf(srcPortEntry, 16);
           int dstPort = Integer.valueOf(dstPortEntry, 16);
           int status  = Integer.valueOf(connStatus, 16);
-          if(DEBUG) Log.d(TAG, srcPortEntry);
+          if(DEBUG) Logger.d(TAG, srcPortEntry);
 
           srcAddressEntry = getIPAddrByHex(srcAddressEntry);
           dstAddressEntry = getIPAddrByHex(dstAddressEntry);
@@ -151,11 +152,11 @@ public class MyClientResolver implements IClientResolver {
       }
 
       // nothing found we create descriptor with what we got as input
-      if (DEBUG) Log.d(TAG, "No data for " + address + ":" + port);
+      if (DEBUG) Logger.d(TAG, "No data for " + address + ":" + port);
       return null;
 
     } catch (Exception e) {
-      if(DEBUG) Log.e(TAG, "parsing client data error : " + e.getMessage());
+      if(DEBUG) Logger.e(TAG, "parsing client data error : " + e.getMessage());
       if (reader != null){
         try {
           reader.close();
@@ -164,7 +165,7 @@ public class MyClientResolver implements IClientResolver {
         }
       }
     }
-    if (DEBUG) Log.d(TAG, "No data for " + address + ":" + port);
+    if (DEBUG) Logger.d(TAG, "No data for " + address + ":" + port);
     return null;
   }
 

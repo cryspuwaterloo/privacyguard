@@ -3,7 +3,6 @@ package com.PrivacyGuard.Application.Network.Resolver;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService;
 import org.sandrop.webscarab.model.ConnectionDescriptor;
 import org.sandrop.webscarab.plugin.proxy.SiteData;
@@ -20,6 +19,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.PrivacyGuard.Application.Logger;
 
 /**
  * Created by y59song on 05/06/14.
@@ -94,7 +95,7 @@ public class MyNetworkHostNameResolver {
                       String[] parts = val.split("=");
                       if (parts != null && parts.length == 2 && parts[0].equalsIgnoreCase("cn") && parts[1] != null && parts[1].length() > 0){
                         siteDataCurrent.name = parts[1].trim();
-                        if (LOGD) Log.d(TAG, "Adding hostname to dictionary " + siteDataCurrent.name + " port:" + siteDataCurrent.sourcePort);
+                        if (LOGD) Logger.d(TAG, "Adding hostname to dictionary " + siteDataCurrent.name + " port:" + siteDataCurrent.sourcePort);
                         siteDataCurrent.certs = certs;
                         siteData.put(siteDataCurrent.sourcePort, siteDataCurrent);
                         ipPortSiteData.put(siteDataCurrent.tcpAddress + ":" + siteDataCurrent.destPort, siteDataCurrent);
@@ -103,7 +104,7 @@ public class MyNetworkHostNameResolver {
                     }
                   }
                 }catch(Exception e){
-                  if (LOGD) Log.d(TAG, e.getMessage());
+                  if (LOGD) Logger.d(TAG, e.getMessage());
                 }
               }
             }
@@ -125,7 +126,7 @@ public class MyNetworkHostNameResolver {
               socket.close();
             }else{
               SiteData siteDataCached = ipPortSiteData.get(siteDataCurrent.tcpAddress + ":" + siteDataCurrent.destPort);
-              if (LOGD) Log.d(TAG, "Already have candidate for " + siteDataCached.name + ". No need to fetch " + siteDataCurrent.tcpAddress + " on port:" + siteDataCurrent.destPort);
+              if (LOGD) Logger.d(TAG, "Already have candidate for " + siteDataCached.name + ". No need to fetch " + siteDataCurrent.tcpAddress + " on port:" + siteDataCurrent.destPort);
               siteData.put(siteDataCurrent.sourcePort, siteDataCached);
             }
           } catch (Exception e) {
@@ -154,7 +155,7 @@ public class MyNetworkHostNameResolver {
 
   private void getCertificateData(SiteData newSiteData){
     if (!siteData.containsKey(newSiteData.sourcePort)){
-      if (LOGD) Log.d(TAG, "Add hostname to resolve :" +
+      if (LOGD) Logger.d(TAG, "Add hostname to resolve :" +
         newSiteData.tcpAddress + " source port " +
         newSiteData.sourcePort + " uid " +
         newSiteData.appUID);
@@ -186,7 +187,7 @@ public class MyNetworkHostNameResolver {
     SiteData secureHost = null;
     int port =  socket.getPort();
     int localport =  socket.getLocalPort();
-    if (LOGD) Log.d(TAG, "Search site for port " + port + " local:" + localport);
+    if (LOGD) Logger.d(TAG, "Search site for port " + port + " local:" + localport);
     SiteData secureHostInit = parseData(socket, descriptor);
     if (!_getCertificateData){
       return secureHostInit;
@@ -213,10 +214,10 @@ public class MyNetworkHostNameResolver {
       secureHost.name = mHostName;
     }
     if (secureHost == null){
-      if (LOGD) Log.d(TAG, "Nothing found for site for port " + port);
+      if (LOGD) Logger.d(TAG, "Nothing found for site for port " + port);
       return secureHostInit;
     }else{
-      if (LOGD) Log.d(TAG, "Having site for port " + port + " "
+      if (LOGD) Logger.d(TAG, "Having site for port " + port + " "
         +  secureHost.name + " addr: "
         + secureHost.tcpAddress
         + " port " + secureHost.destPort);

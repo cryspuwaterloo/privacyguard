@@ -1,7 +1,5 @@
 package com.PrivacyGuard.Application.Network;
 
-import android.util.Log;
-
 import com.PrivacyGuard.Application.Logger;
 import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService;
 import com.PrivacyGuard.Application.Network.Forwarder.LocalServerForwarder;
@@ -42,7 +40,7 @@ public class LocalServer extends Thread {
             try {
                 listen();
             } catch (IOException e) {
-                if(DEBUG) Log.d(TAG, "Listen error");
+                if(DEBUG) Logger.d(TAG, "Listen error");
                 e.printStackTrace();
             }
         this.vpnService = vpnService;
@@ -73,7 +71,7 @@ public class LocalServer extends Thread {
                 e.printStackTrace();
             }
         }
-        Log.d(TAG, "Stop Listening");
+        Logger.d(TAG, "Stop Listening");
     }
 
     private class LocalServerHandler implements Runnable {

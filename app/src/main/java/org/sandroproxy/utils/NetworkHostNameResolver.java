@@ -171,7 +171,7 @@ public class NetworkHostNameResolver implements ITransparentProxyResolver{
     
     private void getCertificateData(SiteData newSiteData){
         if (!siteData.containsKey(newSiteData.sourcePort)){
-            if (LOGD) Log.d(TAG, "Add hostname to resolve :" + 
+            if (LOGD) Log.d(TAG, "Add hostname to resolve :" +
                     newSiteData.tcpAddress + " source port " + 
                     newSiteData.sourcePort + " uid " + 
                     newSiteData.appUID);
@@ -234,7 +234,7 @@ public class NetworkHostNameResolver implements ITransparentProxyResolver{
             if (LOGD) Log.d(TAG, "Nothing found for site for port " + port);
             return secureHostInit;
         }else{
-            if (LOGD) Log.d(TAG, "Having site for port " + port + " " 
+            if (LOGD) Log.d(TAG, "Having site for port " + port + " "
                     +  secureHost.name + " addr: " 
                     + secureHost.tcpAddress 
                     + " port " + secureHost.destPort);

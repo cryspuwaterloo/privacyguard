@@ -8,12 +8,12 @@ import android.os.Environment;
 import android.preference.PreferenceFragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
+import com.PrivacyGuard.Application.Logger;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
 import com.PrivacyGuard.Plugin.KeywordDetection;
 import com.PrivacyGuard.Utilities.FileChooser;
@@ -135,7 +135,7 @@ public class MyPreferencesActivity extends AppCompatActivity {
         File exportDir = new File(Environment.getExternalStorageDirectory(), "privacyguard");
         if (!exportDir.exists()) {
             if (!exportDir.mkdirs()) {
-                Log.e(TAG, "cannot create directories: " + exportDir.getAbsolutePath());
+                Logger.e(TAG, "cannot create directories: " + exportDir.getAbsolutePath());
             }
         }
 
@@ -161,9 +161,9 @@ public class MyPreferencesActivity extends AppCompatActivity {
                 csvWrite.close();
                 curCSV.close();
 
-                Log.d(TAG, String.format("table '%s' has been exported to '%s'", table, file.getAbsolutePath()));
+                Logger.d(TAG, String.format("table '%s' has been exported to '%s'", table, file.getAbsolutePath()));
             } catch (Exception sqlEx) {
-                Log.e(TAG, sqlEx.getMessage(), sqlEx);
+                Logger.e(TAG, sqlEx.getMessage(), sqlEx);
             }
         }
     }

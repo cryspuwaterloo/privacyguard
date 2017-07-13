@@ -1,7 +1,8 @@
 package com.PrivacyGuard.Plugin;
 
 import android.content.Context;
-import android.util.Log;
+
+import com.PrivacyGuard.Application.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -77,7 +78,7 @@ public class KeywordDetection implements IPlugin {
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
-            Log.d(TAG, "Keywords refreshed; " + keywords.size() + " keywords are registered");
+            Logger.d(TAG, "Keywords refreshed; " + keywords.size() + " keywords are registered");
         }
         init = true;
     }
