@@ -2,7 +2,9 @@ package com.PrivacyGuard.Application.Fragments;
 
 import android.app.DatePickerDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -10,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -21,6 +24,7 @@ import com.PrivacyGuard.Application.Activities.R;
 import com.PrivacyGuard.Application.Database.DataLeak;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
 import com.PrivacyGuard.Application.Interfaces.AppDataInterface;
+import com.PrivacyGuard.Application.Logger;
 import com.PrivacyGuard.Plugin.LeakReport;
 
 import java.text.DateFormat;
@@ -38,6 +42,9 @@ import java.util.Locale;
  */
 
 public class LeakQueryFragment extends Fragment {
+
+    private static String TAG = "Test";
+
 
     private Calendar calendar = Calendar.getInstance(Locale.CANADA);
 
@@ -58,6 +65,7 @@ public class LeakQueryFragment extends Fragment {
     private TextView totalNumber;
     private View progressBar;
     private ImageButton query;
+    private Button share;
 
     private AppDataInterface activity;
 
@@ -83,6 +91,7 @@ public class LeakQueryFragment extends Fragment {
         leaksList.addHeaderView(LayoutInflater.from(getContext()).inflate(R.layout.query_list_header, null, false));
         listAdapter = new ListAdapter(getContext(), new ArrayList<DataLeak>());
         leaksList.setAdapter(listAdapter);
+        leaksList.addFooterView(LayoutInflater.from(getContext()).inflate(R.layout.query_list_footer, null, false));
 
         totalNumber = (TextView)view.findViewById(R.id.total_number);
         progressBar = view.findViewById(R.id.progress_bar);
@@ -169,8 +178,54 @@ public class LeakQueryFragment extends Fragment {
             }
         });
 
+        share = (Button)view.findViewById(R.id.Share);
+        share.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+                int size = listAdapter.getCount();
+                String message = "All " + size + " Results:\n\n";
+
+                for(int i=0 ; i<listAdapter.getCount() ; i++){
+                    DataLeak data = listAdapter.getItem(i);
+                    message = message + "Application: " + data.getAppName() + "\n";
+                    message = message + "Category: " + data.getCategory().toLowerCase() + "\n";
+                    message = message + "Type: " + data.getType() + "\n";
+                    message = message + "Time: " + dateFormatDisplaySpecific.format(data.getTimestampDate()) + "\n";
+                    message = message + "Content: " + data.getLeakContent() + "\n";
+                    message = message + "Status: " + (data.getForegroundStatus() == DatabaseHandler.FOREGROUND_STATUS ? FOREGROUND : BACKGROUND)
+                            + "\n\n";
+                }
+                sendEmail(message);
+
+            }
+
+
+        });
+
+
         return view;
     }
+
+
+    protected void sendEmail(String message) {
+        String[] TO = {""};
+        String[] CC = {""};
+        Intent emailIntent = new Intent(Intent.ACTION_SEND);
+
+        emailIntent.setData(Uri.parse("mailto:"));
+        emailIntent.setType("text/plain");
+        emailIntent.putExtra(Intent.EXTRA_EMAIL, TO);
+        emailIntent.putExtra(Intent.EXTRA_CC, CC);
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Your subject");
+        emailIntent.putExtra(Intent.EXTRA_TEXT, message);
+
+        try {
+            startActivity(Intent.createChooser(emailIntent, "Send mail..."));
+        } catch (android.content.ActivityNotFoundException ex) {
+            Logger.d(TAG, "error");
+        }
+    }
+
 
     private class ListAdapter extends ArrayAdapter<DataLeak> {
         public ListAdapter(Context context, ArrayList<DataLeak> leaks) {

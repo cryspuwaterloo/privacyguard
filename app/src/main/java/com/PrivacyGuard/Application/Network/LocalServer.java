@@ -5,6 +5,7 @@ import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService;
 import com.PrivacyGuard.Application.Network.Forwarder.LocalServerForwarder;
 import com.PrivacyGuard.Application.Network.SSL.SSLSocketBuilder;
 import com.PrivacyGuard.Utilities.CertificateManager;
+import com.PrivacyGuard.Application.Network.SSL.SSLPinning;
 
 import org.sandrop.webscarab.model.ConnectionDescriptor;
 import org.sandrop.webscarab.plugin.proxy.SiteData;
@@ -13,14 +14,12 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.ServerSocket;
-//import java.nio.channels.ServerSocketChannel;
-//import java.nio.channels.SocketChannel;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+
+import static com.PrivacyGuard.Application.Logger.getDiskFileDir;
 
 /**
  * Created by frank on 2014-06-03.
@@ -33,7 +32,7 @@ public class LocalServer extends Thread {
     //private ServerSocketChannel serverSocketChannel;
     private ServerSocket serverSocket;
     private MyVpnService vpnService;
-    private Set<String> sslPinning = new HashSet<String>();
+    private SSLPinning sslPinning= new SSLPinning(getDiskFileDir(), "SSLInterceptFailures");
 
     public LocalServer(MyVpnService vpnService) {
         //if(serverSocketChannel == null || !serverSocketChannel.isOpen())
@@ -113,9 +112,6 @@ public class LocalServer extends Thread {
                                 if (tmp_session.isValid()) {
                                     client = ssl_client;
                                     target = ssl_target;
-                                    // XXX: for connect.uwaterloo.ca, there are always two concurrent TLS connections; setting up the first one will fail and turn off
-                                    // TLS interception; the second one won't fail so here we will turn on TLS interception again; need a better way, maybe turn off TLS interception
-                                    // only after n (n > 1) attempts have failed? don't set n too high otherwise user may get annoyed
                                     sslPinning.remove(descriptor.getRemoteAddress());
 
                                 } else {
