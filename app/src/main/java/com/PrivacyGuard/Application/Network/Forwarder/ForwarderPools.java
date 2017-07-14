@@ -37,6 +37,7 @@ public class ForwarderPools {
     private HashMap<Pair<Integer, Byte>, AbsForwarder> portToForwarder;
     private MyVpnService vpnService;
     private static final String TAG = ForwarderPools.class.getSimpleName();
+    private static final boolean DEBUG = false;
 
     public ForwarderPools(MyVpnService vpnService) {
         this.vpnService = vpnService;
@@ -79,13 +80,13 @@ public class ForwarderPools {
     private AbsForwarder getByProtocol(byte protocol, int port) {
         switch (protocol) {
             case IPDatagram.TCP:
-                Logger.d(TAG, "Creating TCP forwarder for src port " + port);
+                if (DEBUG) Logger.d(TAG, "Creating TCP forwarder for src port " + port);
                 return new TCPForwarder(vpnService, port);
             case IPDatagram.UDP:
-                Logger.d(TAG, "Creating UDP forwarder for src port " + port);
+                if (DEBUG) Logger.d(TAG, "Creating UDP forwarder for src port " + port);
                 return new UDPForwarder(vpnService, port);
             default:
-                Logger.d(TAG, "Unknown type of forwarder requested for protocol " + protocol);
+                if (DEBUG) Logger.d(TAG, "Unknown type of forwarder requested for protocol " + protocol);
                 return null;
         }
     }

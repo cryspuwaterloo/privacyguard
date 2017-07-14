@@ -21,11 +21,10 @@
 - Rating system which associates each app with a five star rating based on leakage history/ show star rating below app icons on phone
 - Allow an option for the user to share statistics with us so overall stats on apps can be aggregated
 - Potentially display leakage stats as they become more complex in graphical form
-- Test on multiple OS versions, and look into new features offered by 5.x and 6.x
 - Plugins should be configurable from UI, not hardcoded
-- Android privodes Keystore API after 4.0. This might affect how certificate is stored and installed
 - Support TLS SNI and certificate pinning
-- Don't fail if user refuses to trust fake CA certificate; in general, let user disable TLS interception
+- Don't fail if user refuses to trust fake CA certificate; in general, let user disable TLS interception, probably on a per-app basis
 - Report IP destination address of leaks
 - Remove certificate for fake root CA upon app uninstallation
-- Improve algorithm for remembering sites that seem to use certificate pinning
+- List of keywords to be filtered for should be directly editable in app
+- Add feature to capture all traffic in pcap format

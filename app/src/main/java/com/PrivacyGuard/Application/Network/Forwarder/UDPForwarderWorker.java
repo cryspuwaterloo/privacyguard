@@ -20,8 +20,8 @@ import java.util.Arrays;
  * There is one such thread per UDP request source port
  */
 public class UDPForwarderWorker extends Thread {
-
-    private final String TAG = "UDPForwarderWorker";
+    private static final String TAG = UDPForwarderWorker.class.getSimpleName();
+    private static final boolean DEBUG = false;
     private final int LIMIT = 32767;
     private UDPForwarder forwarder;
     private IPHeader newIPHeader;
@@ -63,7 +63,7 @@ public class UDPForwarderWorker extends Thread {
                     newUDPHeader.updateSrcPort(datagram.getPort());
                     UDPDatagram response = new UDPDatagram(newUDPHeader, received);
                     //response.debugInfo(dstAddress);
-                    Logger.d(TAG, "response is " + response.debugString());
+                    if (DEBUG) Logger.d(TAG, "response is " + response.debugString());
                     forwarder.forwardResponse(newIPHeader, response);
                 }
             }

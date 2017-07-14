@@ -62,7 +62,7 @@ import java.util.HashMap;
  * Created by frank on 2014-03-26.
  */
 public class MyVpnService extends VpnService implements Runnable {
-    public static final String CADir = Logger.getDiskCacheDir().getAbsolutePath();
+    public static final String CADir = Logger.getDiskFileDir().getAbsolutePath();
     // also update SSLSocketFactoryFactory.java if CAName is modified
     public static final String CAName = "PrivacyGuard Custom CA";
     public static final String CertName = "PrivacyGuard_Cert";
@@ -244,7 +244,8 @@ public class MyVpnService extends VpnService implements Runnable {
         DatabaseHandler db = DatabaseHandler.getInstance(this);
 
         // w3kim@uwaterloo.ca
-        db.addUrlIfAny(leak.appName, leak.packageName, request);
+        // disabled since we don't seem to be doing anything with this recorded information
+        //db.addUrlIfAny(leak.appName, leak.packageName, request);
 
         int notifyId = db.findNotificationId(leak);
         if (notifyId < 0) {

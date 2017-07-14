@@ -35,7 +35,8 @@ import java.nio.ByteBuffer;
  * Created by frank on 2014-03-29.
  */
 public class UDPForwarder extends AbsForwarder { //} implements ICommunication {
-    private final String TAG = "UDPForwarder";
+    private static final String TAG = UDPForwarder.class.getSimpleName();
+    private static final boolean DEBUG = false;
     private final int LIMIT = 32767;
     private final int WAIT_BEFORE_RELEASE_PERIOD = 60000;
     //private InetAddress dstAddress;
@@ -62,7 +63,7 @@ public class UDPForwarder extends AbsForwarder { //} implements ICommunication {
         UDPDatagram udpDatagram = (UDPDatagram)ipDatagram.payLoad();
 
         //udpDatagram.debugInfo(dstAddress);
-        Logger.d("UDPForwarder", "forwarding " + udpDatagram.debugString());
+        if (DEBUG) Logger.d("UDPForwarder", "forwarding " + udpDatagram.debugString());
 
         send(udpDatagram, ipDatagram.header().getDstAddress(), ipDatagram.payLoad().getDstPort());
 
@@ -72,7 +73,7 @@ public class UDPForwarder extends AbsForwarder { //} implements ICommunication {
     @Override
     // Should never get called since we don't use LocalServer for UDP
     public void forwardResponse(byte[] response) {
-        Logger.d("UDPForwarder", "Unsolicited packet received: " + response);
+        if (DEBUG) Logger.d("UDPForwarder", "Unsolicited packet received: " + response);
     }
 
     public boolean setup(IPDatagram firstRequest) {
@@ -112,7 +113,7 @@ public class UDPForwarder extends AbsForwarder { //} implements ICommunication {
             socket.close();
         }
 
-        Logger.d(TAG, "Releasing UDP forwarder for port " + port);
+        if (DEBUG) Logger.d(TAG, "Releasing UDP forwarder for port " + port);
     }
 
     @Override

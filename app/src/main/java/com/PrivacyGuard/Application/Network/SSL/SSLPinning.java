@@ -21,7 +21,7 @@ public class SSLPinning {
        interception another chance  */
     private static int REMOVE_RATE = 5;
 
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
     private static final String TAG = SSLPinning.class.getSimpleName();
 
     private File failureFile;

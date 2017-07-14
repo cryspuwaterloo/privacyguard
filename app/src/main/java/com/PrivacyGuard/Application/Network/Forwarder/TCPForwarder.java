@@ -39,7 +39,8 @@ import java.net.Socket;
  * Created by frank on 2014-03-27.
  */
 public class TCPForwarder extends AbsForwarder { //implements ICommunication {
-    private final String TAG = "TCPForwarder";
+    private static final String TAG = TCPForwarder.class.getSimpleName();
+    private static final boolean DEBUG = false;
     private final int WAIT_BEFORE_RELEASE_PERIOD = 60000;
     protected Status status;
     protected boolean firstData = true;
@@ -58,25 +59,25 @@ public class TCPForwarder extends AbsForwarder { //implements ICommunication {
 
     private boolean handle_LISTEN(IPDatagram ipDatagram, byte flag, int len) {
         if (flag != TCPHeader.SYN) {
-            Logger.d(TAG, "LISTEN: Resetting " + ipDatagram.payLoad().header().getSrcPort() + " : " + ipDatagram.payLoad().header().getDstPort());
+            if (DEBUG) Logger.d(TAG, "LISTEN: Resetting " + ipDatagram.payLoad().header().getSrcPort() + " : " + ipDatagram.payLoad().header().getDstPort());
             close(true);
             return false;
         }
-        Logger.d(TAG, "LISTEN: Accepting " + ipDatagram.payLoad().header().getSrcPort() + " : " + ipDatagram.payLoad().header().getDstPort());
+        if (DEBUG) Logger.d(TAG, "LISTEN: Accepting " + ipDatagram.payLoad().header().getSrcPort() + " : " + ipDatagram.payLoad().header().getDstPort());
         conn_info.reset(ipDatagram);
         conn_info.setup(this);
         if (worker == null || !worker.isValid()) {
             close(true);
-            Logger.d(TAG, "LISTEN: Failed to set up worker for " + ipDatagram.payLoad().header().getDstPort());
+            if (DEBUG) Logger.d(TAG, "LISTEN: Failed to set up worker for " + ipDatagram.payLoad().header().getDstPort());
             return false;
         }
         TCPDatagram response = new TCPDatagram(conn_info.getTransHeader(len, TCPHeader.SYNACK), null, conn_info.getDstAddress());
-        Logger.d(TAG, "LISTEN: Responded with " + response.headerToString());
+        if (DEBUG) Logger.d(TAG, "LISTEN: Responded with " + response.headerToString());
         conn_info.increaseSeq(
                 forwardResponse(conn_info.getIPHeader(), response)
         );
         status = Status.SYN_ACK_SENT;
-        Logger.d(TAG, "LISTEN: Switched to SYN_ACK_SENT");
+        if (DEBUG) Logger.d(TAG, "LISTEN: Switched to SYN_ACK_SENT");
         return true;
     }
 
@@ -91,12 +92,12 @@ public class TCPForwarder extends AbsForwarder { //implements ICommunication {
 
     private boolean handle_SYN_ACK_SENT(byte flag) {
         if(flag != TCPHeader.ACK) {
-            Logger.d(TAG, "SYN_ACK_SENT: No ACK received, ignored");
+            if (DEBUG) Logger.d(TAG, "SYN_ACK_SENT: No ACK received, ignored");
             // don't close since sometimes we get multiple duplicate SYNs
             return false;
         }
         status = Status.DATA;
-        Logger.d(TAG, "SYN_ACK_SENT: Switched to DATA");
+        if (DEBUG) Logger.d(TAG, "SYN_ACK_SENT: Switched to DATA");
         return true;
     }
 
@@ -106,7 +107,7 @@ public class TCPForwarder extends AbsForwarder { //implements ICommunication {
         }else{
             assert ((flag & TCPHeader.ACK) == 0);
             if (((flag & TCPHeader.ACK) == 0) && ((flag & TCPHeader.RST) == 0)) {
-                Logger.e(TAG, "DATA: ACK is 0 for Datagram:\nHeader: " + ipDatagram.header().toString() +"\nPayload: "+ipDatagram.payLoad().toString());
+                if (DEBUG) Logger.e(TAG, "DATA: ACK is 0 for Datagram:\nHeader: " + ipDatagram.header().toString() +"\nPayload: "+ipDatagram.payLoad().toString());
                 return false;
             }
         }
@@ -123,11 +124,11 @@ public class TCPForwarder extends AbsForwarder { //implements ICommunication {
             conn_info.increaseSeq(
                     forwardResponse(conn_info.getIPHeader(), new TCPDatagram(conn_info.getTransHeader(0, TCPHeader.FINACK), null, conn_info.getDstAddress()))
             );
-            Logger.d(TAG, "DATA: FIN received, closing");
+            if (DEBUG) Logger.d(TAG, "DATA: FIN received, closing");
             close(false);
         } else if((flag & TCPHeader.RST) != 0) { // RST
             close(false);
-            Logger.d(TAG, "DATA: RST received, closing");
+            if (DEBUG) Logger.d(TAG, "DATA: RST received, closing");
         }
         // if none of the above hold, we have an empty ACK
         return true;
@@ -137,11 +138,11 @@ public class TCPForwarder extends AbsForwarder { //implements ICommunication {
         assert(flag == TCPHeader.ACK);
         if ((flag != TCPHeader.ACK)) {
 //TODO: find out why this would happen
-            Logger.e(TAG, "ACK is 0");
+            if (DEBUG) Logger.e(TAG, "ACK is 0");
             return false;
         }
         status = Status.CLOSED;
-        Logger.d(TAG, "HALF_CLOSE_BY_CLIENT close");
+        if (DEBUG) Logger.d(TAG, "HALF_CLOSE_BY_CLIENT close");
         close(false);
         return true;
     }
@@ -152,7 +153,7 @@ public class TCPForwarder extends AbsForwarder { //implements ICommunication {
                     forwardResponse(conn_info.getIPHeader(), new TCPDatagram(conn_info.getTransHeader(len, TCPHeader.ACK), null, conn_info.getDstAddress()))
             );
             status = Status.CLOSED;
-            Logger.d(TAG, "HALF_CLOSE_BY_SERVER close");
+            if (DEBUG) Logger.d(TAG, "HALF_CLOSE_BY_SERVER close");
             close(false);
         } // ELSE ACK for the finack sent by the server
         return true;
@@ -168,26 +169,26 @@ public class TCPForwarder extends AbsForwarder { //implements ICommunication {
             rlen = ipDatagram.payLoad().dataLength();
             if(conn_info == null) conn_info = new TCPConnectionInfo(ipDatagram);
         } else return;
-        Logger.d(TAG, "HANDLING: " + ipDatagram.headerToString() + ((TCPDatagram)ipDatagram.payLoad()).headerToString());
+        if (DEBUG) Logger.d(TAG, "HANDLING: " + ipDatagram.headerToString() + ((TCPDatagram)ipDatagram.payLoad()).headerToString());
         switch(status) {
             case LISTEN:
-                Logger.d(TAG, "LISTEN");
+                if (DEBUG) Logger.d(TAG, "LISTEN");
                 if(!handle_LISTEN(ipDatagram, flag, len)) return;
                 else break;
             case SYN_ACK_SENT:
-                Logger.d(TAG, "SYN_ACK_SENT");
+                if (DEBUG) Logger.d(TAG, "SYN_ACK_SENT");
                 if(!handle_SYN_ACK_SENT(flag)) return;
                 else break;
             case DATA:
-                Logger.d(TAG, "DATA");
+                if (DEBUG) Logger.d(TAG, "DATA");
                 if(!handle_DATA(ipDatagram, flag, len, rlen)) return;
                 else break;
             case HALF_CLOSE_BY_CLIENT:
-                Logger.d(TAG, "HALF_CLOSE_BY_CLIENT");
+                if (DEBUG) Logger.d(TAG, "HALF_CLOSE_BY_CLIENT");
                 if(!handle_HALF_CLOSE_BY_CLIENT(flag)) return;
                 else break;
             case HALF_CLOSE_BY_SERVER:
-                Logger.d(TAG, "HALF_CLOSE_BY_SERVER");
+                if (DEBUG) Logger.d(TAG, "HALF_CLOSE_BY_SERVER");
                 if(!handle_HALF_CLOSE_BY_SERVER(flag, len)) return;
                 else break;
             case CLOSED:
@@ -285,13 +286,13 @@ public class TCPForwarder extends AbsForwarder { //implements ICommunication {
         }
         // don't release this forwarder right away since we may see more packets for this connection, which would then unnecessarily
         // re-create this forwarder
-        Logger.d(TAG, "Preparing for release of TCP forwarder for port " + port);
+        if (DEBUG) Logger.d(TAG, "Preparing for release of TCP forwarder for port " + port);
         releaseTime = System.currentTimeMillis() + WAIT_BEFORE_RELEASE_PERIOD;
     }
 
     public void release()
     {
-        Logger.d(TAG, "Releasing TCP forwarder for port " + port);
+        if (DEBUG) Logger.d(TAG, "Releasing TCP forwarder for port " + port);
     }
 
     public boolean hasExpired() {
@@ -306,7 +307,7 @@ public class TCPForwarder extends AbsForwarder { //implements ICommunication {
 
         try {
             socketToLocalServer.getOutputStream().write(request);
-            Logger.d(TAG, request.length + " bytes forwarded to LocalServer from port: " + src_port);
+            if (DEBUG) Logger.d(TAG, request.length + " bytes forwarded to LocalServer from port: " + src_port);
             PrivacyGuard.tcpForwarderWorkerWrite += request.length;
         } catch (IOException e) {
             e.printStackTrace();

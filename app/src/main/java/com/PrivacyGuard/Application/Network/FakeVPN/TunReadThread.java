@@ -40,7 +40,8 @@ public class TunReadThread extends Thread {
     private final ForwarderPools forwarderPools;
     private final Dispatcher dispatcher;
     private LinkedBlockingQueue<IPDatagram> readQueue = new LinkedBlockingQueue<>();
-    public final static String TAG = "TunReadThread";
+    private static final String TAG = TunReadThread.class.getSimpleName();
+    private static final boolean DEBUG = false;
 
     public TunReadThread(FileDescriptor fd, MyVpnService vpnService) {
         localIn = new FileInputStream(fd);
@@ -59,7 +60,7 @@ public class TunReadThread extends Thread {
                 if (localInChannel.read(packet) > 0) {
                     packet.flip();
                     if ((ip = IPDatagram.create(packet)) != null) {
-                        Logger.d(TAG, "receiving: " + ip.headerToString());
+                        if (DEBUG) Logger.d(TAG, "receiving: " + ip.headerToString());
                         readQueue.offer(ip);
                     }
                 } else {

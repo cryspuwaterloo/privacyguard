@@ -30,6 +30,8 @@ import com.PrivacyGuard.Application.Network.Protocol.IP.IPPayLoad;
  */
 
 public abstract class AbsForwarder {
+    private static final String TAG = AbsForwarder.class.getSimpleName();
+    private static final boolean DEBUG = false;
     protected MyVpnService vpnService;
     //protected boolean closed = true;
     protected int port;
@@ -66,7 +68,7 @@ public abstract class AbsForwarder {
         if(ipHeader == null || datagram == null) return 0;
         datagram.update(ipHeader); // set the checksum
         IPDatagram newIpDatagram = new IPDatagram(ipHeader, datagram); // set the ip datagram, will update the length and the checksum
-        Logger.d("AbsForwarder",newIpDatagram.headerToString());
+        if (DEBUG) Logger.d("AbsForwarder",newIpDatagram.headerToString());
         vpnService.fetchResponse(newIpDatagram.toByteArray());
         return datagram.virtualLength();
     }

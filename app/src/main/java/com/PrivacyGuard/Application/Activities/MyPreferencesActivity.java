@@ -132,12 +132,7 @@ public class MyPreferencesActivity extends AppCompatActivity {
     public void exportData() {
         DatabaseHandler mDbHandler = DatabaseHandler.getInstance(this);
 
-        File exportDir = new File(Environment.getExternalStorageDirectory(), "privacyguard");
-        if (!exportDir.exists()) {
-            if (!exportDir.mkdirs()) {
-                Logger.e(TAG, "cannot create directories: " + exportDir.getAbsolutePath());
-            }
-        }
+        File exportDir = Logger.getDiskCacheDir();
 
         long timestamp = System.currentTimeMillis();
         for (String table : mDbHandler.getTables()) {

@@ -45,10 +45,8 @@ public class LocalServerForwarder extends Thread {
 
     private static final String TIME_STAMP_FORMAT = "MM-dd HH:mm:ss.SSS";
     private static final String UNKNOWN = "unknown";
-    private static String TAG = LocalServerForwarder.class.getSimpleName();
-    private static boolean EVALUATE = false;
-    private static boolean DEBUG = true;
-    private static boolean PROTECT = true;
+    private static final String TAG = LocalServerForwarder.class.getSimpleName();
+    private static final boolean DEBUG = false;
     private static int LIMIT = 1368;
     private static ByteArrayPool byteArrayPool = new ByteArrayPool(10, LIMIT);
     private boolean outgoing = false;
@@ -61,7 +59,6 @@ public class LocalServerForwarder extends Thread {
     private int destPort, srcPort;
     private SimpleDateFormat df = new SimpleDateFormat(TIME_STAMP_FORMAT, Locale.CANADA);
     private LinkedBlockingQueue<ByteArray> toFilter = new LinkedBlockingQueue<>();
-    //private SocketChannel inChannel, outChannel;
 
     public LocalServerForwarder(Socket inSocket, Socket outSocket, boolean isOutgoing, MyVpnService vpnService) {
         this.inSocket = inSocket;
@@ -142,15 +139,15 @@ public class LocalServerForwarder extends Thread {
                         filterThread.filter(new String(buff, 0, got));
                     }
                 }
-                Logger.d(TAG, got + " bytes to be written to " + srcIP + ":" + srcPort + "->" + destIP + ":" + destPort);
+                if (DEBUG) Logger.d(TAG, got + " bytes to be written to " + srcIP + ":" + srcPort + "->" + destIP + ":" + destPort);
                 out.write(buff, 0, got);
-                Logger.d(TAG, got + " bytes written to " + srcIP + ":" + srcPort + "->" + destIP + ":" + destPort);
+                if (DEBUG) Logger.d(TAG, got + " bytes written to " + srcIP + ":" + srcPort + "->" + destIP + ":" + destPort);
                 out.flush();
             }
-            Logger.d(TAG, "terminating " + srcIP + ":" + srcPort + "->" + destIP + ":" + destPort);
+            if (DEBUG) Logger.d(TAG, "terminating " + srcIP + ":" + srcPort + "->" + destIP + ":" + destPort);
         } catch (Exception ignore) {
             ignore.printStackTrace();
-            Logger.d(TAG, "outgoing : " + outgoing);
+            if (DEBUG) Logger.d(TAG, "outgoing : " + outgoing);
             // can happen when app opens a connection and then terminates it right away so
             // this thread will start running only after a FIN has already been to the server
         }
