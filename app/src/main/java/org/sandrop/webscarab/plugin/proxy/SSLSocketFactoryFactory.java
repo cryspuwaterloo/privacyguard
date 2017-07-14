@@ -255,7 +255,7 @@ public class SSLSocketFactoryFactory {
         SSLContext sslContext = (SSLContext) contextCache.get(certEntry);
         if (sslContext == null) {
             X509KeyManager km;
-            _logger.finest("don't have an SSL context");
+            //_logger.finest("don't have an SSL context");
             if (!keystoreCert.containsAlias(certEntry)) {
                 km = createKeyMaterial(hostData);
             } else {
@@ -324,7 +324,7 @@ public class SSLSocketFactoryFactory {
             throw new GeneralSecurityException(
                     "Internal error: private key for " + hostData.name + " not found!");
         }
-        _logger.finest("loading keys for " + certEntry);
+        //_logger.finest("loading keys for " + certEntry);
         return new HostKeyManager(hostData, pk, certs);
     }
 

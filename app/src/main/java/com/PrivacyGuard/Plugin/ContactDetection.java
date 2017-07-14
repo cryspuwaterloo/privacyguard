@@ -10,6 +10,7 @@ import android.support.annotation.Nullable;
 import android.provider.ContactsContract;
 
 import com.PrivacyGuard.Application.Logger;
+import com.PrivacyGuard.Utilities.StringUtil;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -71,13 +72,15 @@ public class ContactDetection implements IPlugin {
 
     @Override
     public void setContext(Context context) {
-        if (init) return;
-        // TODO: this way we will miss new/updated contacts, but it is more efficient than
-        // re-reading the contacts for each new connection; can we ask to be notified when
-        // there is a new/updated contact?
-        init = true;
-        getNumber(context.getContentResolver());
-        getEmail(context.getContentResolver());
+        synchronized (emailList) {
+            if (init) return;
+            // TODO: this way we will miss new/updated contacts, but it is more efficient than
+            // re-reading the contacts for each new connection; can we ask to be notified when
+            // there is a new/updated contact?
+            init = true;
+            getNumber(context.getContentResolver());
+            getEmail(context.getContentResolver());
+        }
     }
 
 
@@ -114,6 +117,8 @@ public class ContactDetection implements IPlugin {
                     String email = emails.getString(emailAddressIdx);
                     if (DEBUG) Logger.d(TAG, "contact email address: " + email);
                     emailList.add(email);
+                    if (DEBUG) Logger.d(TAG, "contact email address: " + StringUtil.encodeAt(email));
+                    emailList.add(StringUtil.encodeAt(email));
                 } while (emails.moveToNext());
             }
 

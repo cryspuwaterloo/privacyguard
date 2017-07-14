@@ -4,12 +4,15 @@ import android.content.Context;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.Nullable;
 
 import com.PrivacyGuard.Application.Logger;
 import com.PrivacyGuard.Plugin.LeakReport.LeakCategory;
+import com.PrivacyGuard.Utilities.StringUtil;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,10 +24,12 @@ import java.util.Map;
  */
 public class LocationDetection implements IPlugin {
     private final static String TAG = LocationDetection.class.getSimpleName();
+    private final static boolean DEBUG = false;
     private static long MIN_TIME_INTERVAL_PASSIVE = 60000; //one minute
     private static float MIN_DISTANCE_INTERVAL = 10; // 10 meters
     private static LocationManager mLocationManager;
     private static Map<String, Location> mLocations = Collections.synchronizedMap(new HashMap<String, Location>());
+    private static String routerMacAddress, routerMacAddressEnc;
 
     @Override
     @Nullable
@@ -47,6 +52,18 @@ public class LocationDetection implements IPlugin {
             if ((requestStr.contains(latS) && requestStr.contains(lonS))) {// || (requestStr.contains(latS.replace(".", "")) && requestStr.contains(lonS.replace(".", "")))) {
                 LeakReport rpt = new LeakReport(LeakCategory.LOCATION);
                 rpt.addLeak(new LeakInstance("location", latS + ":" + lonS));
+                return rpt;
+            }
+
+            if (requestStr.contains(routerMacAddress)) {
+                LeakReport rpt = new LeakReport(LeakCategory.LOCATION);
+                rpt.addLeak(new LeakInstance("location", routerMacAddress));
+                return rpt;
+            }
+
+            if (requestStr.contains(routerMacAddressEnc)) {
+                LeakReport rpt = new LeakReport(LeakCategory.LOCATION);
+                rpt.addLeak(new LeakInstance("location", routerMacAddressEnc));
                 return rpt;
             }
         }
@@ -77,6 +94,13 @@ public class LocationDetection implements IPlugin {
                 mLocationManager.requestLocationUpdates(LocationManager.PASSIVE_PROVIDER, MIN_TIME_INTERVAL_PASSIVE, MIN_DISTANCE_INTERVAL, new LocationUpdateListener(), Looper.getMainLooper());
                 updateLastLocations();
                 Logger.logLastLocations(mLocations, true);
+
+                WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+                WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+                routerMacAddress = wifiInfo.getBSSID();
+                if (DEBUG) Logger.d(TAG, routerMacAddress);
+                routerMacAddressEnc = StringUtil.encodeColon(routerMacAddress);
+                if (DEBUG) Logger.d(TAG, routerMacAddressEnc);
             }
         }
     }
@@ -88,6 +112,7 @@ public class LocationDetection implements IPlugin {
             if (loc == null) continue;
             synchronized(mLocations) {
                 mLocations.put(loc.getProvider(), loc);
+                if (DEBUG) Logger.d(TAG, loc.toString());
             }
         }
     }

@@ -46,10 +46,7 @@ import com.PrivacyGuard.Plugin.IPlugin;
 import com.PrivacyGuard.Plugin.KeywordDetection;
 import com.PrivacyGuard.Plugin.LeakReport;
 import com.PrivacyGuard.Plugin.LocationDetection;
-import com.PrivacyGuard.Plugin.PhoneStateDetection;
-import com.PrivacyGuard.Utilities.CertificateManager;
-
-import org.sandrop.webscarab.plugin.proxy.SSLSocketFactoryFactory;
+import com.PrivacyGuard.Plugin.DeviceDetection;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -91,7 +88,7 @@ public class MyVpnService extends VpnService implements Runnable {
     // Plugin
     private Class pluginClass[] = {
             LocationDetection.class,
-            PhoneStateDetection.class,
+            DeviceDetection.class,
             ContactDetection.class,
             // newly added for KeywordDetection
             KeywordDetection.class

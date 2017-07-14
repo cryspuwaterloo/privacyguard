@@ -121,6 +121,7 @@ public class MyPreferencesActivity extends AppCompatActivity {
                 FileUtils.copyFile(file, keywords.getAbsolutePath());
                 // notify the plugin the file has been updated
                 KeywordDetection.invalidate();
+                Logger.d(TAG, "keywords have been updated");
             }
         }).showDialog();
     }

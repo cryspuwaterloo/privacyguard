@@ -20,6 +20,8 @@ public class KeywordDetection implements IPlugin {
     public static final String KEYWORDS_FILE_NAME = "keywords.txt";
 
     private static final String TAG = KeywordDetection.class.getSimpleName();
+    private static final boolean DEBUG = false;
+
     private static final Set<String> keywords = new HashSet<>();
     private static boolean init = false;
 
@@ -63,23 +65,26 @@ public class KeywordDetection implements IPlugin {
 
     @Override
     public void setContext(Context context) {
-        if (init) return;
-        // reading an up-to-date keywords
-        File src = new File(context.getFilesDir() + "/" + KEYWORDS_FILE_NAME);
-        if (src.exists()) {
-            keywords.clear();
-            try {
-                Scanner scanner = new Scanner(new FileInputStream(src));
-                while (scanner.hasNextLine()) {
-                    String keyword = scanner.nextLine();
-                    if (!keyword.isEmpty())
-                        keywords.add(keyword);
+        synchronized(keywords) {
+            if (init) return;
+            // reading an up-to-date keywords
+            File src = new File(context.getFilesDir() + "/" + KEYWORDS_FILE_NAME);
+            if (src.exists()) {
+                keywords.clear();
+                try {
+                    Scanner scanner = new Scanner(new FileInputStream(src));
+                    while (scanner.hasNextLine()) {
+                        String keyword = scanner.nextLine();
+                        if (!keyword.isEmpty())
+                            keywords.add(keyword);
+                            if (DEBUG) Logger.d(TAG, "keyword: " + keyword);
+                    }
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
                 }
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
+                if (DEBUG) Logger.d(TAG, "Keywords refreshed; " + keywords.size() + " keywords are registered");
             }
-            Logger.d(TAG, "Keywords refreshed; " + keywords.size() + " keywords are registered");
+            init = true;
         }
-        init = true;
     }
 }

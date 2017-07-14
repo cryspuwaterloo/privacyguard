@@ -27,4 +27,12 @@ public class StringUtil {
         }
         return msg.trim();
     }
+
+    public static String encodeAt(String emailAddress) {
+        return emailAddress.replace("@", "%40");
+    }
+
+    public static String encodeColon(String macAddress) {
+        return macAddress.replace(":", "%3A");
+    }
 }

@@ -177,7 +177,7 @@ public class LocalServerForwarder extends Thread {
                         leak.packageName = packageName;
                         // w3kim@uwaterloo.ca : added an additional parameter to notify
                         vpnService.notify(msg, leak);
-                        if (DEBUG) Logger.v(TAG, appName + " is leaking " + leak.category.name());
+                        Logger.v(TAG, appName + " is leaking " + leak.category.name());
                         Logger.logLeak(leak.category.name());
                     }
                 }
