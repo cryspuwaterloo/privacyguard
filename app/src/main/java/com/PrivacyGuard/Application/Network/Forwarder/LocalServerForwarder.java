@@ -44,7 +44,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class LocalServerForwarder extends Thread {
 
     private static final String TIME_STAMP_FORMAT = "MM-dd HH:mm:ss.SSS";
-    private static final String UNKNOWN = "unknown";
     private static final String TAG = LocalServerForwarder.class.getSimpleName();
     private static final boolean DEBUG = false;
     private static int LIMIT = 1368;
@@ -59,8 +58,9 @@ public class LocalServerForwarder extends Thread {
     private int destPort, srcPort;
     private SimpleDateFormat df = new SimpleDateFormat(TIME_STAMP_FORMAT, Locale.CANADA);
     private LinkedBlockingQueue<ByteArray> toFilter = new LinkedBlockingQueue<>();
+    private String appName, packageName;
 
-    public LocalServerForwarder(Socket inSocket, Socket outSocket, boolean isOutgoing, MyVpnService vpnService) {
+    public LocalServerForwarder(Socket inSocket, Socket outSocket, boolean isOutgoing, MyVpnService vpnService, String appName, String packageName) {
         this.inSocket = inSocket;
         this.outSocket = outSocket;
         try {
@@ -78,6 +78,8 @@ public class LocalServerForwarder extends Thread {
         this.vpnService = vpnService;
         if (outgoing) this.plugins = vpnService.getNewPlugins();
         setDaemon(true);
+        this.appName = appName;
+        this.packageName = packageName;
     }
 
     /*public LocalServerForwarder(SocketChannel in, SocketChannel out, boolean isOutgoing, MyVpnService vpnService) {
@@ -92,23 +94,28 @@ public class LocalServerForwarder extends Thread {
         setDaemon(true);
     }*/
 
-    public static void connect(Socket clientSocket, Socket serverSocket, MyVpnService vpnService) throws Exception {
+    public static void connect(Socket clientSocket, Socket serverSocket, MyVpnService vpnService, String appName, String packageName) throws Exception {
         if (clientSocket != null && serverSocket != null && clientSocket.isConnected() && serverSocket.isConnected()) {
             clientSocket.setSoTimeout(0);
             serverSocket.setSoTimeout(0);
-            LocalServerForwarder clientServer = new LocalServerForwarder(clientSocket, serverSocket, true, vpnService);
-            LocalServerForwarder serverClient = new LocalServerForwarder(serverSocket, clientSocket, false, vpnService);
+            LocalServerForwarder clientServer = new LocalServerForwarder(clientSocket, serverSocket, true, vpnService, appName, packageName);
+            LocalServerForwarder serverClient = new LocalServerForwarder(serverSocket, clientSocket, false, vpnService, appName, packageName);
             clientServer.start();
             serverClient.start();
 
             if (DEBUG) Logger.d(TAG, "Start forwarding for " + clientSocket.getInetAddress().getHostAddress()+ ":" + clientSocket.getPort() + "<->" + serverSocket.getInetAddress().getHostAddress() + ":" + serverSocket.getPort());
-            while (clientServer.isAlive())
-                clientServer.join();
-            while (serverClient.isAlive())
-                serverClient.join();
+            while (clientServer.isAlive() && serverClient.isAlive()) {
+                try {
+                    Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                }
+            }
             if (DEBUG) Logger.d(TAG, "Stop forwarding " + clientSocket.getInetAddress().getHostAddress()+ ":" + clientSocket.getPort() + "<->" + serverSocket.getInetAddress().getHostAddress() + ":" + serverSocket.getPort());
             clientSocket.close();
             serverSocket.close();
+            clientServer.join();
+            serverClient.join();
+
         } else {
             if (DEBUG) Logger.d(TAG, "skipping socket forwarding because of invalid sockets");
             if (clientSocket != null && clientSocket.isConnected()) {
@@ -157,16 +164,6 @@ public class LocalServerForwarder extends Thread {
     public class FilterThread extends Thread {
         public void filter(String msg) {
             if (PrivacyGuard.doFilter && outgoing) {
-                String appName = null;
-                String packageName = null;
-                ConnectionDescriptor des = vpnService.getClientAppResolver().getClientDescriptorBySocket(inSocket);
-                if (des != null) {
-                    appName = des.getName();
-                    packageName = des.getNamespace();
-                } else {
-                    appName = UNKNOWN;
-                    packageName = UNKNOWN;
-                }
 
                 Logger.logTraffic(packageName, appName, srcPort, destIP, destPort, msg);
 
@@ -175,7 +172,6 @@ public class LocalServerForwarder extends Thread {
                     if (leak != null) {
                         leak.appName = appName;
                         leak.packageName = packageName;
-                        // w3kim@uwaterloo.ca : added an additional parameter to notify
                         vpnService.notify(msg, leak);
                         Logger.v(TAG, appName + " is leaking " + leak.category.name());
                         Logger.logLeak(leak.category.name());

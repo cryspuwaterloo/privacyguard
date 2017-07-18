@@ -5,7 +5,7 @@ import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService;
 import com.PrivacyGuard.Application.Network.Forwarder.LocalServerForwarder;
 import com.PrivacyGuard.Application.Network.SSL.SSLSocketBuilder;
 import com.PrivacyGuard.Utilities.CertificateManager;
-import com.PrivacyGuard.Application.Network.SSL.SSLPinning;
+import com.PrivacyGuard.Application.Network.SSL.TLSWhiteList;
 
 import org.sandrop.webscarab.model.ConnectionDescriptor;
 import org.sandrop.webscarab.plugin.proxy.SiteData;
@@ -32,7 +32,7 @@ public class LocalServer extends Thread {
     //private ServerSocketChannel serverSocketChannel;
     private ServerSocket serverSocket;
     private MyVpnService vpnService;
-    private SSLPinning sslPinning= new SSLPinning(getDiskFileDir(), "SSLInterceptFailures");
+    private TLSWhiteList tlsWhiteList= new TLSWhiteList(getDiskFileDir(), "TLSInterceptFailures");
 
     public LocalServer(MyVpnService vpnService) {
         //if(serverSocketChannel == null || !serverSocketChannel.isOpen())
@@ -75,6 +75,7 @@ public class LocalServer extends Thread {
 
     private class LocalServerHandler implements Runnable {
         private final String TAG = LocalServerHandler.class.getSimpleName();
+        private static final String UNKNOWN = "unknown";
         private Socket client;
         public LocalServerHandler(Socket client) {
             this.client = client;
@@ -82,58 +83,63 @@ public class LocalServer extends Thread {
         @Override
         public void run() {
             try {
-                ConnectionDescriptor descriptor = vpnService.getClientAppResolver().getClientDescriptorByPort(client.getPort());
+                ConnectionDescriptor descriptor = vpnService.getClientAppResolver().getClientDescriptorBySocket(client);
+                String appName, packageName;
+                if (descriptor != null) {
+                    appName = descriptor.getName();
+                    packageName = descriptor.getNamespace();
+                } else {
+                    appName = UNKNOWN;
+                    packageName = UNKNOWN;
+                }
+                if (DEBUG) Logger.d(TAG, "app name: " + appName + " / package name: " + packageName);
                 //SocketChannel targetChannel = SocketChannel.open();
                 //Socket target = targetChannel.socket();
                 Socket target = new Socket();
                 target.bind(null);
                 vpnService.protect(target);
+                // TODO: why do this and the call above return different results?
+                descriptor = vpnService.getClientAppResolver().getClientDescriptorByPort(client.getPort());
                 //boolean result = targetChannel.connect(new InetSocketAddress(descriptor.getRemoteAddress(), descriptor.getRemotePort()));
                 target.connect(new InetSocketAddress(descriptor.getRemoteAddress(), descriptor.getRemotePort()));
 
                 if(descriptor != null && descriptor.getRemotePort() == SSLPort) {
 
-                    if (!sslPinning.contains(descriptor.getRemoteAddress())) {
+                    if (!tlsWhiteList.contains(descriptor.getRemoteAddress(), packageName)) {
                         SiteData remoteData = vpnService.getHostNameResolver().getSecureHost(client, descriptor, true);
-                        // XXX: blacklist apps for which the local TLS handshake succeeds but then the app terminates, likely due to certificate pinning
-                        //      at the app layer (instead of at the TLS layer)
-                        if (remoteData.name.contains("amazon")) {
-                            if (DEBUG) Logger.d(TAG, "Skipping TLS interception for " + descriptor.getRemoteAddress() + ":" + descriptor.getRemotePort() + " due to suspected pinning");
-                        } else {
-                            if (DEBUG) Logger.d(TAG, "Begin Local Handshake : " + remoteData.tcpAddress + " " + remoteData.name);
-                            SSLSocket ssl_client = SSLSocketBuilder.negotiateSSL(client, remoteData, false, CertificateManager.getSSLSocketFactoryFactory());
-                            SSLSession session = ssl_client.getSession();
-                            if (DEBUG) Logger.d(TAG, "After Local Handshake : " + remoteData.tcpAddress + " " + remoteData.name + " " + session + " is valid : " + session.isValid());
-                            if (session.isValid()) {
-                                // UH: this uses default SSLSocketFactory, which verifies hostname, does it also check for certificate expiration?
-                                Socket ssl_target = ((SSLSocketFactory) SSLSocketFactory.getDefault()).createSocket(target, descriptor.getRemoteAddress(), descriptor.getRemotePort(), true);
-                                SSLSession tmp_session = ((SSLSocket) ssl_target).getSession();
-                                if (DEBUG) Logger.d(TAG, "Remote Handshake : " + tmp_session + " is valid : " + tmp_session.isValid());
-                                if (tmp_session.isValid()) {
-                                    client = ssl_client;
-                                    target = ssl_target;
-                                    sslPinning.remove(descriptor.getRemoteAddress());
+                        if (DEBUG) Logger.d(TAG, "Begin Local Handshake : " + remoteData.tcpAddress + " " + remoteData.name);
+                        SSLSocket ssl_client = SSLSocketBuilder.negotiateSSL(client, remoteData, false, CertificateManager.getSSLSocketFactoryFactory());
+                        SSLSession session = ssl_client.getSession();
+                        if (DEBUG) Logger.d(TAG, "After Local Handshake : " + remoteData.tcpAddress + " " + remoteData.name + " " + session + " is valid : " + session.isValid());
+                        if (session.isValid()) {
+                            // UH: this uses default SSLSocketFactory, which verifies hostname, does it also check for certificate expiration?
+                            Socket ssl_target = ((SSLSocketFactory) SSLSocketFactory.getDefault()).createSocket(target, descriptor.getRemoteAddress(), descriptor.getRemotePort(), true);
+                            SSLSession tmp_session = ((SSLSocket) ssl_target).getSession();
+                            if (DEBUG) Logger.d(TAG, "Remote Handshake : " + tmp_session + " is valid : " + tmp_session.isValid());
+                            if (tmp_session.isValid()) {
+                                client = ssl_client;
+                                target = ssl_target;
+                                tlsWhiteList.remove(descriptor.getRemoteAddress());
 
-                                } else {
-                                    ssl_client.close();
-                                    ssl_target.close();
-                                    client.close();
-                                    target.close();
-                                    return;
-                                }
                             } else {
-                                sslPinning.add(descriptor.getRemoteAddress());
                                 ssl_client.close();
+                                ssl_target.close();
                                 client.close();
                                 target.close();
                                 return;
                             }
+                        } else {
+                            tlsWhiteList.add(descriptor.getRemoteAddress());
+                            ssl_client.close();
+                            client.close();
+                            target.close();
+                            return;
                         }
                     } else {
-                        if (DEBUG) Logger.d(TAG, "Skipping TLS interception for " + descriptor.getRemoteAddress() + ":" + descriptor.getRemotePort() + " due to suspected pinning");
+                        if (DEBUG) Logger.d(TAG, "Skipping TLS interception for " + descriptor.getRemoteAddress() + ":" + descriptor.getRemotePort() + " due to whitelisting");
                     }
                 }
-                LocalServerForwarder.connect(client, target, vpnService);
+                LocalServerForwarder.connect(client, target, vpnService, appName, packageName);
             } catch (Exception e) {
                 e.printStackTrace();
             }

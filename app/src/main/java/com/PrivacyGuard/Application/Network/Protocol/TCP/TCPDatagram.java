@@ -69,6 +69,10 @@ public class TCPDatagram extends IPPayLoad {
         sb.append(Long.toString(((TCPHeader) header).getAck_num() & 0xFFFFFFFFL));
         sb.append(" Data Length=");
         sb.append(dataLength());
+        //if (dataLength() != 0) {
+        //    sb.append(" Data=");
+        //    sb.append(new String(data));
+        //}
         return sb.toString();
     }
 

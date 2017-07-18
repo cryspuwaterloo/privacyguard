@@ -66,6 +66,7 @@ public class ForwarderPools {
     }
 
     void releaseExpiredForwarders() {
+        if (DEBUG) Logger.d(TAG, "Number of forwarders: " + portToForwarder.size());
         Iterator it = portToForwarder.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();

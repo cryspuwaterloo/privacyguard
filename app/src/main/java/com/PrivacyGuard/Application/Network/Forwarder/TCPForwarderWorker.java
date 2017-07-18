@@ -64,7 +64,7 @@ public class TCPForwarderWorker extends Thread {
             int got;
             InputStream in = socket.getInputStream();
             while ((got = in.read(buff)) > -1) {
-                if (DEBUG) Logger.d(TAG, got + " bytes to be written to " + src_port);
+                if (DEBUG) Logger.d(TAG, got + " response bytes to be written to " + src_port);
                 PrivacyGuard.tcpForwarderWorkerRead += got;
                 byte[] temp = new byte[got];
                 System.arraycopy(buff, 0, temp, 0, got);

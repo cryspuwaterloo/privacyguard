@@ -118,8 +118,6 @@ public class CertificateManager {
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
         } catch (CertificateException e) {
             e.printStackTrace();
         } finally {

@@ -41,12 +41,14 @@ import java.net.Socket;
 public class TCPForwarder extends AbsForwarder { //implements ICommunication {
     private static final String TAG = TCPForwarder.class.getSimpleName();
     private static final boolean DEBUG = false;
-    private final int WAIT_BEFORE_RELEASE_PERIOD = 60000;
+    private final int WAIT_BEFORE_RELEASE_PERIOD_AFTER_CLOSE = 60000;
+    private final int WAIT_BEFORE_RELEASE_PERIOD_IF_IDLE = 300000;
     protected Status status;
     protected boolean firstData = true;
     private TCPForwarderWorker worker;
     private TCPConnectionInfo conn_info;
-    protected long releaseTime;
+    protected long releaseTimeAfterClose;
+    protected long releaseTimeIfIdle;
     private boolean closed = true;
     private Socket socketToLocalServer;
     private int src_port;
@@ -249,7 +251,10 @@ public class TCPForwarder extends AbsForwarder { //implements ICommunication {
 
     @Override
     public void forwardRequest(IPDatagram ipDatagram) {
+
         handle_packet(ipDatagram);
+
+        releaseTimeIfIdle = System.currentTimeMillis() + WAIT_BEFORE_RELEASE_PERIOD_IF_IDLE;
     }
 
     @Override
@@ -287,7 +292,7 @@ public class TCPForwarder extends AbsForwarder { //implements ICommunication {
         // don't release this forwarder right away since we may see more packets for this connection, which would then unnecessarily
         // re-create this forwarder
         if (DEBUG) Logger.d(TAG, "Preparing for release of TCP forwarder for port " + port);
-        releaseTime = System.currentTimeMillis() + WAIT_BEFORE_RELEASE_PERIOD;
+        releaseTimeAfterClose = System.currentTimeMillis() + WAIT_BEFORE_RELEASE_PERIOD_AFTER_CLOSE;
     }
 
     public void release()
@@ -296,7 +301,17 @@ public class TCPForwarder extends AbsForwarder { //implements ICommunication {
     }
 
     public boolean hasExpired() {
-        return closed && releaseTime < System.currentTimeMillis();
+        long current = System.currentTimeMillis();
+
+        if (closed) {
+            if (releaseTimeAfterClose < current) return true;
+        }
+        else if (releaseTimeIfIdle < current) {
+            if (DEBUG) Logger.d(TAG, "Going to release TCP forwarder for port " + port + " due to idleness");
+            close(true);
+        }
+
+        return false;
     }
 
     public enum Status {
