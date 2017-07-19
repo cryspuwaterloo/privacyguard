@@ -36,6 +36,7 @@ import com.PrivacyGuard.Application.Activities.AppSummaryActivity;
 import com.PrivacyGuard.Application.Activities.R;
 import com.PrivacyGuard.Application.Database.DatabaseHandler;
 import com.PrivacyGuard.Application.Logger;
+import com.PrivacyGuard.Application.Network.FilterThread;
 import com.PrivacyGuard.Application.Network.Forwarder.ForwarderPools;
 import com.PrivacyGuard.Application.Network.LocalServer;
 import com.PrivacyGuard.Application.Network.Resolver.MyClientResolver;
@@ -90,10 +91,12 @@ public class MyVpnService extends VpnService implements Runnable {
             LocationDetection.class,
             DeviceDetection.class,
             ContactDetection.class,
-            // newly added for KeywordDetection
             KeywordDetection.class
     };
     private ArrayList<IPlugin> plugins;
+
+    // Thread that looks for leaks if filtering is done asynchronously
+    private FilterThread filterThread;
 
     // Other
     private SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
@@ -179,6 +182,11 @@ public class MyVpnService extends VpnService implements Runnable {
         readThread.start();
         writeThread = new TunWriteThread(mInterface.getFileDescriptor(), this);
         writeThread.start();
+
+        if (PrivacyGuard.asynchronous) {
+            filterThread = new FilterThread(this);
+            filterThread.start();
+        }
     }
 
     private void wait_to_close() {
@@ -192,6 +200,10 @@ public class MyVpnService extends VpnService implements Runnable {
 
             while (localServer.isAlive())
                 localServer.join();
+
+            if (PrivacyGuard.asynchronous && filterThread.isAlive())
+                filterThread.join();
+
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -212,6 +224,8 @@ public class MyVpnService extends VpnService implements Runnable {
     public ForwarderPools getForwarderPools() {
         return forwarderPools;
     }
+
+    public FilterThread getFilterThread() { return filterThread; }
 
     public ArrayList<IPlugin> getNewPlugins() {
         ArrayList<IPlugin> ret = new ArrayList<IPlugin>();
@@ -313,6 +327,7 @@ public class MyVpnService extends VpnService implements Runnable {
             readThread.interrupt();
             writeThread.interrupt();
             localServer.interrupt();
+            if (PrivacyGuard.asynchronous) filterThread.interrupt();
             mInterface.close();
         } catch (IOException e) {
             Logger.e(TAG, e.toString() + "\n" + Arrays.toString(e.getStackTrace()));

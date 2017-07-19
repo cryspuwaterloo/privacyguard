@@ -19,50 +19,31 @@
 
 package com.PrivacyGuard.Application.Network.Forwarder;
 
-
 import com.PrivacyGuard.Application.Logger;
 import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService;
+import com.PrivacyGuard.Application.Network.FilterThread;
 import com.PrivacyGuard.Application.PrivacyGuard;
-import com.PrivacyGuard.Plugin.IPlugin;
-import com.PrivacyGuard.Plugin.LeakReport;
-import com.PrivacyGuard.Utilities.ByteArray;
-import com.PrivacyGuard.Utilities.ByteArrayPool;
-
-import org.sandrop.webscarab.model.ConnectionDescriptor;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.nio.channels.SocketChannel;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Locale;
-import java.util.concurrent.LinkedBlockingQueue;
-
 
 public class LocalServerForwarder extends Thread {
 
-    private static final String TIME_STAMP_FORMAT = "MM-dd HH:mm:ss.SSS";
     private static final String TAG = LocalServerForwarder.class.getSimpleName();
     private static final boolean DEBUG = false;
     private static int LIMIT = 1368;
-    private static ByteArrayPool byteArrayPool = new ByteArrayPool(10, LIMIT);
+
     private boolean outgoing = false;
-    private ArrayList<IPlugin> plugins;
     private MyVpnService vpnService;
-    private Socket inSocket, outSocket;
     private InputStream in;
     private OutputStream out;
     private String destIP, srcIP;
     private int destPort, srcPort;
-    private SimpleDateFormat df = new SimpleDateFormat(TIME_STAMP_FORMAT, Locale.CANADA);
-    private LinkedBlockingQueue<ByteArray> toFilter = new LinkedBlockingQueue<>();
     private String appName, packageName;
 
     public LocalServerForwarder(Socket inSocket, Socket outSocket, boolean isOutgoing, MyVpnService vpnService, String appName, String packageName) {
-        this.inSocket = inSocket;
-        this.outSocket = outSocket;
         try {
             this.in = inSocket.getInputStream();
             this.out = outSocket.getOutputStream();
@@ -76,23 +57,10 @@ public class LocalServerForwarder extends Thread {
         this.srcIP = inSocket.getInetAddress().getHostAddress();
         this.srcPort = inSocket.getPort();
         this.vpnService = vpnService;
-        if (outgoing) this.plugins = vpnService.getNewPlugins();
         setDaemon(true);
         this.appName = appName;
         this.packageName = packageName;
     }
-
-    /*public LocalServerForwarder(SocketChannel in, SocketChannel out, boolean isOutgoing, MyVpnService vpnService) {
-        this.inChannel = in;
-        this.outChannel = out;
-        this.outgoing = isOutgoing;
-        this.destIP = out.socket().getInetAddress().getHostAddress();
-        if (this.destPort == 443) destIP += " (SSL)";
-        this.destPort = out.socket().getPort();
-        this.vpnService = vpnService;
-        if (outgoing) this.plugins = vpnService.getNewPlugins();
-        setDaemon(true);
-    }*/
 
     public static void connect(Socket clientSocket, Socket serverSocket, MyVpnService vpnService, String appName, String packageName) throws Exception {
         if (clientSocket != null && serverSocket != null && clientSocket.isConnected() && serverSocket.isConnected()) {
@@ -128,22 +96,20 @@ public class LocalServerForwarder extends Thread {
     }
 
     public void run() {
-        FilterThread filterThread = null;
-        if (outgoing) {
-            filterThread = new FilterThread();
-            if (PrivacyGuard.doFilter && PrivacyGuard.asynchronous) filterThread.start();
-        }
+
+        FilterThread filterObject = null;
+        if (!PrivacyGuard.asynchronous) filterObject = new FilterThread(vpnService, appName, packageName, srcPort, destIP, destPort);
+
         try {
             byte[] buff = new byte[LIMIT];
             int got;
             while ((got = in.read(buff)) > -1) {
                 if (PrivacyGuard.doFilter && outgoing) {
+                    String msg = new String(buff, 0, got);
                     if (PrivacyGuard.asynchronous) {
-                        if (!filterThread.isAlive()) filterThread.start();
-                        toFilter.offer(byteArrayPool.getByteArray(buff, got));
+                        vpnService.getFilterThread().offer(msg, appName, packageName, srcPort, destIP, destPort);
                     } else {
-                        if (filterThread.isAlive()) filterThread.interrupt();
-                        filterThread.filter(new String(buff, 0, got));
+                        filterObject.filter(msg);
                     }
                 }
                 if (DEBUG) Logger.d(TAG, got + " bytes to be written to " + srcIP + ":" + srcPort + "->" + destIP + ":" + destPort);
@@ -158,40 +124,6 @@ public class LocalServerForwarder extends Thread {
             // can happen when app opens a connection and then terminates it right away so
             // this thread will start running only after a FIN has already been to the server
         }
-        if (outgoing && PrivacyGuard.asynchronous && filterThread.isAlive()) filterThread.interrupt();
     }
 
-    public class FilterThread extends Thread {
-        public void filter(String msg) {
-            if (PrivacyGuard.doFilter && outgoing) {
-
-                Logger.logTraffic(packageName, appName, srcPort, destIP, destPort, msg);
-
-                for (IPlugin plugin : plugins) {
-                    LeakReport leak = plugin.handleRequest(msg);
-                    if (leak != null) {
-                        leak.appName = appName;
-                        leak.packageName = packageName;
-                        vpnService.notify(msg, leak);
-                        Logger.v(TAG, appName + " is leaking " + leak.category.name());
-                        Logger.logLeak(leak.category.name());
-                    }
-                }
-            }
-        }
-
-        public void run() {
-            try {
-                while (!interrupted()) {
-                    ByteArray temp = toFilter.take();
-                    //Logger.d("toFilter", "" + toFilter.size());
-                    String msg = new String(temp.data(), 0, temp.length());
-                    byteArrayPool.release(temp);
-                    filter(msg);
-                }
-            } catch (InterruptedException e) {
-                //e.printStackTrace();
-            }
-        }
-    }
 }

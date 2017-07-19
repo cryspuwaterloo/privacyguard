@@ -23,7 +23,7 @@ public class TLSWhiteList {
        interception another chance  */
     private static int REMOVE_RATE = 5;
 
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
     private static final String TAG = TLSWhiteList.class.getSimpleName();
 
     private File automaticFile;
@@ -46,6 +46,7 @@ public class TLSWhiteList {
         manualList.add("com.wire");
         manualList.add("com.amazon.mShop.android.shopping");
         manualList.add("org.mozilla.firefox");
+        manualList.add("com.android.providers.downloads.ui");
     }
 
     private void readfromfile(File directory, String file) {
