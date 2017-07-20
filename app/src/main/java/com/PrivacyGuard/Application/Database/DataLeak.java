@@ -13,8 +13,9 @@ public class DataLeak {
     private String timestamp;
     private Date timestampDate;
     private int foregroundStatus;
+    private String destination;
 
-    public DataLeak(String packageName, String appName, String category, String type, String content, String timestamp, int foregroundStatus){
+    public DataLeak(String packageName, String appName, String category, String type, String content, String timestamp, int foregroundStatus, String destination){
         this.packageName = packageName;
         this.appName = appName;
         this.category = category;
@@ -22,6 +23,7 @@ public class DataLeak {
         this.leakContent = content;
         this.timestamp = timestamp;
         this.foregroundStatus = foregroundStatus;
+        this.destination = destination;
 
         try {
             this.timestampDate = DatabaseHandler.getDateFormat().parse(timestamp);
@@ -61,5 +63,9 @@ public class DataLeak {
 
     public int getForegroundStatus() {
         return foregroundStatus;
+    }
+
+    public String getDestination() {
+        return destination;
     }
 }

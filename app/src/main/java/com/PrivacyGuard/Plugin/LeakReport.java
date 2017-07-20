@@ -14,7 +14,7 @@ public class LeakReport {
         LOCATION,
         CONTACT,
         DEVICE,
-        KEYWORD /* * [w3kim@uwaterloo.ca] added for keyword detection */
+        KEYWORD
     }
 
     public ConnectionMetaData metaData;

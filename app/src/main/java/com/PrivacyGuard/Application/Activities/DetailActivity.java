@@ -94,7 +94,8 @@ public class DetailActivity extends AppCompatActivity {
             View header = getLayoutInflater().inflate(R.layout.listview_detail, null);
             ((TextView) header.findViewById(R.id.detail_type)).setText(R.string.type_label);
             ((TextView) header.findViewById(R.id.detail_time)).setText(R.string.time_label);
-            ((TextView) header.findViewById(R.id.detail_content)).setText(R.string.content_label);
+            //((TextView) header.findViewById(R.id.detail_content)).setText(R.string.content_label);
+            ((TextView) header.findViewById(R.id.detail_destination)).setText(R.string.destination_label);
 
             list.addHeaderView(header);
             list.setAdapter(adapter);

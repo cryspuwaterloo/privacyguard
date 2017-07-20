@@ -190,6 +190,7 @@ public class LeakQueryFragment extends Fragment {
                     message = message + "Application: " + data.getAppName() + "\n";
                     message = message + "Category: " + data.getCategory().toLowerCase() + "\n";
                     message = message + "Type: " + data.getType() + "\n";
+                    message = message + "Destination: " + data.getDestination() + "\n";
                     message = message + "Time: " + dateFormatDisplaySpecific.format(data.getTimestampDate()) + "\n";
                     message = message + "Content: " + data.getLeakContent() + "\n";
                     message = message + "Status: " + (data.getForegroundStatus() == DatabaseHandler.FOREGROUND_STATUS ? FOREGROUND : BACKGROUND)
@@ -244,6 +245,7 @@ public class LeakQueryFragment extends Fragment {
             TextView appNameText = (TextView)convertView.findViewById(R.id.app_name);
             TextView categoryText = (TextView)convertView.findViewById(R.id.category);
             TextView typeText = (TextView)convertView.findViewById(R.id.type);
+            TextView destinationText = (TextView)convertView.findViewById(R.id.destination);
             TextView timeStampText = (TextView)convertView.findViewById(R.id.time_stamp);
             TextView contentText = (TextView)convertView.findViewById(R.id.content);
             TextView statusText = (TextView)convertView.findViewById(R.id.status);
@@ -254,6 +256,7 @@ public class LeakQueryFragment extends Fragment {
             appNameText.setText(dataLeak.getAppName());
             categoryText.setText(categoryCamelCase);
             typeText.setText(dataLeak.getType());
+            destinationText.setText(dataLeak.getDestination());
             timeStampText.setText(dateFormatDisplaySpecific.format(dataLeak.getTimestampDate()));
             contentText.setText(dataLeak.getLeakContent());
             statusText.setText(dataLeak.getForegroundStatus() == DatabaseHandler.FOREGROUND_STATUS ? FOREGROUND : BACKGROUND);

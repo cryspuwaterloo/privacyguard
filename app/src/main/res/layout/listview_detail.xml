@@ -39,7 +39,6 @@
         android:layout_marginEnd="4dp"
         android:background="@color/material_blue_grey_800" />
 
-
     <TextView
         android:layout_width="0dp"
         android:layout_weight="1"
@@ -47,7 +46,7 @@
         android:textAppearance="?android:attr/textAppearanceListItem"
         android:text="long long content"
         android:textAlignment="center"
-        android:id="@+id/detail_content"
+        android:id="@+id/detail_destination"
         android:gravity="center_horizontal" />
 
 
