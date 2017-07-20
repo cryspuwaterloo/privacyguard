@@ -21,7 +21,7 @@ public class TLSWhiteList {
 
     /* likelihood used to remove a site from the set of suspected SSL pinning sites to give SSL
        interception another chance  */
-    private static int REMOVE_RATE = 5;
+    private static int REMOVE_RATE = 10;
 
     private static final boolean DEBUG = false;
     private static final String TAG = TLSWhiteList.class.getSimpleName();

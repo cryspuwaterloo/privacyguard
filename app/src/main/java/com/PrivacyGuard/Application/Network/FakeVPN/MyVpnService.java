@@ -270,11 +270,21 @@ public class MyVpnService extends VpnService implements Runnable {
     }
 
     void buildNotification(int notifyId, int frequency, LeakReport leak) {
-        String msg = leak.appName + " is leaking " + leak.category.name() + " information";
+
+        int idx = leak.metaData.destHostName.lastIndexOf('.');
+        String destNetwork;
+        if (idx > 0)
+            idx = leak.metaData.destHostName.lastIndexOf('.', idx-1);
+        if (idx > -1)
+            destNetwork = leak.metaData.destHostName.substring(idx+1);
+        else
+            destNetwork = leak.metaData.destHostName;
+
+        String msg = "Leaking " + leak.category.name() + " to " + destNetwork;
         NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.ic_spam)
-                        .setContentTitle(leak.appName)
+                        .setContentTitle(leak.metaData.appName)
                         .setContentText(msg).setNumber(frequency)
                         .setTicker(msg)
                         .setAutoCancel(true);
@@ -284,12 +294,12 @@ public class MyVpnService extends VpnService implements Runnable {
         ignoreIntent.putExtra("notificationId", notifyId);
         // use System.currentTimeMillis() to have a unique ID for the pending intent
         PendingIntent pendingIntent = PendingIntent.getBroadcast(this.getApplicationContext(), (int) System.currentTimeMillis(), ignoreIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        mBuilder.addAction(R.drawable.ic_cancel, "Ignore this kind of leaks", pendingIntent);
+        mBuilder.addAction(R.drawable.ic_cancel, "Ignore " + leak.category.name() + " leaks for this app", pendingIntent);
 
         // Creates an explicit intent for an Activity in your app
         Intent resultIntent = new Intent(this, AppSummaryActivity.class);
-        resultIntent.putExtra(PrivacyGuard.EXTRA_PACKAGE_NAME, leak.packageName);
-        resultIntent.putExtra(PrivacyGuard.EXTRA_APP_NAME, leak.appName);
+        resultIntent.putExtra(PrivacyGuard.EXTRA_PACKAGE_NAME, leak.metaData.packageName);
+        resultIntent.putExtra(PrivacyGuard.EXTRA_APP_NAME, leak.metaData.appName);
         resultIntent.putExtra(PrivacyGuard.EXTRA_IGNORE, 0);
 
         // The stack builder object will contain an artificial back stack for the

@@ -229,8 +229,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     private void addLeakSummary(LeakReport rpt) {
         ContentValues values = new ContentValues();
-        values.put(KEY_PACKAGE, rpt.packageName);
-        values.put(KEY_NAME, rpt.appName);
+        values.put(KEY_PACKAGE, rpt.metaData.packageName);
+        values.put(KEY_NAME, rpt.metaData.appName);
         values.put(KEY_CATEGORY, rpt.category.name());
         values.put(KEY_FREQUENCY, 0);
         values.put(KEY_IGNORE, 0);
@@ -415,7 +415,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         Cursor cursor = mDB.query(TABLE_LEAK_SUMMARY,
                 new String[]{KEY_ID, KEY_FREQUENCY, KEY_IGNORE},
                 KEY_PACKAGE + "=? AND " + KEY_CATEGORY + "=?",
-                new String[]{rpt.packageName, rpt.category.name()}, null, null, null, null);
+                new String[]{rpt.metaData.packageName, rpt.category.name()}, null, null, null, null);
 
         if (cursor != null) {
             if (!cursor.moveToFirst()) { // this package(app) has no leak of this category previously
@@ -423,7 +423,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 cursor = mDB.query(TABLE_LEAK_SUMMARY,
                         new String[]{KEY_ID, KEY_FREQUENCY, KEY_IGNORE},
                         KEY_PACKAGE + "=? AND " + KEY_CATEGORY + "=?",
-                        new String[]{rpt.packageName, rpt.category.name()}, null, null, null, null);
+                        new String[]{rpt.metaData.packageName, rpt.category.name()}, null, null, null, null);
             }
             if (!cursor.moveToFirst()) {
                 Logger.i("DBHandler", "fail to create summary table");
@@ -438,7 +438,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             cursor.close();
 
             for (LeakInstance li : rpt.leaks) {
-                addDataLeak(rpt.packageName, rpt.appName, rpt.category.name(), li.type, li.content);
+                addDataLeak(rpt.metaData.packageName, rpt.metaData.appName, rpt.category.name(), li.type, li.content);
             }
             // Need to update frequency in summary table accordingly
             // Which row to update, based on the package and category

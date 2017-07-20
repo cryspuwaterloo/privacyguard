@@ -29,13 +29,11 @@ public class LocalServer extends Thread {
     private static final boolean DEBUG = false;
     private static final String TAG = LocalServer.class.getSimpleName();
     public static int port = 12345;
-    //private ServerSocketChannel serverSocketChannel;
     private ServerSocket serverSocket;
     private MyVpnService vpnService;
     private TLSWhiteList tlsWhiteList= new TLSWhiteList(getDiskFileDir(), "TLSInterceptFailures");
 
     public LocalServer(MyVpnService vpnService) {
-        //if(serverSocketChannel == null || !serverSocketChannel.isOpen())
             try {
                 listen();
             } catch (IOException e) {
@@ -46,10 +44,6 @@ public class LocalServer extends Thread {
     }
 
     private void listen() throws IOException {
-        //serverSocketChannel = ServerSocketChannel.open();
-        //serverSocketChannel.socket().setReuseAddress(true);
-        //serverSocketChannel.socket().bind(null);
-        //port = serverSocketChannel.socket().getLocalPort();
         serverSocket = new ServerSocket();
         serverSocket.bind(null);
         port = serverSocket.getLocalPort();
@@ -60,8 +54,6 @@ public class LocalServer extends Thread {
         while (!isInterrupted()) {
             try {
                 if (DEBUG) Logger.d(TAG, "Accepting");
-                //SocketChannel socketChannel = serverSocketChannel.accept();
-                //Socket socket = socketChannel.socket();
                 Socket socket = serverSocket.accept();
                 vpnService.protect(socket);
                 if (DEBUG) Logger.d(TAG, "Receiving : " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
@@ -92,15 +84,13 @@ public class LocalServer extends Thread {
                     appName = UNKNOWN;
                     packageName = UNKNOWN;
                 }
+
                 if (DEBUG) Logger.d(TAG, "app name: " + appName + " / package name: " + packageName);
-                //SocketChannel targetChannel = SocketChannel.open();
-                //Socket target = targetChannel.socket();
                 Socket target = new Socket();
                 target.bind(null);
                 vpnService.protect(target);
                 // TODO: why do this and the call above return different results?
                 descriptor = vpnService.getClientAppResolver().getClientDescriptorByPort(client.getPort());
-                //boolean result = targetChannel.connect(new InetSocketAddress(descriptor.getRemoteAddress(), descriptor.getRemotePort()));
                 target.connect(new InetSocketAddress(descriptor.getRemoteAddress(), descriptor.getRemotePort()));
 
                 if(descriptor != null && descriptor.getRemotePort() == SSLPort) {
@@ -139,7 +129,7 @@ public class LocalServer extends Thread {
                         if (DEBUG) Logger.d(TAG, "Skipping TLS interception for " + descriptor.getRemoteAddress() + ":" + descriptor.getRemotePort() + " due to whitelisting");
                     }
                 }
-                LocalServerForwarder.connect(client, target, vpnService, appName, packageName);
+                LocalServerForwarder.connect(client, target, vpnService, packageName, appName);
             } catch (Exception e) {
                 e.printStackTrace();
             }

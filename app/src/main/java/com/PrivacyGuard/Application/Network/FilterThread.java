@@ -4,6 +4,7 @@ import com.PrivacyGuard.Application.Logger;
 import com.PrivacyGuard.Plugin.IPlugin;
 import com.PrivacyGuard.Plugin.LeakReport;
 import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService;
+import com.PrivacyGuard.Application.Network.ConnectionMetaData;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -12,40 +13,36 @@ public class FilterThread extends Thread {
     private static final boolean DEBUG = false;
     private LinkedBlockingQueue<FilterMsg> toFilter = new LinkedBlockingQueue<>();
     private MyVpnService vpnService;
-    private String appName, packageName, destIP;
-    private int srcPort, destPort;
+    ConnectionMetaData metaData;
+    private String appName, packageName, destIP, type;
+    private int srcPort, destPort, id;
 
     public FilterThread(MyVpnService vpnService) {
         this.vpnService= vpnService;
     }
 
-    public FilterThread(MyVpnService vpnService, String appName, String packageName, int srcPort, String destIP, int destPort) {
-        this.vpnService= vpnService;
-        this.appName = appName;
-        this.packageName = packageName;
-        this.srcPort = srcPort;
-        this.destIP = destIP;
-        this.destPort = destPort;
+    public FilterThread(MyVpnService vpnService, ConnectionMetaData metaData) {
+        this.vpnService = vpnService;
+        this.metaData = metaData;
     }
 
-    public void offer(String msg, String appName, String packageName, int srcPort, String destIP, int destPort) {
-        FilterMsg filterData = new FilterMsg(msg, appName, packageName, srcPort, destIP, destPort);
+    public void offer(String msg, ConnectionMetaData metaData) {
+        FilterMsg filterData = new FilterMsg(msg, metaData);
         toFilter.offer(filterData);
     }
 
     public void filter(String msg) {
-        filter(msg, appName, packageName, srcPort, destIP, destPort);
+        filter(msg, metaData);
     }
 
-    public void filter(String msg, String appName, String packageName, int srcPort, String destIP, int destPort) {
+    public void filter(String msg, ConnectionMetaData metaData) {
 
-        Logger.logTraffic(packageName, appName, srcPort, destIP, destPort, msg);
+        Logger.logTraffic(metaData, msg);
 
         for (IPlugin plugin : vpnService.getNewPlugins()) {
             LeakReport leak = plugin.handleRequest(msg);
             if (leak != null) {
-                leak.appName = appName;
-                leak.packageName = packageName;
+                leak.metaData = metaData;
                 vpnService.notify(msg, leak);
                 if (DEBUG) Logger.v(TAG, appName + " is leaking " + leak.category.name());
                 Logger.logLeak(leak.category.name());
@@ -57,7 +54,7 @@ public class FilterThread extends Thread {
         try {
             while (!interrupted()) {
                 FilterMsg temp = toFilter.take();
-                filter(temp.msg, temp.packageName, temp.appName, temp.srcPort, temp.destIP, temp.destPort);
+                filter(temp.msg, temp.metaData);
             }
         } catch (InterruptedException e) {
             //e.printStackTrace();
@@ -65,16 +62,12 @@ public class FilterThread extends Thread {
     }
 
     class FilterMsg {
-        String msg, packageName, appName, destIP;
-        int srcPort, destPort;
+        ConnectionMetaData metaData;
+        String msg;
 
-        FilterMsg(String msg, String packageName, String appName, int srcPort, String destIP, int destPort) {
+        FilterMsg(String msg, ConnectionMetaData metaData) {
             this.msg = msg;
-            this.packageName = packageName;
-            this.appName = appName;
-            this.srcPort = srcPort;
-            this.destIP = destIP;
-            this.destPort = destPort;
+            this.metaData = metaData;
         }
     }
 }

@@ -3,6 +3,8 @@ package com.PrivacyGuard.Plugin;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.PrivacyGuard.Application.Network.ConnectionMetaData;
+
 /**
  * Created by justinhu on 16-03-09.
  */
@@ -15,8 +17,7 @@ public class LeakReport {
         KEYWORD /* * [w3kim@uwaterloo.ca] added for keyword detection */
     }
 
-    public String packageName;
-    public String appName;
+    public ConnectionMetaData metaData;
     public LeakCategory category;
     public List<LeakInstance> leaks;
 

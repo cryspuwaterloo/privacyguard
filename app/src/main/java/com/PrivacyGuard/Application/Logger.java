@@ -5,6 +5,7 @@ import android.os.Environment;
 import android.util.Log;
 
 import com.PrivacyGuard.Application.Activities.BuildConfig;
+import com.PrivacyGuard.Application.Network.ConnectionMetaData;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -126,18 +127,18 @@ public class Logger {
         }
     }
 
-    public static void logTraffic(String packageName, String appName, int srcPort, String destIP, int destPort, String msg) {
-        //log network traffic ONLY in debug build
+    public static void logTraffic(ConnectionMetaData metaData, String msg) {
         if (BuildConfig.DEBUG) {
 
             try {
                 PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(trafficFile, true)));
                 out.println("=========================");
                 out.println("Time : " + df.format(new Date()));
-                out.println(" [ " + packageName + " ]  " + appName + "  src port: " + srcPort);
-                out.println("Destination: " + destIP + ":" + destPort);
+                out.println(" [ " + metaData.appName + " ]  " + metaData.packageName + "  src port: " + metaData.srcPort);
+                out.println(" [ " + metaData.destHostName + " ] " + metaData.destIP + ":" + metaData.destPort);
                 out.println("");
-                out.println("Request " + msg);
+                out.println("Message:");
+                out.println(msg);
                 out.println("");
                 out.close();
             } catch (IOException e) {

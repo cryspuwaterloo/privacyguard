@@ -20,6 +20,7 @@
 package com.PrivacyGuard.Application.Network.Forwarder;
 
 import com.PrivacyGuard.Application.Logger;
+import com.PrivacyGuard.Application.Network.ConnectionMetaData;
 import com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService;
 import com.PrivacyGuard.Application.Network.FilterThread;
 import com.PrivacyGuard.Application.PrivacyGuard;
@@ -39,11 +40,9 @@ public class LocalServerForwarder extends Thread {
     private MyVpnService vpnService;
     private InputStream in;
     private OutputStream out;
-    private String destIP, srcIP;
-    private int destPort, srcPort;
-    private String appName, packageName;
+    private ConnectionMetaData metaData;
 
-    public LocalServerForwarder(Socket inSocket, Socket outSocket, boolean isOutgoing, MyVpnService vpnService, String appName, String packageName) {
+    public LocalServerForwarder(Socket inSocket, Socket outSocket, boolean isOutgoing, MyVpnService vpnService, String packageName, String appName) {
         try {
             this.in = inSocket.getInputStream();
             this.out = outSocket.getOutputStream();
@@ -51,23 +50,27 @@ public class LocalServerForwarder extends Thread {
             e.printStackTrace();
         }
         this.outgoing = isOutgoing;
-        this.destIP = outSocket.getInetAddress().getHostAddress();
-        this.destPort = outSocket.getPort();
-        if (this.destPort == 443) destIP += " (SSL)";
-        this.srcIP = inSocket.getInetAddress().getHostAddress();
-        this.srcPort = inSocket.getPort();
         this.vpnService = vpnService;
+        this.metaData = new ConnectionMetaData(packageName, appName, null, 0, null, 0, null);
+
+        metaData.destIP = outSocket.getInetAddress().getHostAddress();
+        metaData.destPort = outSocket.getPort();
+        if (metaData.destPort == 443) metaData.destIP += " (SSL)";
+        metaData.destHostName = outSocket.getInetAddress().getCanonicalHostName();
+        metaData.srcIP = inSocket.getInetAddress().getHostAddress();
+        metaData.srcPort = inSocket.getPort();
+
         setDaemon(true);
-        this.appName = appName;
-        this.packageName = packageName;
+
     }
 
-    public static void connect(Socket clientSocket, Socket serverSocket, MyVpnService vpnService, String appName, String packageName) throws Exception {
+    public static void connect(Socket clientSocket, Socket serverSocket, MyVpnService vpnService, String packageName, String appName) throws Exception {
         if (clientSocket != null && serverSocket != null && clientSocket.isConnected() && serverSocket.isConnected()) {
+
             clientSocket.setSoTimeout(0);
             serverSocket.setSoTimeout(0);
-            LocalServerForwarder clientServer = new LocalServerForwarder(clientSocket, serverSocket, true, vpnService, appName, packageName);
-            LocalServerForwarder serverClient = new LocalServerForwarder(serverSocket, clientSocket, false, vpnService, appName, packageName);
+            LocalServerForwarder clientServer = new LocalServerForwarder(clientSocket, serverSocket, true, vpnService, packageName, appName);
+            LocalServerForwarder serverClient = new LocalServerForwarder(serverSocket, clientSocket, false, vpnService, packageName, appName);
             clientServer.start();
             serverClient.start();
 
@@ -98,7 +101,7 @@ public class LocalServerForwarder extends Thread {
     public void run() {
 
         FilterThread filterObject = null;
-        if (!PrivacyGuard.asynchronous) filterObject = new FilterThread(vpnService, appName, packageName, srcPort, destIP, destPort);
+        if (!PrivacyGuard.asynchronous) filterObject = new FilterThread(vpnService, metaData);
 
         try {
             byte[] buff = new byte[LIMIT];
@@ -107,17 +110,17 @@ public class LocalServerForwarder extends Thread {
                 if (PrivacyGuard.doFilter && outgoing) {
                     String msg = new String(buff, 0, got);
                     if (PrivacyGuard.asynchronous) {
-                        vpnService.getFilterThread().offer(msg, appName, packageName, srcPort, destIP, destPort);
+                        vpnService.getFilterThread().offer(msg, metaData);
                     } else {
                         filterObject.filter(msg);
                     }
                 }
-                if (DEBUG) Logger.d(TAG, got + " bytes to be written to " + srcIP + ":" + srcPort + "->" + destIP + ":" + destPort);
+                if (DEBUG) Logger.d(TAG, got + " bytes to be written to " + metaData.srcIP + ":" + metaData.srcPort + "->" + metaData.destIP + ":" + metaData.destPort);
                 out.write(buff, 0, got);
-                if (DEBUG) Logger.d(TAG, got + " bytes written to " + srcIP + ":" + srcPort + "->" + destIP + ":" + destPort);
+                if (DEBUG) Logger.d(TAG, got + " bytes written to " + metaData.srcIP + ":" + metaData.srcPort + "->" + metaData.destIP + ":" + metaData.destPort);
                 out.flush();
             }
-            if (DEBUG) Logger.d(TAG, "terminating " + srcIP + ":" + srcPort + "->" + destIP + ":" + destPort);
+            if (DEBUG) Logger.d(TAG, "terminating " + metaData.srcIP + ":" + metaData.srcPort + "->" + metaData.destIP + ":" + metaData.destPort);
         } catch (Exception ignore) {
             ignore.printStackTrace();
             if (DEBUG) Logger.d(TAG, "outgoing : " + outgoing);
