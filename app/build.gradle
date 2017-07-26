@@ -1,18 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    signingConfigs {
-        config {
-            keyAlias 'AndroidKey'
-            keyPassword 'privacyguard'
-            storeFile file('/Users/justinhu/privacyguard/app/KeyStore.jks')
-            storePassword 'privacyguard'
-        }
-    }
     compileSdkVersion 23
     buildToolsVersion '25.0.2'
     defaultConfig {
-        applicationId "com.PrivacyGuard"
+        applicationId "ca.uwaterloo.crysp.privacyguard"
         minSdkVersion 18
         targetSdkVersion 23
     }
@@ -20,7 +12,6 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
-            signingConfig signingConfigs.config
         }
         debug {
             debuggable true

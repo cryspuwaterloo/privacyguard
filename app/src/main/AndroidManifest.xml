@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.PrivacyGuard.Application.Activities"
-    android:versionCode="1"
+    package="ca.uwaterloo.crysp.privacyguard"
+    android:versionCode="2"
     android:versionName="1.0">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -27,7 +27,7 @@
     <!-- End of copy. -->
     <application
         android:theme = "@style/AppTheme"
-        android:name="com.PrivacyGuard.Application.PrivacyGuard"
+        android:name="ca.uwaterloo.crysp.privacyguard.Application.PrivacyGuard"
         android:hardwareAccelerated="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name">
@@ -37,7 +37,7 @@
             android:value="@integer/google_play_services_version" />
 
         <activity
-            android:name=".MainActivity"
+            android:name="ca.uwaterloo.crysp.privacyguard.Application.Activities.MainActivity"
             android:label="@string/app_name"
             android:launchMode="singleTop"
             android:screenOrientation="portrait">
@@ -48,50 +48,50 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".AppSummaryActivity"
+            android:name="ca.uwaterloo.crysp.privacyguard.Application.Activities.AppSummaryActivity"
             android:launchMode="singleTop"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName="ca.uwaterloo.crysp.privacyguard.Application.Activities.MainActivity"
             android:screenOrientation="portrait">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.PrivacyGuard.Application.Activities.MainActivity" />
+                android:value="ca.uwaterloo.crysp.privacyguard.Application.Activities.MainActivity" />
         </activity>
 
         <activity
-            android:name=".DetailActivity"
-            android:parentActivityName=".AppSummaryActivity"
+            android:name="ca.uwaterloo.crysp.privacyguard.Application.Activities.DetailActivity"
+            android:parentActivityName="ca.uwaterloo.crysp.privacyguard.Application.Activities.AppSummaryActivity"
             android:screenOrientation="portrait"/>
         <activity
-            android:name=".LocationDetailActivity"
-            android:parentActivityName=".AppSummaryActivity"
+            android:name="ca.uwaterloo.crysp.privacyguard.Application.Activities.LocationDetailActivity"
+            android:parentActivityName="ca.uwaterloo.crysp.privacyguard.Application.Activities.AppSummaryActivity"
             android:screenOrientation="portrait"/>
 
         <activity
-            android:name=".MyPreferencesActivity"
-            android:parentActivityName=".MainActivity"
+            android:name="ca.uwaterloo.crysp.privacyguard.Application.Activities.MyPreferencesActivity"
+            android:parentActivityName="ca.uwaterloo.crysp.privacyguard.Application.Activities.MainActivity"
             android:screenOrientation="portrait"/>
 
         <activity
-            android:name=".AppDataActivity"
-            android:parentActivityName=".AppSummaryActivity"
+            android:name="ca.uwaterloo.crysp.privacyguard.Application.Activities.AppDataActivity"
+            android:parentActivityName="ca.uwaterloo.crysp.privacyguard.Application.Activities.AppSummaryActivity"
             android:screenOrientation="portrait"/>
 
         <activity
-            android:name=".AllAppsDataActivity"
-            android:parentActivityName=".MainActivity"
+            android:name="ca.uwaterloo.crysp.privacyguard.Application.Activities.AllAppsDataActivity"
+            android:parentActivityName="ca.uwaterloo.crysp.privacyguard.Application.Activities.MainActivity"
             android:screenOrientation="portrait"/>
 
-        <receiver android:name="com.PrivacyGuard.Application.ActionReceiver"/>
+        <receiver android:name="ca.uwaterloo.crysp.privacyguard.Application.ActionReceiver"/>
 
         <service
-            android:name="com.PrivacyGuard.Application.Network.FakeVPN.MyVpnService"
+            android:name="ca.uwaterloo.crysp.privacyguard.Application.Network.FakeVPN.MyVpnService"
             android:permission="android.permission.BIND_VPN_SERVICE">
             <intent-filter>
                 <action android:name="android.net.VpnService" />
             </intent-filter>
         </service>
 
-        <receiver android:name="com.PrivacyGuard.Application.Database.RecordAppStatusEvents" >
+        <receiver android:name="ca.uwaterloo.crysp.privacyguard.Application.Database.RecordAppStatusEvents" >
             <intent-filter>
                 <action android:name="android.intent.action.DATE_CHANGED" />
                 <action android:name="android.intent.action.ACTION_SHUTDOWN" />

@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Privacy Guard</string>
+    <string name="app_name">PrivacyGuard</string>
 
     <!-- Main Activity -->
-    <string name="connect">Enable Privacy Guard</string>
-    <string name="connected">Privacy Guard Enabled</string>
+    <string name="connect">Enable PrivacyGuard</string>
+    <string name="connected">PrivacyGuard Enabled</string>
     <string name="disconnect">Disconnect</string>
     <string name="mainActivity_warn_dialog_title">Warning</string>
-    <string name="mainActivity_warn_dialog_msg">Unable to start Privacy Guard</string>
+    <string name="mainActivity_warn_dialog_msg">Unable to start PrivacyGuard</string>
     <string name="data_leakage_frequency">Data leakage frequency this month:</string>
     <string name="title_activity_location">Map</string>
     <string name="starting_vpn_message">Starting VPN</string>
-    <string name="vpn_running_broadcast_intent">com.PrivacyGuard.VpnRunning</string>
+    <string name="vpn_running_broadcast_intent">ca.uwaterloo.crysp.privacyguard.VpnRunning</string>
     <string name="update_filter_keywords_title">Update Filter Keywords</string>
-    <string name="update_filter_keywords_message">In the following dialog box, choose the file that contains all keywords that Privacy Guard should look for in the network traffic.</string>
+    <string name="update_filter_keywords_message">In the following dialog box, choose the file that contains all keywords that PrivacyGuard should look for in the network traffic.</string>
     <string name="export_data_title">Export Data</string>
     <string name="export_data_message">Are you sure you want to export data? This will export all database tables into CSV files (one CSV file for each table).</string>
     <string name="vpn_on">ON</string>
@@ -21,10 +21,10 @@
     <string name="leak_singular">leak</string>
     <string name="leak_plural">leaks</string>
     <string name="settings">Settings</string>
-    <string name="permissions_not_granted_message">To use Privacy Guard, you need to turn on\nall the permissions that it requires.</string>
+    <string name="permissions_not_granted_message">To use PrivacyGuard, you need to turn on all permissions that it requires.\n\nFor example, if PrivacyGuard cannot learn your location, it cannot look for leaks of your location in traffic that is leaving your device.\n\nPrivacyGuard uses the information that you grant it access to only locally and does not transmit it to remote entities.</string>
     <string name="delete_package_title">Delete Application Data</string>
-    <string name="delete_package_message">Are you sure you want to delete all the data that Privacy Guard has recorded for %s? This action cannot be undone.</string>
-    <string name="category_ignored">ignored</string>
+    <string name="delete_package_message">Are you sure you want to delete all the data that PrivacyGuard has recorded for %s? This action cannot be undone.</string>
+    <string name="category_ignored">no notifications</string>
 
     <!-- Preferences -->
     <string name="pref_leak_display_order_key">pref_leak_display_order</string>
@@ -41,7 +41,7 @@
     <string name="update_filter_keywords">Update Filter Keywords</string>
 
     <!-- App Data Activity -->
-    <string name="usage_stats_permission_not_granted_message">To view usage statistics, you need to turn on\nthe Usage Access Permission.</string>
+    <string name="usage_stats_permission_not_granted_message">To use PrivacyGuard, you need to give it usage acccess.\n\nOtherwise, PrivacyGuard cannot determine whether an app leaked your personal information while being in the foreground or while being in the background.</string>
     <string name="turn_on_permission_button">Turn On</string>
     <string name="invalid_android_version_message" formatted="false">Your current Android version is: %d.\nYou need at least version %d to use this feature.</string>
 
@@ -87,5 +87,7 @@
     <string name="spinner_status">Status:</string>
     <string name="start_date">Start Date:</string>
     <string name="end_date">End Date:</string>
+    <string name="certificate_root_store">Cannot inspect encrypted traffic</string>
+    <string name="certificate_root_store_msg">In order for PrivacyGuard to inspect encrypted traffic, it needs to add a certificate to your device\'s certificate store. This requires that you enter your device\'s PIN and click the \"OK\" button when asked to name the certificate.</string>
 
 </resources>

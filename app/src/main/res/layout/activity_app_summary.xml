@@ -38,7 +38,7 @@
                 android:layout_weight="1"
                     android:layout_height="wrap_content"
                     android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:text="Don't send notifications for this app"
+                    android:text="Don't notify of future leakages"
                     android:id="@+id/summary_toggle_textview"
                 android:layout_gravity="start"/>
 
