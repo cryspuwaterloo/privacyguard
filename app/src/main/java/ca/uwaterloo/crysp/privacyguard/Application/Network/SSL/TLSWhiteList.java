@@ -46,7 +46,9 @@ public class TLSWhiteList {
         manualList.add("com.wire");
         manualList.add("com.amazon.mShop.android.shopping");
         manualList.add("org.mozilla.firefox");
-        manualList.add("com.android.providers.downloads.ui");
+        // these are now not routed through the VPN in the first place.
+        //manualList.add("com.android.vending");
+        //manualList.add("com.android.providers.downloads.ui");
     }
 
     private void readfromfile(File directory, String file) {

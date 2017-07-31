@@ -24,6 +24,7 @@ import android.app.PendingIntent;
 import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.VpnService;
 import android.os.Binder;
 import android.os.IBinder;
@@ -162,6 +163,15 @@ public class MyVpnService extends VpnService implements Runnable {
         b.addDnsServer("8.8.8.8");
         b.addRoute("0.0.0.0", 0);
         b.setMtu(1500);
+        // should we disallow whitelisted apps here? whitelisting currently means that we don't do
+        // TLS interception for an app but we may be still interested in gathering its metadata;
+        // for now exclude only Google Play app
+        try {
+            b.addDisallowedApplication("com.android.vending");
+            b.addDisallowedApplication("com.android.providers.downloads.ui");
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
         mInterface = b.establish();
         if (mInterface == null) {
             Logger.d(TAG, "Failed to establish Builder interface");
