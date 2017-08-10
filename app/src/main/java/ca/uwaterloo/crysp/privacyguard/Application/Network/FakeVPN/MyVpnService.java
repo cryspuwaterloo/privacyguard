@@ -163,6 +163,8 @@ public class MyVpnService extends VpnService implements Runnable {
         b.addDnsServer("8.8.8.8");
         b.addRoute("0.0.0.0", 0);
         b.setMtu(1500);
+        b.setBlocking(true);
+
         // should we disallow whitelisted apps here? whitelisting currently means that we don't do
         // TLS interception for an app but we may be still interested in gathering its metadata;
         // for now exclude only Google Play app

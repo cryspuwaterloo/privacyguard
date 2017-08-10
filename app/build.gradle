@@ -5,7 +5,7 @@ android {
     buildToolsVersion '25.0.2'
     defaultConfig {
         applicationId "ca.uwaterloo.crysp.privacyguard"
-        minSdkVersion 22
+        minSdkVersion 21
         targetSdkVersion 23
     }
     buildTypes {

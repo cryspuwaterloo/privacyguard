@@ -46,7 +46,7 @@ public class TLSWhiteList {
         manualList.add("com.wire");
         manualList.add("com.amazon.mShop.android.shopping");
         manualList.add("org.mozilla.firefox");
-        // these are now not routed through the VPN in the first place.
+        // the VPN is now configured to no longer route these apps' traffic through it
         //manualList.add("com.android.vending");
         //manualList.add("com.android.providers.downloads.ui");
     }

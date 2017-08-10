@@ -64,8 +64,8 @@ public class TunReadThread extends Thread {
                         readQueue.offer(ip);
                     }
                 } else {
-                    // length = 0 is possible, -1 means reach the end of the stream
-                    Thread.sleep(1);
+                    // shouldn't happen given that read() is blocking
+                    Thread.sleep(100);
                 }
             }
         } catch (IOException | InterruptedException e) {
