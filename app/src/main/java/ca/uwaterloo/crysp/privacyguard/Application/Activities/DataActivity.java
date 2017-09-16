@@ -16,9 +16,11 @@ import android.view.Menu;
 import android.view.MenuInflater;
 
 import ca.uwaterloo.crysp.privacyguard.Application.Database.DataLeak;
+import ca.uwaterloo.crysp.privacyguard.Application.Database.Traffic;
 import ca.uwaterloo.crysp.privacyguard.Application.Fragments.LeakQueryFragment;
 import ca.uwaterloo.crysp.privacyguard.Application.Fragments.LeakReportFragment;
 import ca.uwaterloo.crysp.privacyguard.Application.Fragments.LeakSummaryFragment;
+import ca.uwaterloo.crysp.privacyguard.Application.Fragments.TrafficFragment;
 import ca.uwaterloo.crysp.privacyguard.Application.Interfaces.AppDataInterface;
 import ca.uwaterloo.crysp.privacyguard.Plugin.LeakReport;
 import ca.uwaterloo.crysp.privacyguard.R;
@@ -27,7 +29,7 @@ import java.util.List;
 
 public abstract class DataActivity extends AppCompatActivity implements AppDataInterface {
 
-    private static final int TAB_COUNT = 3;
+    private static final int TAB_COUNT = 4;
 
     private LeakReportFragment leakReportFragment;
     private LeakSummaryFragment leakSummaryFragment;
@@ -37,6 +39,12 @@ public abstract class DataActivity extends AppCompatActivity implements AppDataI
     protected List<DataLeak> contactLeaks;
     protected List<DataLeak> deviceLeaks;
     protected List<DataLeak> keywordLeaks;
+
+    private TrafficFragment trafficFragment;
+    protected List<Traffic> trafficsInE;
+    protected List<Traffic> trafficsOutE;
+    protected List<Traffic> trafficsInNe;
+    protected List<Traffic> trafficsOutNe;
 
     protected TabLayout tabLayout;
 
@@ -49,6 +57,8 @@ public abstract class DataActivity extends AppCompatActivity implements AppDataI
         leakReportFragment = new LeakReportFragment();
         leakSummaryFragment = new LeakSummaryFragment();
         leakQueryFragment = new LeakQueryFragment();
+
+        trafficFragment = new TrafficFragment();
 
         ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
         viewPager.setAdapter(new CustomFragmentPagerAdapter(getSupportFragmentManager(), this));
@@ -66,7 +76,7 @@ public abstract class DataActivity extends AppCompatActivity implements AppDataI
     }
 
     public class CustomFragmentPagerAdapter extends FragmentPagerAdapter {
-        private String tabTitles[] = new String[] { "Report", "Summary", "Query"};
+        private String tabTitles[] = new String[] { "Report", "Summary", "Query", "Traffic"};
 
         public CustomFragmentPagerAdapter(FragmentManager fm, Context context) {
             super(fm);
@@ -86,6 +96,8 @@ public abstract class DataActivity extends AppCompatActivity implements AppDataI
                     return leakSummaryFragment;
                 case 2:
                     return leakQueryFragment;
+                case 3:
+                    return trafficFragment;
                 default:
                     return null;
             }
@@ -120,6 +132,20 @@ public abstract class DataActivity extends AppCompatActivity implements AppDataI
                 return keywordLeaks;
         }
         return null;
+    }
+
+    @Override
+    public List<Traffic> getTraffics(boolean encrypted, boolean outgoing){
+        if(encrypted && outgoing){
+            return trafficsOutE;
+        }
+        if(!encrypted && outgoing){
+            return trafficsOutNe;
+        }
+        if(!encrypted && !outgoing){
+            return trafficsInNe;
+        }
+        return trafficsInE;
     }
 }
 

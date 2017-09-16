@@ -5,6 +5,8 @@ import ca.uwaterloo.crysp.privacyguard.Plugin.IPlugin;
 import ca.uwaterloo.crysp.privacyguard.Plugin.LeakReport;
 import ca.uwaterloo.crysp.privacyguard.Application.Network.FakeVPN.MyVpnService;
 import ca.uwaterloo.crysp.privacyguard.Application.Network.ConnectionMetaData;
+import ca.uwaterloo.crysp.privacyguard.Plugin.TrafficRecord;
+import ca.uwaterloo.crysp.privacyguard.Plugin.TrafficReport;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -37,15 +39,28 @@ public class FilterThread extends Thread {
 
     public void filter(String msg, ConnectionMetaData metaData) {
 
-        Logger.logTraffic(metaData, msg);
+        TrafficReport traffic;
+        TrafficRecord record = vpnService.getTrafficRecord();
+        traffic = record.handle(msg);
 
-        for (IPlugin plugin : vpnService.getNewPlugins()) {
-            LeakReport leak = plugin.handleRequest(msg);
-            if (leak != null) {
-                leak.metaData = metaData;
-                vpnService.notify(msg, leak);
-                if (DEBUG) Logger.v(TAG, appName + " is leaking " + leak.category.name());
-                Logger.logLeak(leak.category.name());
+        if(traffic != null){
+            traffic.metaData = metaData;
+            vpnService.addtotraffic(traffic);
+        }
+        Logger.d(TAG, "Testing");
+
+        if(metaData.outgoing) {
+
+            Logger.logTraffic(metaData, msg);
+
+            for (IPlugin plugin : vpnService.getNewPlugins()) {
+                LeakReport leak = plugin.handleRequest(msg);
+                if (leak != null) {
+                    leak.metaData = metaData;
+                    vpnService.notify(msg, leak);
+                    if (DEBUG) Logger.v(TAG, appName + " is leaking " + leak.category.name());
+                    Logger.logLeak(leak.category.name());
+                }
             }
         }
     }

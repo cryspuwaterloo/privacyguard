@@ -11,6 +11,8 @@ import ca.uwaterloo.crysp.privacyguard.Application.Logger;
 import ca.uwaterloo.crysp.privacyguard.Plugin.LeakInstance;
 import ca.uwaterloo.crysp.privacyguard.Plugin.LeakReport;
 
+import ca.uwaterloo.crysp.privacyguard.Plugin.TrafficReport;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -57,7 +59,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     public String[] getTables() {
-        return new String[]{TABLE_DATA_LEAKS, TABLE_LEAK_SUMMARY, TABLE_URL, TABLE_APP_STATUS_EVENTS};
+        return new String[]{TABLE_DATA_LEAKS, TABLE_LEAK_SUMMARY, TABLE_URL, TABLE_APP_STATUS_EVENTS, CREATE_TRAFFIC_TABLE};
     }
 
     public static SimpleDateFormat getDateFormat() {
@@ -73,6 +75,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.execSQL(CREATE_APP_STATUS_TABLE);
         // w3kim@uwaterloo.ca
         db.execSQL(CREATE_URL_TABLE);
+        db.execSQL(CREATE_TRAFFIC_TABLE);
     }
 
     // Upgrading database
@@ -84,6 +87,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_APP_STATUS_EVENTS);
         // w3kim@uwaterloo.ca
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_URL);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_TRAFFIC_SUMMARY);
         // Create tables again
         onCreate(db);
     }
@@ -167,9 +171,147 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             + KEY_FREQUENCY + " INTEGER,"
             + KEY_IGNORE + " INTEGER)";
 
+    ////////////////////////////////////////////
+    private static final String TABLE_TRAFFIC_SUMMARY = "traffic_summary";
+    private static final String KEY_TRAFFIC_ID = "_id";
+    private static final String KEY_TRAFFIC_APP_NAME = "app_name";
+    private static final String KEY_TRAFFIC_DEST_ADDR = "dest_addr";
+    private static final String KEY_TRAFFIC_ENCRYPTION = "encryption";
+    private static final String KEY_TRAFFIC_SIZE = "data_size";
+    private static final String KEY_TRAFFIC_DIRECTION_OUT = "direction_out";
+
+    private static final String CREATE_TRAFFIC_TABLE = "CREATE TABLE " + TABLE_TRAFFIC_SUMMARY + "("
+            + KEY_TRAFFIC_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+            + KEY_TRAFFIC_APP_NAME + " TEXT,"
+            + KEY_TRAFFIC_DEST_ADDR + " TEXT,"
+            + KEY_TRAFFIC_ENCRYPTION + " INTEGER,"
+            + KEY_TRAFFIC_SIZE + " INTEGER,"
+            + KEY_TRAFFIC_DIRECTION_OUT + " INTEGER )";
+
     /**
      * All CRUD(Create, Read, Update, Delete) Operations
      */
+
+    private void addnewtraffic(TrafficReport traffic){
+        int encryption;
+        if (traffic.metaData.destPort == 443){
+            encryption = 1;
+        } else{
+            encryption = 0;
+        }
+        int outgoing= 0;
+        String destIP = traffic.metaData.srcIP;
+        if(traffic.metaData.outgoing){
+            outgoing = 1;
+            destIP = traffic.metaData.destIP;
+
+        }
+        ContentValues values = new ContentValues();
+        values.put(KEY_TRAFFIC_APP_NAME, traffic.metaData.appName);
+        values.put(KEY_TRAFFIC_DEST_ADDR, destIP);
+        values.put(KEY_TRAFFIC_ENCRYPTION, encryption);
+        values.put(KEY_TRAFFIC_SIZE, traffic.size);
+        values.put(KEY_TRAFFIC_DIRECTION_OUT, outgoing);
+        mDB.insert(TABLE_TRAFFIC_SUMMARY, null, values);
+        Logger.d(TAG, "Testing: adding new " + destIP + ":" + traffic.size);
+    }
+
+    public void addtraffic(TrafficReport traffic){
+        int encryption;
+        if (traffic.metaData.destPort == 443){
+            encryption = 1;
+        } else{
+            encryption = 0;
+        }
+        int outgoing= 0;
+        String destIP = traffic.metaData.srcIP;
+        if(traffic.metaData.outgoing){
+            outgoing = 1;
+            destIP = traffic.metaData.destIP;
+        }
+        Cursor cursor = mDB.query(TABLE_TRAFFIC_SUMMARY,
+                new String[]{KEY_TRAFFIC_ID, KEY_TRAFFIC_SIZE},
+                KEY_TRAFFIC_APP_NAME + "=? AND " + KEY_TRAFFIC_DEST_ADDR + "=? AND "
+                        + KEY_TRAFFIC_ENCRYPTION + "=? AND " + KEY_TRAFFIC_DIRECTION_OUT + "=?",
+                new String[]{traffic.metaData.appName, destIP, Integer.toString(encryption), Integer.toString(outgoing)}, null, null, null, null);
+
+        if (cursor != null) {
+            if (!cursor.moveToFirst()) { // this package(app) has no leak of this category previously
+                addnewtraffic(traffic);
+                cursor = mDB.query(TABLE_TRAFFIC_SUMMARY,
+                        new String[]{KEY_TRAFFIC_ID, KEY_TRAFFIC_SIZE},
+                        KEY_TRAFFIC_APP_NAME + "=? AND " + KEY_TRAFFIC_DEST_ADDR + "=? AND "
+                                + KEY_TRAFFIC_ENCRYPTION + "=? AND " + KEY_TRAFFIC_DIRECTION_OUT + "=?",
+                        new String[]{traffic.metaData.appName, destIP, Integer.toString(encryption)}, null, null, null, null);
+            }
+            if (!cursor.moveToFirst()) {
+                Logger.i("DBHandler", "fail to create summary table");
+                cursor.close();
+                return;
+            }
+
+            int Id = cursor.getInt(0);
+            int size = cursor.getInt(1);
+
+            cursor.close();
+
+            // Need to update frequency in summary table accordingly
+            // Which row to update, based on the package and category
+            ContentValues values = new ContentValues();
+            values.put(KEY_TRAFFIC_SIZE, size + traffic.size);
+
+            String selection = KEY_TRAFFIC_ID + " =?";
+            String[] selectionArgs = {String.valueOf(Id)};
+
+            int count = mDB.update(
+                    TABLE_TRAFFIC_SUMMARY,
+                    values,
+                    selection,
+                    selectionArgs);
+
+            Logger.d(TAG, "Testing: update appname: "+ traffic.metaData.appName + " to: " + destIP + " : " + (size + traffic.size)) ;
+
+            if (count == 0) {
+                Logger.i("DBHandler", "fail to update summary table");
+            }
+        }
+    }
+
+    public List<Traffic> getTraffics(String appName, boolean encrypted, boolean outgoing) {
+        List<Traffic> traffics = new ArrayList<>();
+        Cursor cursor = mDB.query(TABLE_TRAFFIC_SUMMARY, new String[]{KEY_TRAFFIC_DEST_ADDR, KEY_TRAFFIC_SIZE},
+                KEY_TRAFFIC_APP_NAME + "=? AND " + KEY_TRAFFIC_ENCRYPTION + "=? AND " + KEY_TRAFFIC_DIRECTION_OUT + "=? ",
+                new String[]{appName, encrypted ? "1" : "0", outgoing ? "1" : "0"}, null, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                do {
+                    Traffic traffic = new Traffic(appName, cursor.getString(0), encrypted, cursor.getInt(1), outgoing) ;
+                    traffics.add(traffic);
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
+        }
+        // return contact list
+        return traffics;
+    }
+
+    public List<Traffic> getTraffics(boolean encrypted, boolean outgoing) {
+        List<Traffic> traffics = new ArrayList<>();
+        Cursor cursor = mDB.query(TABLE_TRAFFIC_SUMMARY, new String[]{KEY_TRAFFIC_APP_NAME, KEY_TRAFFIC_DEST_ADDR, KEY_TRAFFIC_SIZE},
+                KEY_TRAFFIC_ENCRYPTION + "=? AND " + KEY_TRAFFIC_DIRECTION_OUT + "=? ",
+                new String[]{encrypted ? "1" : "0", outgoing ? "1" : "0"}, null, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                do {
+                    Traffic traffic = new Traffic(cursor.getString(0), cursor.getString(1), encrypted, cursor.getInt(2), outgoing);
+                    traffics.add(traffic);
+                } while (cursor.moveToNext());
+            }
+            cursor.close();
+        }
+        // return contact list
+        return traffics;
+    }
 
     // w3kim@uwaterloo.ca
     private void addUrl(String appName, String packageName, String url, String host, String res, String queryParams) {

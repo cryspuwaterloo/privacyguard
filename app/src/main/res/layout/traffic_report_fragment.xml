@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LinearLayout android:background="@color/black" android:layout_height="match_parent" android:layout_width="match_parent" android:orientation="vertical" xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:id="@+id/graph_title" android:layout_height="wrap_content" android:layout_width="wrap_content" android:orientation="horizontal" android:layout_gravity="center" android:layout_marginBottom="10dp" android:layout_marginTop="10dp">
+        <TextView android:id="@+id/app_name" android:layout_height="wrap_content" android:layout_width="wrap_content" android:textSize="22sp"/>
+        <ImageView android:id="@+id/app_icon" android:layout_height="30dp" android:layout_width="30dp" android:layout_marginStart="4dp" android:layout_marginLeft="4dp" android:scaleType="centerInside"/>
+    </LinearLayout>
+    <LinearLayout android:layout_height="25dp" android:layout_width="match_parent" android:orientation="horizontal">
+        <LinearLayout android:layout_height="match_parent" android:layout_width="130dp" android:orientation="vertical">
+            <TextView android:layout_height="match_parent" android:layout_width="match_parent" android:textSize="18sp" android:text="Data"/>
+        </LinearLayout>
+        <View android:background="@color/material_blue_grey_800" android:layout_height="fill_parent" android:layout_width="1dp" android:layout_marginStart="4dp" android:layout_marginEnd="4dp"/>
+        <LinearLayout android:layout_height="match_parent" android:layout_width="130dp" android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="Encrypted"
+                android:textAlignment="center"
+                android:textSize="18sp" />
+        </LinearLayout>
+        <View android:background="@color/material_blue_grey_800" android:layout_height="fill_parent" android:layout_width="1dp" android:layout_marginStart="4dp" android:layout_marginEnd="4dp"/>
+        <LinearLayout android:layout_height="match_parent" android:layout_width="match_parent" android:orientation="vertical">
+            <TextView android:layout_height="match_parent" android:layout_width="match_parent" android:textSize="18sp" android:text="Direction"/>
+        </LinearLayout>
+    </LinearLayout>
+    <View android:background="@color/material_blue_grey_800" android:layout_height="1dp" android:layout_width="match_parent" android:layout_marginStart="4dp" android:layout_marginEnd="4dp"/>
+    <LinearLayout android:layout_height="103dp" android:layout_width="match_parent" android:orientation="horizontal" android:weightSum="1">
+        <LinearLayout android:layout_height="wrap_content" android:layout_width="130dp" android:orientation="vertical">
+            <LinearLayout android:layout_height="25dp" android:layout_width="match_parent" android:orientation="horizontal">
+                <TextView android:id="@+id/trafficOutE" android:layout_height="match_parent" android:layout_width="match_parent" android:textSize="18sp" android:layout_weight="1"/>
+            </LinearLayout>
+            <View android:background="@color/material_blue_grey_800" android:layout_height="1dp" android:layout_width="fill_parent" android:layout_marginStart="4dp" android:layout_marginEnd="4dp"/>
+            <LinearLayout android:layout_height="25dp" android:layout_width="match_parent" android:orientation="horizontal">
+                <TextView android:id="@+id/trafficsInE" android:layout_height="match_parent" android:layout_width="match_parent" android:textSize="18sp" android:layout_weight="1"/>
+            </LinearLayout>
+            <View android:background="@color/material_blue_grey_800" android:layout_height="1dp" android:layout_width="fill_parent" android:layout_marginStart="4dp" android:layout_marginEnd="4dp"/>
+            <LinearLayout android:layout_height="25dp" android:layout_width="match_parent" android:orientation="horizontal">
+                <TextView android:id="@+id/trafficsOutNe" android:layout_height="match_parent" android:layout_width="match_parent" android:textSize="18sp" android:layout_weight="1"/>
+            </LinearLayout>
+            <View android:id="@+id/view5" android:background="@color/material_blue_grey_800" android:layout_height="1dp" android:layout_width="fill_parent" android:layout_marginStart="4dp" android:layout_marginEnd="4dp"/>
+            <LinearLayout android:layout_height="25dp" android:layout_width="match_parent" android:orientation="horizontal">
+                <TextView android:id="@+id/trafficsInNe" android:layout_height="match_parent" android:layout_width="match_parent" android:textSize="18sp" android:layout_weight="1"/>
+            </LinearLayout>
+        </LinearLayout>
+        <View android:background="@color/material_blue_grey_800" android:layout_height="fill_parent" android:layout_width="1dp" android:layout_marginStart="4dp" android:layout_marginEnd="4dp"/>
+        <LinearLayout android:layout_height="match_parent" android:layout_width="130dp" android:orientation="vertical">
+            <LinearLayout android:layout_height="25dp" android:layout_width="match_parent" android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="Yes"
+                    android:textAlignment="center"
+                    android:textSize="18sp" />
+            </LinearLayout>
+            <View android:background="@color/material_blue_grey_800" android:layout_height="1dp" android:layout_width="fill_parent" android:layout_marginStart="4dp" android:layout_marginEnd="4dp"/>
+            <LinearLayout android:layout_height="25dp" android:layout_width="match_parent" android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="Yes"
+                    android:textSize="18sp" />
+            </LinearLayout>
+            <View android:background="@color/material_blue_grey_800" android:layout_height="1dp" android:layout_width="fill_parent" android:layout_marginStart="4dp" android:layout_marginEnd="4dp"/>
+            <LinearLayout android:layout_height="25dp" android:layout_width="match_parent" android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="No"
+                    android:textSize="18sp" />
+            </LinearLayout>
+            <View android:background="@color/material_blue_grey_800" android:layout_height="1dp" android:layout_width="fill_parent" android:layout_marginStart="4dp" android:layout_marginEnd="4dp"/>
+            <LinearLayout android:layout_height="25dp" android:layout_width="match_parent" android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="No"
+                    android:textAlignment="center"
+                    android:textSize="18sp" />
+            </LinearLayout>
+        </LinearLayout>
+        <View android:background="@color/material_blue_grey_800" android:layout_height="fill_parent" android:layout_width="1dp" android:layout_marginStart="4dp" android:layout_marginEnd="4dp"/>
+        <LinearLayout android:layout_height="match_parent" android:layout_width="match_parent" android:orientation="vertical">
+            <LinearLayout android:layout_height="25dp" android:layout_width="match_parent" android:orientation="horizontal">
+                <TextView android:layout_height="match_parent" android:layout_width="match_parent" android:textSize="18sp" android:text="Out" android:textAlignment="center" android:layout_weight="1"/>
+            </LinearLayout>
+            <View android:background="@color/material_blue_grey_800" android:layout_height="1dp" android:layout_width="fill_parent" android:layout_marginStart="4dp" android:layout_marginEnd="4dp"/>
+            <LinearLayout android:layout_height="25dp" android:layout_width="match_parent" android:orientation="horizontal">
+                <TextView android:layout_height="match_parent" android:layout_width="match_parent" android:textSize="18sp" android:text="In" android:textAlignment="center" android:layout_weight="1"/>
+            </LinearLayout>
+            <View android:background="@color/material_blue_grey_800" android:layout_height="1dp" android:layout_width="fill_parent" android:layout_marginStart="4dp" android:layout_marginEnd="4dp"/>
+            <LinearLayout android:layout_height="25dp" android:layout_width="match_parent" android:orientation="horizontal">
+                <TextView android:layout_height="match_parent" android:layout_width="match_parent" android:textSize="18sp" android:text="Out" android:textAlignment="center" android:layout_weight="1"/>
+            </LinearLayout>
+            <View android:background="@color/material_blue_grey_800" android:layout_height="1dp" android:layout_width="fill_parent" android:layout_marginStart="4dp" android:layout_marginEnd="4dp"/>
+            <LinearLayout android:layout_height="25dp" android:layout_width="match_parent" android:orientation="horizontal">
+                <TextView android:layout_height="match_parent" android:layout_width="match_parent" android:textSize="18sp" android:text="In" android:textAlignment="center" android:layout_weight="1"/>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

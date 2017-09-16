@@ -49,6 +49,8 @@ import ca.uwaterloo.crysp.privacyguard.Plugin.KeywordDetection;
 import ca.uwaterloo.crysp.privacyguard.Plugin.LeakReport;
 import ca.uwaterloo.crysp.privacyguard.Plugin.LocationDetection;
 import ca.uwaterloo.crysp.privacyguard.Plugin.DeviceDetection;
+import ca.uwaterloo.crysp.privacyguard.Plugin.TrafficRecord;
+import ca.uwaterloo.crysp.privacyguard.Plugin.TrafficReport;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -256,6 +258,29 @@ public class MyVpnService extends VpnService implements Runnable {
             e.printStackTrace();
         }
         return null;
+    }
+
+    ////////////////////
+
+    public TrafficRecord getTrafficRecord(){
+        TrafficRecord trafficRecord = new TrafficRecord();
+        trafficRecord.setContext(this);
+        return trafficRecord;
+    }
+
+    public void addtotraffic(TrafficReport traffic) {
+        //update database
+
+        if(traffic.metaData.destPort == 443){
+            traffic.metaData.destIP = traffic.metaData.destIP.replace(" (SSL)", "");
+            Logger.d(TAG, "Testing : change destip" + traffic.metaData.destIP);
+        }
+
+        DatabaseHandler db = DatabaseHandler.getInstance(this);
+
+        db.addtraffic(traffic);
+
+        Logger.d(TAG, "Testing adding to database");
     }
 
     ////////////////////////////////////////////////////

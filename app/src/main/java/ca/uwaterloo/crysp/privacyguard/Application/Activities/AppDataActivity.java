@@ -34,6 +34,11 @@ public class AppDataActivity extends DataActivity {
         contactLeaks = databaseHandler.getAppLeaks(packageName, LeakReport.LeakCategory.CONTACT.name());
         deviceLeaks = databaseHandler.getAppLeaks(packageName, LeakReport.LeakCategory.DEVICE.name());
         keywordLeaks = databaseHandler.getAppLeaks(packageName, LeakReport.LeakCategory.KEYWORD.name());
+
+        trafficsOutE = databaseHandler.getTraffics(appName, true, true);
+        trafficsInE = databaseHandler.getTraffics(appName, true, false);
+        trafficsOutNe = databaseHandler.getTraffics(appName, false, true);
+        trafficsInNe = databaseHandler.getTraffics(appName, false, false);
     }
 
     @Override
@@ -78,6 +83,16 @@ public class AppDataActivity extends DataActivity {
                                 .setTitle(R.string.leak_query_title)
                                 .setIcon(R.drawable.info_outline)
                                 .setMessage(R.string.query_message_single_app)
+                                .setPositiveButton(R.string.dialog_accept, null)
+                                .create();
+                        alertDialog.show();
+                        return true;
+
+                    case 3:
+                        alertDialog = new AlertDialog.Builder(this)
+                                .setTitle(R.string.traffic_title)
+                                .setIcon(R.drawable.info_outline)
+                                .setMessage(R.string.traffic_message_single_app)
                                 .setPositiveButton(R.string.dialog_accept, null)
                                 .create();
                         alertDialog.show();

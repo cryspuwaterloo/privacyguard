@@ -5,6 +5,7 @@ import android.support.v7.app.AlertDialog;
 import android.view.MenuItem;
 
 import ca.uwaterloo.crysp.privacyguard.Application.Database.DatabaseHandler;
+import ca.uwaterloo.crysp.privacyguard.Application.Database.Traffic;
 import ca.uwaterloo.crysp.privacyguard.Plugin.LeakReport;
 import ca.uwaterloo.crysp.privacyguard.R;
 
@@ -23,6 +24,11 @@ public class AllAppsDataActivity extends DataActivity {
         contactLeaks = databaseHandler.getAppLeaks(LeakReport.LeakCategory.CONTACT.name());
         deviceLeaks = databaseHandler.getAppLeaks(LeakReport.LeakCategory.DEVICE.name());
         keywordLeaks = databaseHandler.getAppLeaks(LeakReport.LeakCategory.KEYWORD.name());
+
+        trafficsOutE = databaseHandler.getTraffics(true, true);
+        trafficsInE = databaseHandler.getTraffics(true, false);
+        trafficsOutNe = databaseHandler.getTraffics(false, true);
+        trafficsInNe = databaseHandler.getTraffics(false, false);
     }
 
     @Override
@@ -66,6 +72,17 @@ public class AllAppsDataActivity extends DataActivity {
                                 .create();
                         alertDialog.show();
                         return true;
+
+                    case 3:
+                        alertDialog = new AlertDialog.Builder(this)
+                                .setTitle(R.string.traffic_title)
+                                .setIcon(R.drawable.info_outline)
+                                .setMessage(R.string.traffic_message_all_apps)
+                                .setPositiveButton(R.string.dialog_accept, null)
+                                .create();
+                        alertDialog.show();
+                        return true;
+
                 }
         }
 

@@ -51,7 +51,7 @@ public class LocalServerForwarder extends Thread {
         }
         this.outgoing = isOutgoing;
         this.vpnService = vpnService;
-        this.metaData = new ConnectionMetaData(packageName, appName, null, 0, null, 0, null);
+        this.metaData = new ConnectionMetaData(packageName, appName, null, 0, null, 0, null, outgoing);
 
         metaData.destIP = outSocket.getInetAddress().getHostAddress();
         metaData.destPort = outSocket.getPort();
@@ -107,7 +107,7 @@ public class LocalServerForwarder extends Thread {
             byte[] buff = new byte[LIMIT];
             int got;
             while ((got = in.read(buff)) > -1) {
-                if (PrivacyGuard.doFilter && outgoing) {
+                if (PrivacyGuard.doFilter) {
                     String msg = new String(buff, 0, got);
                     if (PrivacyGuard.asynchronous) {
                         vpnService.getFilterThread().offer(msg, metaData);
