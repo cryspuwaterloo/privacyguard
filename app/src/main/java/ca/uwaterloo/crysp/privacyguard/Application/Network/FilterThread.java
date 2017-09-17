@@ -16,8 +16,6 @@ public class FilterThread extends Thread {
     private LinkedBlockingQueue<FilterMsg> toFilter = new LinkedBlockingQueue<>();
     private MyVpnService vpnService;
     ConnectionMetaData metaData;
-    private String appName, packageName, destIP, type;
-    private int srcPort, destPort, id;
 
     public FilterThread(MyVpnService vpnService) {
         this.vpnService= vpnService;
@@ -47,7 +45,6 @@ public class FilterThread extends Thread {
             traffic.metaData = metaData;
             vpnService.addtotraffic(traffic);
         }
-        Logger.d(TAG, "Testing");
 
         if(metaData.outgoing) {
 
@@ -58,7 +55,7 @@ public class FilterThread extends Thread {
                 if (leak != null) {
                     leak.metaData = metaData;
                     vpnService.notify(msg, leak);
-                    if (DEBUG) Logger.v(TAG, appName + " is leaking " + leak.category.name());
+                    if (DEBUG) Logger.v(TAG, metaData.appName + " is leaking " + leak.category.name());
                     Logger.logLeak(leak.category.name());
                 }
             }

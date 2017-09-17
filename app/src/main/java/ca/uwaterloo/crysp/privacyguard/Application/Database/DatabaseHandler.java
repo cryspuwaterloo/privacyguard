@@ -192,33 +192,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
      * All CRUD(Create, Read, Update, Delete) Operations
      */
 
-    private void addnewtraffic(TrafficReport traffic){
-        int encryption;
-        if (traffic.metaData.destPort == 443){
-            encryption = 1;
-        } else{
-            encryption = 0;
-        }
-        int outgoing= 0;
-        String destIP = traffic.metaData.srcIP;
-        if(traffic.metaData.outgoing){
-            outgoing = 1;
-            destIP = traffic.metaData.destIP;
-
-        }
-        ContentValues values = new ContentValues();
-        values.put(KEY_TRAFFIC_APP_NAME, traffic.metaData.appName);
-        values.put(KEY_TRAFFIC_DEST_ADDR, destIP);
-        values.put(KEY_TRAFFIC_ENCRYPTION, encryption);
-        values.put(KEY_TRAFFIC_SIZE, traffic.size);
-        values.put(KEY_TRAFFIC_DIRECTION_OUT, outgoing);
-        mDB.insert(TABLE_TRAFFIC_SUMMARY, null, values);
-        Logger.d(TAG, "Testing: adding new " + destIP + ":" + traffic.size);
-    }
-
     public void addtraffic(TrafficReport traffic){
         int encryption;
-        if (traffic.metaData.destPort == 443){
+        if (traffic.metaData.encrypted){
             encryption = 1;
         } else{
             encryption = 0;
@@ -237,7 +213,13 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
         if (cursor != null) {
             if (!cursor.moveToFirst()) { // this package(app) has no leak of this category previously
-                addnewtraffic(traffic);
+                ContentValues values = new ContentValues();
+                values.put(KEY_TRAFFIC_APP_NAME, traffic.metaData.appName);
+                values.put(KEY_TRAFFIC_DEST_ADDR, destIP);
+                values.put(KEY_TRAFFIC_ENCRYPTION, encryption);
+                values.put(KEY_TRAFFIC_SIZE, traffic.size);
+                values.put(KEY_TRAFFIC_DIRECTION_OUT, outgoing);
+                mDB.insert(TABLE_TRAFFIC_SUMMARY, null, values);
                 cursor = mDB.query(TABLE_TRAFFIC_SUMMARY,
                         new String[]{KEY_TRAFFIC_ID, KEY_TRAFFIC_SIZE},
                         KEY_TRAFFIC_APP_NAME + "=? AND " + KEY_TRAFFIC_DEST_ADDR + "=? AND "

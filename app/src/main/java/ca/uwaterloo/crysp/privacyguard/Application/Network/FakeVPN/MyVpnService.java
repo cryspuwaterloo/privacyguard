@@ -269,18 +269,10 @@ public class MyVpnService extends VpnService implements Runnable {
     }
 
     public void addtotraffic(TrafficReport traffic) {
-        //update database
-
-        if(traffic.metaData.destPort == 443){
-            traffic.metaData.destIP = traffic.metaData.destIP.replace(" (SSL)", "");
-            Logger.d(TAG, "Testing : change destip" + traffic.metaData.destIP);
-        }
 
         DatabaseHandler db = DatabaseHandler.getInstance(this);
 
         db.addtraffic(traffic);
-
-        Logger.d(TAG, "Testing adding to database");
     }
 
     ////////////////////////////////////////////////////

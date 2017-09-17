@@ -51,17 +51,17 @@ public class LocalServerForwarder extends Thread {
         }
         this.outgoing = isOutgoing;
         this.vpnService = vpnService;
+
         this.metaData = new ConnectionMetaData(packageName, appName, null, 0, null, 0, null, outgoing);
 
         metaData.destIP = outSocket.getInetAddress().getHostAddress();
         metaData.destPort = outSocket.getPort();
-        if (metaData.destPort == 443) metaData.destIP += " (SSL)";
         metaData.destHostName = outSocket.getInetAddress().getCanonicalHostName();
         metaData.srcIP = inSocket.getInetAddress().getHostAddress();
         metaData.srcPort = inSocket.getPort();
+        metaData.encrypted = (isOutgoing && metaData.destPort == 443) || (!isOutgoing && metaData.srcPort == 443);
 
         setDaemon(true);
-
     }
 
     public static void connect(Socket clientSocket, Socket serverSocket, MyVpnService vpnService, String packageName, String appName) throws Exception {
