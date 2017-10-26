@@ -2,7 +2,6 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion '25.0.2'
     defaultConfig {
         applicationId "ca.uwaterloo.crysp.privacyguard"
         minSdkVersion 21
@@ -19,6 +18,7 @@ android {
     }
     productFlavors {
     }
+    buildToolsVersion '26.0.2'
 }
 
 dependencies {
