@@ -15,6 +15,7 @@
     <color name="vpn_red">#fa543b</color>
     <color name="vpn_yellow">#eafa3b</color>
 
+    <!-- these are not used any longer since referencing them in Oreo fails -->
     <color name="location_color">#de04f7</color>
     <color name="contact_color">#fd7226</color>
     <color name="device_color">#11ffcc</color>
