@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <config
-    linePaint.color="#00000000"
-    vertexPaint.color="@color/contact_color"
+    linePaint.color="#10000000"
+    vertexPaint.color="#fd7226"
     vertexPaint.strokeWidth="10dp"
-    fillPaint.color="#00000000"/>
+    fillPaint.color="#10000000"/>
+
+    <!-- using #10000000 instead of #0000000 since the latter ends up being parsed as #0 in Oreo, which is not a valid color -->
+    <!-- using hardcoded colors since referencing the colors in color.xml doesn't work any longer in Oreo -->

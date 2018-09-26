@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="white">#ffffffff</color>
+    <color name="black">#ff000000</color>
+    <color name="gold">#B39E3E</color>
+    <color name="blue">#FF0000FF</color>
+    <color name="green">#FF00FF00</color>
+    <color name="red">#FFFF0000</color>
+    <color name="yellow">#FFFFFF00</color>
+    <color name="transparent">#00000000</color>
+    <color name="grey">#545454</color>
+    <color name="grey_alpha">#60545454</color>
+
+    <color name="vpn_green">#31d620</color>
+    <color name="vpn_red">#fa543b</color>
+    <color name="vpn_yellow">#eafa3b</color>
+
+    <!-- these are not used any longer since referencing them in Oreo fails -->
+    <color name="location_color">#de04f7</color>
+    <color name="contact_color">#fd7226</color>
+    <color name="device_color">#11ffcc</color>
+    <color name="keyword_color">#e0fa36</color>
+
+    <color name="app_status_green">#4cfd4c</color>
+    <color name="app_status_red">#ff2c2c</color>
+</resources>

@@ -34,6 +34,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.CANADA);
     private SQLiteDatabase mDB;
     public static final String LEAK_ID_KEY = "leak_id_key";
+    private static final boolean DEBUG = false;
 
     private static DatabaseHandler sInstance = null;
 
@@ -227,7 +228,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                         new String[]{traffic.metaData.appName, destIP, Integer.toString(encryption)}, null, null, null, null);
             }
             if (!cursor.moveToFirst()) {
-                Logger.i("DBHandler", "fail to create summary table");
+                if (DEBUG) Logger.i("DatabaseHandler", "fail to create summary table");
                 cursor.close();
                 return;
             }
@@ -251,10 +252,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                     selection,
                     selectionArgs);
 
-            Logger.d(TAG, "Testing: update appname: "+ traffic.metaData.appName + " to: " + destIP + " : " + (size + traffic.size)) ;
+            if (DEBUG) Logger.d(TAG, "Testing: update appname: "+ traffic.metaData.appName + " to: " + destIP + " : " + (size + traffic.size)) ;
 
             if (count == 0) {
-                Logger.i("DBHandler", "fail to update summary table");
+                if (DEBUG) Logger.i("DatabaseHandler", "fail to update summary table");
             }
         }
     }
@@ -554,7 +555,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                         new String[]{rpt.metaData.packageName, rpt.category.name()}, null, null, null, null);
             }
             if (!cursor.moveToFirst()) {
-                Logger.i("DBHandler", "fail to create summary table");
+                if (DEBUG) Logger.i("DatabaseHandler", "fail to create summary table");
                 cursor.close();
                 return -1;
             }
@@ -583,7 +584,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                     selectionArgs);
 
             if (count == 0) {
-                Logger.i("DBHandler", "fail to update summary table");
+                Logger.i("DatabaseHandler", "fail to update summary table");
             }
             return ignore == 1 ? -1 : notifyId;
         }
@@ -623,7 +624,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 selection,
                 selectionArgs);
 
-        if (count == 0) Logger.i("DBHandler", "fail to set status for id: " + id);
+        if (count == 0) {
+            if (DEBUG) Logger.i("DatabaseHandler", "fail to set status for id: " + id);
+        }
     }
 
     public void setIgnoreApp(String packageName, boolean ignore) {
@@ -640,7 +643,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 selectionArgs);
 
         if (count == 0) {
-            Logger.i("DBHandler", "fail to set ignore for " + packageName);
+            if (DEBUG) Logger.i("DatabaseHandler", "fail to set ignore for " + packageName);
         }
     }
 
@@ -656,7 +659,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 selection,
                 selectionArgs);
         if (count == 0) {
-            Logger.i("DBHandler", "fail to set ignore for " + notifyId);
+            if (DEBUG) Logger.i("DatabaseHandler", "fail to set ignore for " + notifyId);
         }
     }
 
